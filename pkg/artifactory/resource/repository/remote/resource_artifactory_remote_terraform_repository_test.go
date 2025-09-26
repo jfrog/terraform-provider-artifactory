@@ -1,6 +1,7 @@
 package remote_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -65,6 +66,68 @@ func TestAccRemoteTerraformRepository_migrate_from_SDKv2(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsValidation(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-terraform-remote-validation", "artifactory_remote_terraform_repository")
+
+	// Test case 1: bypass_head_requests = false with registry.terraform.io should fail validation
+	const invalidConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			bypass_head_requests = false
+			terraform_registry_url = "https://registry.terraform.io"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsValidation", invalidConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile("For terraform registries.*bypass_head_requests must be set to true"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsValidationOpenTofu(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-terraform-remote-validation-opentofu", "artifactory_remote_terraform_repository")
+
+	// Test case 2: bypass_head_requests = false with registry.opentofu.org should fail validation
+	const invalidConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			bypass_head_requests = false
+			terraform_registry_url = "https://registry.opentofu.org"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsValidationOpenTofu", invalidConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile("For terraform registries.*bypass_head_requests must be set to true"),
 			},
 		},
 	})

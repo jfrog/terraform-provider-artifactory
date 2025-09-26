@@ -437,6 +437,7 @@ resource "artifactory_remote_terraform_repository" "terraform-remote" {
   url                     = "https://github.com/"
   terraform_registry_url  = "https://registry.terraform.io"
   terraform_providers_url = "https://releases.hashicorp.com"
+  bypass_head_requests    = true
 }
 
 resource "artifactory_remote_rpm_repository" "my-remote-rpm" {

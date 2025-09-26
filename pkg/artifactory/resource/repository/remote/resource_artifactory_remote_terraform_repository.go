@@ -3,8 +3,10 @@ package remote
 import (
 	"context"
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -106,6 +108,49 @@ type RemoteTerraformAPIModel struct {
 	TerraformProvidersURL string `json:"terraformProvidersUrl"`
 }
 
+// Custom validator for bypass_head_requests to enforce true for specific terraform registries
+type terraformBypassHeadRequestsValidator struct{}
+
+func (v terraformBypassHeadRequestsValidator) Description(ctx context.Context) string {
+	return "Validates that bypass_head_requests is true for terraform registries that require it"
+}
+
+func (v terraformBypassHeadRequestsValidator) MarkdownDescription(ctx context.Context) string {
+	return "Validates that `bypass_head_requests` is `true` for terraform registries that require it (registry.terraform.io, registry.opentofu.org, tf.app.wiz.io)"
+}
+
+func (v terraformBypassHeadRequestsValidator) ValidateBool(ctx context.Context, req validator.BoolRequest, resp *validator.BoolResponse) {
+	// Get the terraform_registry_url from the same resource
+	var registryURL types.String
+	diags := req.Config.GetAttribute(ctx, path.Root("terraform_registry_url"), &registryURL)
+	if diags.HasError() {
+		return
+	}
+
+	// Check if the registry URL is one that requires bypass_head_requests = true
+	terraformRegistries := []string{
+		"https://registry.terraform.io",
+		"https://registry.opentofu.org",
+		"https://tf.app.wiz.io",
+	}
+
+	registryURLValue := strings.TrimSuffix(registryURL.ValueString(), "/")
+
+	for _, requiredRegistry := range terraformRegistries {
+		if registryURLValue == requiredRegistry {
+			// For these registries, bypass_head_requests must be true
+			if !req.ConfigValue.ValueBool() {
+				resp.Diagnostics.AddAttributeError(
+					req.Path,
+					"Invalid bypass_head_requests value",
+					"For terraform registries (registry.terraform.io, registry.opentofu.org, tf.app.wiz.io), bypass_head_requests must be set to true. Artifactory automatically enforces this setting for these registries.",
+				)
+			}
+			return
+		}
+	}
+}
+
 func (r *remoteTerraformResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	remoteTerraformAttributes := lo.Assign(
 		RemoteAttributes,
@@ -114,10 +159,14 @@ func (r *remoteTerraformResource) Schema(ctx context.Context, req resource.Schem
 			"bypass_head_requests": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Default:  booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					terraformBypassHeadRequestsValidator{},
+				},
 				MarkdownDescription: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. " +
 					"In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the " +
-					"artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request.",
+					"artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request. " +
+					"**Note**: For terraform registries (registry.terraform.io, registry.opentofu.org, tf.app.wiz.io), this must be set to `true` as Artifactory automatically enforces this setting. Defaults to `false`.",
 			},
 			"terraform_registry_url": schema.StringAttribute{
 				Optional: true,
