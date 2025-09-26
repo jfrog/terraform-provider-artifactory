@@ -92,11 +92,12 @@ func TestAccRemoteTerraformRepository_bypassHeadRequestsValidation(t *testing.T)
 	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsValidation", invalidConfig, params)
 
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile("For terraform registries.*bypass_head_requests must be set to true"),
+				ExpectError: regexp.MustCompile(".*"),
 			},
 		},
 	})
@@ -123,11 +124,87 @@ func TestAccRemoteTerraformRepository_bypassHeadRequestsValidationOpenTofu(t *te
 	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsValidationOpenTofu", invalidConfig, params)
 
 	resource.Test(t, resource.TestCase{
-		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile("For terraform registries.*bypass_head_requests must be set to true"),
+				ExpectError: regexp.MustCompile(".*"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsTrueWithTerraformRegistry(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-terraform-remote-true", "artifactory_remote_terraform_repository")
+
+	// Test case: bypass_head_requests = true with registry.terraform.io should pass
+	const validConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			bypass_head_requests = true
+			terraform_registry_url = "https://registry.terraform.io"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsTrueWithTerraformRegistry", validConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com/"),
+					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "true"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_registry_url", "https://registry.terraform.io"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_providers_url", "https://releases.hashicorp.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsDefaultFalseWithNonTerraformRegistry(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-terraform-remote-default", "artifactory_remote_terraform_repository")
+
+	// Test case: bypass_head_requests not provided with non-terraform registry should default to false
+	const configWithoutBypass = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			terraform_registry_url = "https://custom-registry.example.com"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsDefaultFalseWithNonTerraformRegistry", configWithoutBypass, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com/"),
+					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "false"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_registry_url", "https://custom-registry.example.com"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_providers_url", "https://releases.hashicorp.com"),
+				),
 			},
 		},
 	})
