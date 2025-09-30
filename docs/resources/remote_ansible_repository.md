@@ -11,7 +11,7 @@ Official documentation can be found [here](https://jfrog.com/help/r/jfrog-artifa
 ## Example Usage
 
 ```terraform
-resource "artifactory_remote_alpine_repository" "my-remote-ansible" {
+resource "artifactory_remote_ansible_repository" "my-remote-ansible" {
   key = "my-remote-ansible"
   url = "https://galaxy.ansible.com"
 }
