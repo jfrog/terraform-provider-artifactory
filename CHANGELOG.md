@@ -1,4 +1,4 @@
-### 12.10.1 (Sep 30, 2025).
+### 12.10.1 (Sep 30, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
 
 BUG FIXES:
 
