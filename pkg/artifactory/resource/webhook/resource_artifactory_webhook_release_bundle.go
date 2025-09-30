@@ -22,10 +22,9 @@ var _ resource.Resource = &ReleaseBundleWebhookResource{}
 func NewArtifactoryReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName: fmt.Sprintf("artifactory_%s_webhook", ArtifactoryReleaseBundleDomain),
-			Domain:   ArtifactoryReleaseBundleDomain,
-			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
-				"!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.",
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ArtifactoryReleaseBundleDomain),
+			Domain:      ArtifactoryReleaseBundleDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
 		},
 	}
 }
@@ -53,9 +52,10 @@ func NewDistributionWebhookResource() resource.Resource {
 func NewReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ReleaseBundleDomain),
-			Domain:      ReleaseBundleDomain,
-			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+			TypeName: fmt.Sprintf("artifactory_%s_webhook", ReleaseBundleDomain),
+			Domain:   ReleaseBundleDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
+				"!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.",
 		},
 	}
 }
@@ -83,7 +83,7 @@ var releaseBundleCriteriaBlock = schema.SetNestedBlock{
 				},
 				"registered_release_bundle_names": schema.SetAttribute{
 					ElementType: types.StringType,
-					Optional:    true,
+					Required:    true,
 					Description: "Trigger on this list of release bundle names",
 				},
 			},
@@ -98,7 +98,7 @@ var releaseBundleCriteriaBlock = schema.SetNestedBlock{
 
 func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = r.CreateSchema(r.Domain, &releaseBundleCriteriaBlock, handlerBlock)
-	if r.Domain == ArtifactoryReleaseBundleDomain {
+	if r.Domain == ReleaseBundleDomain {
 		resp.Schema.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
 	}
 }
@@ -108,31 +108,6 @@ func (r *ReleaseBundleWebhookResource) Configure(ctx context.Context, req resour
 }
 
 func releaseBundleValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
-	if criteria.IsNull() || criteria.IsUnknown() {
-		return
-	}
-
-	criteriaObj := criteria.Elements()[0].(types.Object)
-	criteriaAttrs := criteriaObj.Attributes()
-
-	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool)
-	registeredReleaseBundleNames := criteriaAttrs["registered_release_bundle_names"].(types.Set)
-	includePatterns := criteriaAttrs["include_patterns"].(types.Set)
-
-	if anyReleaseBundle.IsUnknown() || registeredReleaseBundleNames.IsUnknown() || includePatterns.IsUnknown() {
-		return
-	}
-
-	if !anyReleaseBundle.ValueBool() && len(registeredReleaseBundleNames.Elements()) == 0 && len(includePatterns.Elements()) == 0 {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_release_bundle"),
-			"Invalid Attribute Configuration",
-			"registered_release_bundle_names and include_patterns cannot be both empty when any_release_bundle is false",
-		)
-	}
-}
-
-func releaseBundleValidateConfigForDestinationDomain(criteria basetypes.SetValue, resp *resource.ValidateConfigResponse) {
 	if criteria.IsNull() || criteria.IsUnknown() {
 		return
 	}
@@ -164,11 +139,7 @@ func (r ReleaseBundleWebhookResource) ValidateConfig(ctx context.Context, req re
 		return
 	}
 
-	if r.Domain == DestinationDomain || r.Domain == ArtifactoryReleaseBundleDomain {
-		releaseBundleValidateConfigForDestinationDomain(data.Criteria, resp)
-	} else {
-		releaseBundleValidateConfig(data.Criteria, resp)
-	}
+	releaseBundleValidateConfig(data.Criteria, resp)
 }
 
 func (r *ReleaseBundleWebhookResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
