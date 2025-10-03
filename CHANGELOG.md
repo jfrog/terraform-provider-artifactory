@@ -1,5 +1,6 @@
 ### 12.10.1 (Oct 3, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
 
+
 BUG FIXES:
 
 * resource/artifactory_remote_terraform_repository: Fix state drift with bypass_head_requests for specific terraform registries. Added validation to enforce bypass_head_requests = true for registry.terraform.io, registry.opentofu.org, and tf.app.wiz.io registries (tf.app.wiz.io only for Artifactory 7.122.0+). Issue: [#1314](https://github.com/jfrog/terraform-provider-artifactory/issues/1314). PR: [#1314](https://github.com/jfrog/terraform-provider-artifactory/pull/1314)
