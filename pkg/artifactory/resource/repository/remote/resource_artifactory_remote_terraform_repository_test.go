@@ -209,3 +209,205 @@ func TestAccRemoteTerraformRepository_bypassHeadRequestsDefaultFalseWithNonTerra
 		},
 	})
 }
+
+func TestAccRemoteTerraformRepository_DefaultbypassHeadRequestsWizRegistryOlderVersion(t *testing.T) {
+	// Test that tf.app.wiz.io does NOT require bypass_head_requests = true for Artifactory < 7.122.0
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Skip test if Artifactory version is 7.122.0 or later
+	isSupported, err := util.CheckVersion(version, "7.122.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if isSupported {
+		t.Skipf("Artifactory version %s is 7.122.0 or later, skipping test for older version behavior", version)
+	}
+
+	_, fqrn, name := testutil.MkNames("test-terraform-wiz-old-version", "artifactory_remote_terraform_repository")
+
+	// Test case: bypass_head_requests = false with tf.app.wiz.io should pass for older versions
+	const validConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/" 
+			terraform_registry_url = "https://tf.app.wiz.io"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryOlderVersion", validConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com/"),
+					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "false"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_registry_url", "https://tf.app.wiz.io"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_providers_url", "https://releases.hashicorp.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryNewerVersionValid(t *testing.T) {
+	// Test that tf.app.wiz.io with bypass_head_requests = true works for Artifactory >= 7.122.0
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Skip test if Artifactory version is earlier than 7.122.0
+	isSupported, err := util.CheckVersion(version, "7.122.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !isSupported {
+		t.Skipf("Artifactory version %s is earlier than 7.122.0, skipping test for newer version behavior", version)
+	}
+
+	_, fqrn, name := testutil.MkNames("test-terraform-wiz-new-version-valid", "artifactory_remote_terraform_repository")
+
+	// Test case: bypass_head_requests = true with tf.app.wiz.io should pass for newer versions
+	const validConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			bypass_head_requests = true
+			terraform_registry_url = "https://tf.app.wiz.io"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryNewerVersionValid", validConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com/"),
+					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "true"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_registry_url", "https://tf.app.wiz.io"),
+					resource.TestCheckResourceAttr(fqrn, "terraform_providers_url", "https://releases.hashicorp.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryNewerVersionInvalid(t *testing.T) {
+	// Test that tf.app.wiz.io with bypass_head_requests = false fails validation for Artifactory >= 7.122.0
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Skip test if Artifactory version is earlier than 7.122.0
+	isSupported, err := util.CheckVersion(version, "7.122.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !isSupported {
+		t.Skipf("Artifactory version %s is earlier than 7.122.0, skipping test for newer version behavior", version)
+	}
+
+	_, fqrn, name := testutil.MkNames("test-terraform-wiz-new-version-invalid", "artifactory_remote_terraform_repository")
+
+	// Test case: bypass_head_requests = false with tf.app.wiz.io should fail validation for newer versions
+	const invalidConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			bypass_head_requests = false
+			terraform_registry_url = "https://tf.app.wiz.io"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryNewerVersionInvalid", invalidConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*"),
+			},
+		},
+	})
+}
+
+func TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryNewerVersionEmpty(t *testing.T) {
+	// Test that tf.app.wiz.io with bypass_head_requests = false fails validation for Artifactory >= 7.122.0
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Skip test if Artifactory version is earlier than 7.122.0
+	isSupported, err := util.CheckVersion(version, "7.122.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !isSupported {
+		t.Skipf("Artifactory version %s is earlier than 7.122.0, skipping test for newer version behavior", version)
+	}
+
+	_, fqrn, name := testutil.MkNames("test-terraform-wiz-new-version-invalid", "artifactory_remote_terraform_repository")
+
+	// Test case: bypass_head_requests = false with tf.app.wiz.io should fail validation for newer versions
+	const invalidConfig = `
+		resource "artifactory_remote_terraform_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			url = "https://github.com/"
+			terraform_registry_url = "https://tf.app.wiz.io"
+			terraform_providers_url = "https://releases.hashicorp.com"
+		}
+	`
+
+	params := map[string]interface{}{
+		"name": name,
+	}
+
+	config := util.ExecuteTemplate("TestAccRemoteTerraformRepository_bypassHeadRequestsWizRegistryNewerVersionInvalid", invalidConfig, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*"),
+			},
+		},
+	})
+}
