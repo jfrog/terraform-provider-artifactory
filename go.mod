@@ -24,7 +24,7 @@ require (
 	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621
-	golang.org/x/net v0.44.0
+	golang.org/x/net v0.45.0
 	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
 )
