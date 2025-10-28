@@ -214,15 +214,19 @@ func (r *BuildWebhookResource) ImportState(ctx context.Context, req resource.Imp
 }
 
 func toBuildCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel BuildCriteriaAPIModel, diags diag.Diagnostics) {
+	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
+
 	var selectedBuilds []string
-	d := criteriaAttrs["selected_builds"].(types.Set).ElementsAs(ctx, &selectedBuilds, false)
-	if d.HasError() {
-		diags.Append(d...)
+	if !anyBuild {
+		d := criteriaAttrs["selected_builds"].(types.Set).ElementsAs(ctx, &selectedBuilds, false)
+		if d.HasError() {
+			diags.Append(d...)
+		}
 	}
 
 	criteriaAPIModel = BuildCriteriaAPIModel{
 		BaseCriteriaAPIModel: baseCriteria,
-		AnyBuild:             criteriaAttrs["any_build"].(types.Bool).ValueBool(),
+		AnyBuild:             anyBuild,
 		SelectedBuilds:       selectedBuilds,
 	}
 
@@ -264,14 +268,21 @@ var buildCriteriaSetResourceModelElementTypes = types.ObjectType{
 }
 
 func fromBuildAPIModel(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
-	selectedBuilds := types.SetNull(types.StringType)
+	selectedBuilds, d := types.SetValueFrom(ctx, types.StringType, []string{})
+	if d.HasError() {
+		diags.Append(d...)
+	}
 	if v, ok := criteriaAPIModel["selectedBuilds"]; ok && v != nil {
 		sb, d := types.SetValueFrom(ctx, types.StringType, v)
 		if d.HasError() {
 			diags.Append(d...)
 		}
-
 		selectedBuilds = sb
+	}
+
+	anyBuild := false
+	if v, ok := criteriaAPIModel["anyBuild"]; ok && v != nil {
+		anyBuild = v.(bool)
 	}
 
 	criteria, d := types.ObjectValue(
@@ -279,7 +290,7 @@ func fromBuildAPIModel(ctx context.Context, criteriaAPIModel map[string]interfac
 		lo.Assign(
 			baseCriteriaAttrs,
 			map[string]attr.Value{
-				"any_build":       types.BoolValue(criteriaAPIModel["anyBuild"].(bool)),
+				"any_build":       types.BoolValue(anyBuild),
 				"selected_builds": selectedBuilds,
 			},
 		),
