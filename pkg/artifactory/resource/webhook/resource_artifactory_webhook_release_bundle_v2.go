@@ -213,15 +213,19 @@ func (r *ReleaseBundleV2WebhookResource) ImportState(ctx context.Context, req re
 }
 
 func toReleaseBundleV2APIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel ReleaseBundleV2CriteriaAPIModel, diags diag.Diagnostics) {
+	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
+
 	var releaseBundleNames []string
-	d := criteriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
-	if d.HasError() {
-		diags.Append(d...)
+	if !anyReleaseBundle {
+		d := criteriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
+		if d.HasError() {
+			diags.Append(d...)
+		}
 	}
 
 	return ReleaseBundleV2CriteriaAPIModel{
 		BaseCriteriaAPIModel:   baseCriteria,
-		AnyReleaseBundle:       criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool(),
+		AnyReleaseBundle:       anyReleaseBundle,
 		SelectedReleaseBundles: releaseBundleNames,
 	}, diags
 }
@@ -261,14 +265,21 @@ var releaseBundleV2CriteriaSetResourceModelElementTypes = types.ObjectType{
 }
 
 func fromReleaseBundleV2APIModel(ctx context.Context, criteriaAPIModel map[string]interface{}, baseCriteriaAttrs map[string]attr.Value) (criteriaSet basetypes.SetValue, diags diag.Diagnostics) {
-	releaseBundleNames := types.SetNull(types.StringType)
+	releaseBundleNames, d := types.SetValueFrom(ctx, types.StringType, []string{})
+	if d.HasError() {
+		diags.Append(d...)
+	}
 	if v, ok := criteriaAPIModel["selectedReleaseBundles"]; ok && v != nil {
 		rb, d := types.SetValueFrom(ctx, types.StringType, v)
 		if d.HasError() {
 			diags.Append(d...)
 		}
-
 		releaseBundleNames = rb
+	}
+
+	anyReleaseBundle := false
+	if v, ok := criteriaAPIModel["anyReleaseBundle"]; ok && v != nil {
+		anyReleaseBundle = v.(bool)
 	}
 
 	criteria, d := types.ObjectValue(
@@ -276,7 +287,7 @@ func fromReleaseBundleV2APIModel(ctx context.Context, criteriaAPIModel map[strin
 		lo.Assign(
 			baseCriteriaAttrs,
 			map[string]attr.Value{
-				"any_release_bundle":       types.BoolValue(criteriaAPIModel["anyReleaseBundles"].(bool)),
+				"any_release_bundle":       types.BoolValue(anyReleaseBundle),
 				"selected_release_bundles": releaseBundleNames,
 			},
 		),

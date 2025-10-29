@@ -1,5 +1,10 @@
-### 12.10.1 (Oct 3, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
+### 12.10.2 (Oct 28, 2025). Tested on Artifactory 7.117.19 with Terraform 1.13.4 and OpenTofu 1.10.6
 
+BUG FIXES: 
+
+* resource/artifactory_build_webhook, resource/artifactory_release_bundle_webhook, resource/artifactory_release_bundle_v2_webhook: Fix to send selected_builds, registered_release_bundle_names, and selected_release_bundles as null instead of empty array when any_build or any_release_bundle is set to true. PR: [#1333](https://github.com/jfrog/terraform-provider-artifactory/pull/1333)
+
+### 12.10.1 (Oct 3, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
 
 BUG FIXES:
 
