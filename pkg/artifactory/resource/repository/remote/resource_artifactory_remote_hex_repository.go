@@ -82,7 +82,6 @@ func (r remoteHexResourceModel) ToAPIModel(ctx context.Context, packageType stri
 		CurationAPIModel: CurationAPIModel{
 			Curated: r.Curated.ValueBool(),
 		},
-		URL:                  r.URL.ValueString(),
 		HexPublicKey:         r.HexPublicKey.ValueString(),
 		HexPrimaryKeyPairRef: r.HexPrimaryKeyPairRef.ValueString(),
 	}, diags
@@ -106,7 +105,6 @@ func (r *remoteHexResourceModel) FromAPIModel(ctx context.Context, apiModel inte
 type RemoteHexAPIModel struct {
 	RemoteAPIModel
 	CurationAPIModel
-	URL                  string `json:"url"`
 	HexPublicKey         string `json:"hexPublicKey"`
 	HexPrimaryKeyPairRef string `json:"primaryKeyPairRef"`
 }

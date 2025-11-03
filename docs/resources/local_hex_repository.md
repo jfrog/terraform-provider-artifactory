@@ -27,7 +27,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 The following arguments are supported, along with the [common list of arguments for the local repositories](local.md):
 
 * `key` - (Required) the identity key of the repo.
-* `hex_primary_key_ref` - (Required) RSA key pair required to sign hex indices.
+* `hex_primary_keypair_ref` - (Required) Select the RSA key pair to sign and encrypt content for secure communication between Artifactory and the Mix client.
 
 
 ## Import

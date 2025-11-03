@@ -16,7 +16,7 @@ func NewHexLocalRepositoryResource() resource.Resource {
 	return &localHexResource{
 		localResource: NewLocalRepositoryResource(
 			repository.HexPackageType,
-			repository.PackageNameLookup["HexPackageType"],
+			repository.PackageNameLookup[repository.HexPackageType],
 			reflect.TypeFor[LocalHexResourceModel](),
 			reflect.TypeFor[LocalHexAPIModel](),
 		),
@@ -108,7 +108,7 @@ func (r *localHexResource) Schema(ctx context.Context, req resource.SchemaReques
 		map[string]schema.Attribute{
 			"hex_primary_keypair_ref": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Reference to the RSA key pair used to sign Hex repository index files. ",
+				MarkdownDescription: "Select the RSA key pair to sign and encrypt content for secure communication between Artifactory and the Mix client.",
 			},
 		},
 	)

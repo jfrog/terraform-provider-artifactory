@@ -1,4 +1,4 @@
-package local
+package virtual
 
 import (
 	"context"
@@ -7,42 +7,41 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	"github.com/samber/lo"
 )
 
-func NewHexLocalRepositoryDataSource() datasource.DataSource {
-	return &HexLocalRepositoryDataSource{}
+func NewHexVirtualRepositoryDataSource() datasource.DataSource {
+	return &HexVirtualRepositoryDataSource{}
 }
 
-type HexLocalRepositoryDataSource struct {
+type HexVirtualRepositoryDataSource struct {
 	ProviderData util.ProviderMetadata
 }
 
-func (d *HexLocalRepositoryDataSource) SetProviderData(providerData util.ProviderMetadata) {
+func (d *HexVirtualRepositoryDataSource) SetProviderData(providerData util.ProviderMetadata) {
 	d.ProviderData = providerData
 }
 
-type HexLocalRepositoryDataSourceModel struct {
-	repository.BaseRepositoryDataSourceModel
+type HexVirtualRepositoryDataSourceModel struct {
+	BaseVirtualRepositoryDataSourceModel
 	HexPrimaryKeyPairRef types.String `tfsdk:"hex_primary_keypair_ref"`
 }
 
-type HexLocalRepositoryAPIModel struct {
-	repository.BaseRepositoryAPIModel
+type HexVirtualRepositoryAPIModel struct {
+	BaseVirtualRepositoryAPIModel
 	HexPrimaryKeyPairRef string `json:"primaryKeyPairRef"`
 }
 
-func (d *HexLocalRepositoryDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "artifactory_local_hex_repository"
+func (d *HexVirtualRepositoryDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = "artifactory_virtual_hex_repository"
 }
 
-func (d *HexLocalRepositoryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *HexVirtualRepositoryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source for a local hex repository",
+		MarkdownDescription: "Data source for a virtual hex repository",
 		Attributes: lo.Assign(
-			repository.BaseSchemaAttributes(),
+			BaseVirtualSchemaAttributes(),
 			map[string]schema.Attribute{
 				"hex_primary_keypair_ref": schema.StringAttribute{
 					MarkdownDescription: "Select the RSA key pair to sign and encrypt content for secure communication between Artifactory and the Mix client.",
@@ -53,7 +52,7 @@ func (d *HexLocalRepositoryDataSource) Schema(ctx context.Context, req datasourc
 	}
 }
 
-func (d *HexLocalRepositoryDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *HexVirtualRepositoryDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -61,15 +60,15 @@ func (d *HexLocalRepositoryDataSource) Configure(ctx context.Context, req dataso
 	d.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
-func (d *HexLocalRepositoryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data HexLocalRepositoryDataSourceModel
+func (d *HexVirtualRepositoryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data HexVirtualRepositoryDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var repo HexLocalRepositoryAPIModel
+	var repo HexVirtualRepositoryAPIModel
 	response, err := d.ProviderData.Client.R().
 		SetResult(&repo).
 		Get("artifactory/api/repositories/" + data.Key.ValueString())
@@ -103,11 +102,11 @@ func (d *HexLocalRepositoryDataSource) Read(ctx context.Context, req datasource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (d *HexLocalRepositoryDataSourceModel) FromAPIModel(ctx context.Context, apiModel HexLocalRepositoryAPIModel) diag.Diagnostics {
+func (d *HexVirtualRepositoryDataSourceModel) FromAPIModel(ctx context.Context, apiModel HexVirtualRepositoryAPIModel) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
-	// Convert common fields using the base repository function
-	diags.Append(repository.CommonFromAPIModel(ctx, &d.BaseRepositoryDataSourceModel, apiModel.BaseRepositoryAPIModel)...)
+	// Convert common fields using the base virtual repository function
+	diags.Append(CommonVirtualFromAPIModel(ctx, &d.BaseVirtualRepositoryDataSourceModel, apiModel.BaseVirtualRepositoryAPIModel)...)
 	if diags.HasError() {
 		return diags
 	}

@@ -17,7 +17,7 @@ func NewHexVirtualRepositoryResource() resource.Resource {
 	return &virtualHexResource{
 		BaseResource: repository.NewRepositoryResource(
 			repository.HexPackageType,
-			"hex",
+			repository.PackageNameLookup[repository.HexPackageType],
 			"virtual",
 			reflect.TypeOf(virtualHexResourceModel{}),
 			reflect.TypeOf(VirtualHexAPIModel{}),
