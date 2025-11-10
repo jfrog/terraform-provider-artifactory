@@ -12,6 +12,14 @@ FEATURES:
 
 **New Resource:** `artifactory_virtual_hex_repository` to support virtual Hex repository. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
 
+IMPROVEMENTS:
+
+* data/artifactory_local_hex_repository: Migrated from Terraform Plugin SDKv2 to Terraform Plugin Framework. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+* data/artifactory_remote_hex_repository: Migrated from Terraform Plugin SDKv2 to Terraform Plugin Framework. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+* data/artifactory_virtual_hex_repository: Migrated from Terraform Plugin SDKv2 to Terraform Plugin Framework. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
 ### 12.10.1 (Oct 3, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
 
 BUG FIXES:

@@ -207,6 +207,10 @@ resource "artifactory_local_hex_repository" "hex-local" {
   depends_on              = [artifactory_keypair.hex-keypair]
 }
 
+data "artifactory_local_hex_repository" "hex-local" {
+  key = artifactory_local_hex_repository.hex-local.key
+}
+
 resource "random_id" "randid" {
   byte_length = 16
 }
@@ -468,6 +472,10 @@ resource "artifactory_remote_hex_repository" "my-remote-hex" {
   public_key              = file("samples/rsa.pub")
   description             = "Repo created by Terraform Provider Artifactory"
   depends_on              = [artifactory_keypair.hex-keypair]
+}
+
+data "artifactory_remote_hex_repository" "my-remote-hex" {
+  key = artifactory_remote_hex_repository.my-remote-hex.key
 }
 
 resource "artifactory_remote_rpm_repository" "my-remote-rpm" {
@@ -759,6 +767,10 @@ resource "artifactory_virtual_hex_repository" "my-hex-virtual" {
     artifactory_local_hex_repository.hex-local,
     artifactory_remote_hex_repository.my-remote-hex
   ]
+}
+
+data "artifactory_virtual_hex_repository" "my-hex-virtual" {
+  key = artifactory_virtual_hex_repository.my-hex-virtual.key
 }
 
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
