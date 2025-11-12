@@ -42,6 +42,7 @@ var PackageTypesLikeGeneric = []string{
 	repository.PyPiPackageType,
 	repository.SwiftPackageType,
 	repository.VagrantPackageType,
+	repository.ReleasebundlesPackageType,
 }
 
 type RepoParams struct {
@@ -256,9 +257,15 @@ func createRepo(unpack unpacker.UnpackFunc, read schema.ReadContextFunc) schema.
 			return ds
 		}
 
-		ds = append(ds, configSync(ctx, d.Id(), m)...)
-		if ds.HasError() {
-			return ds
+		// Skip synchronization for `releasebundles` package type to prevent creation of the member repo on target.
+		// There is a bug on 7.126, which prevents correct sync for environments, and only DEV will be added, if the
+		// repo on the target instance will be created by federation.
+		packageType, ok := d.GetOk("package_type")
+		if !ok || packageType.(string) != repository.ReleasebundlesPackageType {
+			ds = append(ds, configSync(ctx, d.Id(), m)...)
+			if ds.HasError() {
+				return ds
+			}
 		}
 
 		return append(ds, read(ctx, d, m)...)
@@ -414,6 +421,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		CustomizeDiff: customdiff.All(
 			repository.ProjectEnvironmentsDiff,
 			repository.VerifyDisableProxy,
+			repository.VerifyReleasebundlesKey,
 		),
 	}
 }

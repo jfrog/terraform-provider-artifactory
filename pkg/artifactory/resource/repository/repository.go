@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/go-cty/cty"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/jfrog/terraform-provider-shared/client"
@@ -70,6 +72,7 @@ const (
 	PubPackageType               = "pub"
 	PuppetPackageType            = "puppet"
 	PyPiPackageType              = "pypi"
+	ReleasebundlesPackageType    = "releasebundles"
 	RPMPackageType               = "rpm"
 	SBTPackageType               = "sbt"
 	SwiftPackageType             = "swift"
@@ -1001,6 +1004,30 @@ func VerifyDisableProxy(_ context.Context, diff *sdkv2_schema.ResourceDiff, _ in
 	return nil
 }
 
+func VerifyReleasebundlesKey(_ context.Context, diff *sdkv2_schema.ResourceDiff, _ interface{}) error {
+	packageType, ok := diff.GetOk("package_type")
+	if !ok {
+		// package_type might not be set yet, skip validation
+		return nil
+	}
+
+	if packageType.(string) == ReleasebundlesPackageType {
+		key, ok := diff.GetOk("key")
+		if !ok {
+			// key might not be set yet, skip validation
+			return nil
+		}
+
+		keyStr := key.(string)
+		requiredSuffix := "release-bundles-v2"
+		if !strings.HasSuffix(keyStr, requiredSuffix) {
+			return fmt.Errorf("when `package_type` is `%s`, the `key` attribute must end with `%s`, got: `%s`", ReleasebundlesPackageType, requiredSuffix, keyStr)
+		}
+	}
+
+	return nil
+}
+
 func MkResourceSchema(skeemas map[int16]map[string]*sdkv2_schema.Schema, packer packer.PackFunc, unpack unpacker.UnpackFunc, constructor Constructor) *sdkv2_schema.Resource {
 	var reader = MkRepoRead(packer, constructor)
 	return &sdkv2_schema.Resource{
@@ -1026,7 +1053,10 @@ func MkResourceSchema(skeemas map[int16]map[string]*sdkv2_schema.Schema, packer 
 			},
 		},
 
-		CustomizeDiff: ProjectEnvironmentsDiff,
+		CustomizeDiff: customdiff.All(
+			ProjectEnvironmentsDiff,
+			VerifyReleasebundlesKey,
+		),
 	}
 }
 
