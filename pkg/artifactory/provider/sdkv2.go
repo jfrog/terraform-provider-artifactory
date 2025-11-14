@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"os"
 	"strings"
@@ -54,6 +53,48 @@ func SdkV2() *schema.Provider {
 				ValidateDiagFunc: validator.StringIsNotEmpty,
 				Description:      "Terraform Cloud Workload Identity Token tag name. Use for generating multiple TFC workload identity tokens. When set, the provider will attempt to use env var with this tag name as suffix. **Note:** this is case sensitive, so if set to `JFROG`, then env var `TFC_WORKLOAD_IDENTITY_TOKEN_JFROG` is used instead of `TFC_WORKLOAD_IDENTITY_TOKEN`. See [Generating Multiple Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation#generating-multiple-tokens) on HCP Terraform for more details.",
 			},
+			"client_certificate_path": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validator.StringIsNotEmpty,
+				Description:      "Filesystem path to a PEM-encoded client certificate or certificate chain to use for mutual TLS authentication. Must be specified together with `client_certificate_key_path`.",
+				ConflictsWith: []string{
+					"client_certificate_pem",
+					"client_private_key_pem",
+				},
+			},
+			"client_certificate_key_path": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validator.StringIsNotEmpty,
+				Description:      "Filesystem path to the PEM-encoded private key that matches `client_certificate_path`.",
+				ConflictsWith: []string{
+					"client_certificate_pem",
+					"client_private_key_pem",
+				},
+			},
+			"client_certificate_pem": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Sensitive:        true,
+				ValidateDiagFunc: validator.StringIsNotEmpty,
+				Description:      "Inline PEM-encoded client certificate or certificate chain used for mutual TLS authentication. Must be specified together with `client_private_key_pem`.",
+				ConflictsWith: []string{
+					"client_certificate_path",
+					"client_certificate_key_path",
+				},
+			},
+			"client_private_key_pem": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Sensitive:        true,
+				ValidateDiagFunc: validator.StringIsNotEmpty,
+				Description:      "Inline PEM-encoded private key that matches `client_certificate_pem`.",
+				ConflictsWith: []string{
+					"client_certificate_path",
+					"client_certificate_key_path",
+				},
+			},
 		},
 
 		ResourcesMap:   resourcesMap(),
@@ -77,6 +118,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	// Check environment variables, first available OS variable will be assigned to the var
 	url := util.CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := util.CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
+	clientCertificatePath := util.CheckEnvVars([]string{"JFROG_CLIENT_CERT_PATH", "ARTIFACTORY_CLIENT_CERT_PATH"}, "")
+	clientCertificateKeyPath := util.CheckEnvVars([]string{"JFROG_CLIENT_CERT_KEY_PATH", "ARTIFACTORY_CLIENT_CERT_KEY_PATH"}, "")
+	clientCertificatePEM := util.CheckEnvVars([]string{"JFROG_CLIENT_CERT_PEM", "ARTIFACTORY_CLIENT_CERT_PEM"}, "")
+	clientPrivateKeyPEM := util.CheckEnvVars([]string{"JFROG_CLIENT_PRIVATE_KEY_PEM", "ARTIFACTORY_CLIENT_PRIVATE_KEY_PEM"}, "")
 
 	if v, ok := d.GetOk("url"); ok {
 		url = v.(string)
@@ -105,6 +150,19 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		accessToken = v.(string)
 	}
 
+	if v, ok := d.GetOk("client_certificate_path"); ok {
+		clientCertificatePath = v.(string)
+	}
+	if v, ok := d.GetOk("client_certificate_key_path"); ok {
+		clientCertificateKeyPath = v.(string)
+	}
+	if v, ok := d.GetOk("client_certificate_pem"); ok {
+		clientCertificatePEM = v.(string)
+	}
+	if v, ok := d.GetOk("client_private_key_pem"); ok {
+		clientPrivateKeyPEM = v.(string)
+	}
+
 	apiKey := d.Get("api_key").(string)
 
 	restyClient, err = client.AddAuth(restyClient, apiKey, accessToken)
@@ -113,10 +171,21 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	}
 
 	bypassJFrogTLSVerification := os.Getenv("JFROG_BYPASS_TLS_VERIFICATION")
-	if strings.ToLower(bypassJFrogTLSVerification) == "true" {
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true,
-		}
+	tlsConfig, err := buildTLSConfig(tlsConfigOptions{
+		ClientCertificatePath:    clientCertificatePath,
+		ClientCertificateKeyPath: clientCertificateKeyPath,
+		ClientCertificatePEM:     clientCertificatePEM,
+		ClientPrivateKeyPEM:      clientPrivateKeyPEM,
+		InsecureSkipVerify:       strings.ToLower(bypassJFrogTLSVerification) == "true",
+	})
+	if err != nil {
+		return nil, diag.Diagnostics{{
+			Severity: diag.Error,
+			Summary:  "Error configuring TLS",
+			Detail:   err.Error(),
+		}}
+	}
+	if tlsConfig != nil {
 		restyClient.SetTLSClientConfig(tlsConfig)
 	}
 
