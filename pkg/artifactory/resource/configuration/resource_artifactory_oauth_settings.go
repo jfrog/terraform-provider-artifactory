@@ -244,9 +244,15 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 	}
 
 	var resourceOauthSettingsDelete = func(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
+		// Explicitly disable all OAuth settings instead of nullifying
+		// This ensures all boolean flags are set to false and providers are cleared
 		var content = `
 security:
-  oauthSettings: ~
+  oauthSettings:
+    enableIntegration: false
+    persistUsers: false
+    allowUserToAccessProfile: false
+    oauthProvidersSettings: {}
 `
 
 		err := SendConfigurationPatch([]byte(content), m.(util.ProviderMetadata).Client)
