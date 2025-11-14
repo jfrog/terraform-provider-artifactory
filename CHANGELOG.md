@@ -1,3 +1,9 @@
+### 12.11.0 (Nov 14 2025).
+
+BUG FIXES: 
+
+* resource/artifactory_oauth_settings: Fix explicitly disable OAuth integration on resource deletion
+
 ### 12.10.2 (Oct 28, 2025). Tested on Artifactory 7.117.19 with Terraform 1.13.4 and OpenTofu 1.10.6
 
 BUG FIXES: 
