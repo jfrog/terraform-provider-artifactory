@@ -109,7 +109,7 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateCheck:        validator.CheckImportState(name, "key"),
-				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete", "member.0.access_token", "member.1.access_token"},
 			},
 		},
 	})
@@ -246,6 +246,10 @@ func genericTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCa
 
 func TestAccFederatedRepoGenericTypes(t *testing.T) {
 	for _, packageType := range federated.PackageTypesLikeGeneric {
+		// Skip releasebundles as it has its own dedicated test and repo name convention is different for this type
+		if packageType == repository.ReleasebundlesPackageType {
+			continue
+		}
 		t.Run(packageType, func(t *testing.T) {
 			resource.Test(genericTestCase(packageType, t))
 		})
@@ -1543,4 +1547,167 @@ func TestAccFederatedTerraformRepositories(t *testing.T) {
 			resource.Test(makeFederatedTerraformRepoTestCase(registryType, t))
 		})
 	}
+}
+
+func TestAccFederatedReleasebundlesRepository(t *testing.T) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skip(reason)
+	}
+
+	projectName := fmt.Sprintf("t%d", testutil.RandomInt())
+	projectKey := projectName
+	projectEnv := testutil.RandSelect("DEV", "PROD").(string)
+	repoName := fmt.Sprintf("%s-release-bundles-v2", projectName)
+
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_federated_releasebundles_repository")
+	projectFqrn := "project.test"
+	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), repoName)
+	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), repoName)
+
+	configWithOneMember := util.ExecuteTemplate("TestAccFederatedReleasebundlesRepositoryConfig", `
+		terraform {
+			required_providers {
+				project = {
+					source  = "jfrog/project"
+					version = "~> 1.9"
+				}
+			}
+		}
+
+		resource "project" "test" {
+			  key          = "{{ .projectKey }}"
+			  display_name = "Test Project {{ .projectKey }}"
+			  description  = "Test project for federated releasebundles repository"
+			  admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			  }
+			  max_storage_in_gibibytes   = 10
+			  block_deployments_on_limit = false
+			  email_notification         = true
+		}
+
+		resource "artifactory_federated_releasebundles_repository" "{{ .name }}" {
+			key                  = "{{ .repoName }}"
+			description          = "Test federated releasebundles repo for {{ .repoName }}"
+			notes                = "Test federated releasebundles repo for {{ .repoName }}"
+			project_key          = project.test.key
+			project_environments = ["{{ .projectEnv }}"]
+
+			member {
+				url     = "{{ .member1Url }}"
+				enabled = true
+			}
+		}
+	`, map[string]interface{}{
+		"name":       name,
+		"repoName":   repoName,
+		"projectKey": projectKey,
+		"projectEnv": projectEnv,
+		"member1Url": federatedMember1Url,
+	})
+
+	configWithTwoMembers := util.ExecuteTemplate("TestAccFederatedReleasebundlesRepositoryConfig", `
+		terraform {
+			required_providers {
+				project = {
+					source  = "jfrog/project"
+					version = "~> 1.9"
+				}
+			}
+		}
+	
+		resource "project" "test" {
+			  key          = "{{ .projectKey }}"
+			  display_name = "Test Project {{ .projectKey }}"
+			  description  = "Test project for federated releasebundles repository"
+			  admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			  }
+			  max_storage_in_gibibytes   = 10
+			  block_deployments_on_limit = false
+			  email_notification         = true
+		}
+	
+		resource "artifactory_federated_releasebundles_repository" "{{ .name }}" {
+			key                  = "{{ .repoName }}"
+			description          = "Test federated releasebundles repo for {{ .repoName }}"
+			notes                = "Test federated releasebundles repo for {{ .repoName }}"
+			project_key          = project.test.key
+			project_environments = ["{{ .projectEnv }}"]
+	
+			member {
+				url     = "{{ .member1Url }}"
+				enabled = true
+			}
+	
+			member {
+				url     = "{{ .member2Url }}"
+				enabled = true
+			}
+		}
+	`, map[string]interface{}{
+		"name":       name,
+		"repoName":   repoName,
+		"projectKey": projectKey,
+		"projectEnv": projectEnv,
+		"member1Url": federatedMember1Url,
+		"member2Url": federatedMember2Url,
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				VersionConstraint: "~> 1.9",
+				Source:            "jfrog/project",
+			},
+		},
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: configWithOneMember,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(projectFqrn, "key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "key", repoName),
+					resource.TestCheckResourceAttr(fqrn, "package_type", repository.ReleasebundlesPackageType),
+					resource.TestCheckResourceAttr(fqrn, "description", fmt.Sprintf("Test federated releasebundles repo for %s", repoName)),
+					resource.TestCheckResourceAttr(fqrn, "notes", fmt.Sprintf("Test federated releasebundles repo for %s", repoName)),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
+					resource.TestCheckResourceAttr(fqrn, "member.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.url", federatedMember1Url),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+				),
+			},
+			{
+				Config: configWithTwoMembers,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(projectFqrn, "key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "key", repoName),
+					resource.TestCheckResourceAttr(fqrn, "package_type", repository.ReleasebundlesPackageType),
+					resource.TestCheckResourceAttr(fqrn, "project_key", projectKey),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", projectEnv),
+					resource.TestCheckResourceAttr(fqrn, "member.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "member.0.enabled", "true"),
+					resource.TestCheckResourceAttr(fqrn, "member.1.enabled", "true"),
+					resource.TestMatchResourceAttr(fqrn, "member.0.url", regexp.MustCompile(regexp.QuoteMeta(federatedMember1Url)+"|"+regexp.QuoteMeta(federatedMember2Url))),
+					resource.TestMatchResourceAttr(fqrn, "member.1.url", regexp.MustCompile(regexp.QuoteMeta(federatedMember1Url)+"|"+regexp.QuoteMeta(federatedMember2Url))),
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(repoName, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete", "member.0.access_token", "member.1.access_token"},
+			},
+		},
+	})
 }
