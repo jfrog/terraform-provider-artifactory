@@ -246,7 +246,11 @@ func ResourceArtifactoryOauthSettings() *schema.Resource {
 	var resourceOauthSettingsDelete = func(_ context.Context, _ *schema.ResourceData, m interface{}) diag.Diagnostics {
 		var content = `
 security:
-  oauthSettings: ~
+  oauthSettings:
+    enableIntegration: false
+    persistUsers: false
+    allowUserToAccessProfile: false
+    oauthProvidersSettings: {}
 `
 
 		err := SendConfigurationPatch([]byte(content), m.(util.ProviderMetadata).Client)
