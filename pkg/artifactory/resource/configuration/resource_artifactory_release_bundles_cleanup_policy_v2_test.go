@@ -104,6 +104,19 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 
 	_, fqrn, policyName := testutil.MkNames("test-release-bundle-v2", "artifactory_release_bundle_v2_cleanup_policy")
 
+	// Create test projects
+	projectKey1 := "test"
+	projectKey2 := "test2"
+	projectKey3 := "test3"
+	acctest.CreateProject(t, projectKey1)
+	acctest.CreateProject(t, projectKey2)
+	acctest.CreateProject(t, projectKey3)
+	defer func() {
+		acctest.DeleteProject(t, projectKey1)
+		acctest.DeleteProject(t, projectKey2)
+		acctest.DeleteProject(t, projectKey3)
+	}()
+
 	temp := `
 		resource "artifactory_release_bundle_v2_cleanup_policy" "{{ .policyName }}" {
 			key = "{{ .policyName }}"
@@ -112,16 +125,12 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 			duration_in_minutes = 60
 			enabled = true
 			search_criteria = {
-				include_all_projects = true
-				included_projects = []
+				include_all_projects = false
+				included_projects = ["test", "test2"]
 				release_bundles = [
 				{
 					name = "**"
-					project_key = "test"
-				},
-				{
-					name = "**"
-					project_key = "test2"
+					project_key = ""
 				}
 				]
 				exclude_promoted_environments = [
@@ -133,21 +142,17 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 	updatedTemp := `
 		resource "artifactory_release_bundle_v2_cleanup_policy" "{{ .policyName }}" {
 			key = "{{ .policyName }}"
-			description = "test release bundle cleanup policy"
-			cron_expression = "0 0 2 ? * MON-SAT *"
-			duration_in_minutes = 60
+			description = "test release bundle cleanup policy updated"
+			cron_expression = "0 0 3 ? * MON-SAT *"
+			duration_in_minutes = 90
 			enabled = true
 			search_criteria = {
-				include_all_projects = true
-				included_projects = []
+				include_all_projects = false
+				included_projects = ["test2", "test3"]
 				release_bundles = [
 				{
 					name = "**"
-					project_key = "test2"
-				},
-				{
-					name = "**"
-					project_key = "test3"
+					project_key = ""
 				}
 				]
 				exclude_promoted_environments = [
@@ -193,33 +198,29 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "item_type", "releaseBundle"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "24"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.exclude_promoted_environments.0", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "false"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", "test"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.project_key", "test2"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", ""),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "2"),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", policyName),
-					resource.TestCheckResourceAttr(fqrn, "description", "test release bundle cleanup policy"),
-					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 2 ? * MON-SAT *"),
-					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
+					resource.TestCheckResourceAttr(fqrn, "description", "test release bundle cleanup policy updated"),
+					resource.TestCheckResourceAttr(fqrn, "cron_expression", "0 0 3 ? * MON-SAT *"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "90"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "item_type", "releaseBundle"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "24"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.exclude_promoted_environments.0", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "false"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", "test2"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.project_key", "test3"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", ""),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "2"),
 				),
 			},
 			{

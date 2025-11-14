@@ -200,6 +200,17 @@ resource "artifactory_local_vagrant_repository" "vagrant-local" {
   description = "Repo created by Terraform Provider Artifactory"
 }
 
+resource "artifactory_local_hex_repository" "hex-local" {
+  key                     = "hex-local"
+  hex_primary_keypair_ref = artifactory_keypair.hex-keypair.pair_name
+  description             = "Repo created by Terraform Provider Artifactory"
+  depends_on              = [artifactory_keypair.hex-keypair]
+}
+
+data "artifactory_local_hex_repository" "hex-local" {
+  key = artifactory_local_hex_repository.hex-local.key
+}
+
 resource "random_id" "randid" {
   byte_length = 16
 }
@@ -234,6 +245,20 @@ resource "artifactory_keypair" "some-keypairGPG2" {
   private_key = file("samples/gpg.priv")
   public_key  = file("samples/gpg.pub")
   passphrase  = "some-passphrase"
+}
+
+resource "artifactory_keypair" "hex-keypair" {
+  pair_name   = "hex-keypair"
+  pair_type   = "RSA"
+  alias       = "hex-alias"
+  private_key = file("samples/rsa.priv")
+  public_key  = file("samples/rsa.pub")
+  lifecycle {
+    ignore_changes = [
+      private_key,
+      passphrase,
+    ]
+  }
 }
 
 resource "artifactory_local_debian_repository" "my-debian-repo" {
@@ -438,6 +463,19 @@ resource "artifactory_remote_terraform_repository" "terraform-remote" {
   terraform_registry_url  = "https://registry.terraform.io"
   terraform_providers_url = "https://releases.hashicorp.com"
   bypass_head_requests    = true
+}
+
+resource "artifactory_remote_hex_repository" "my-remote-hex" {
+  key                     = "my-remote-hex"
+  url                     = "https://repo.hex.pm"
+  hex_primary_keypair_ref = artifactory_keypair.hex-keypair.pair_name
+  public_key              = file("samples/rsa.pub")
+  description             = "Repo created by Terraform Provider Artifactory"
+  depends_on              = [artifactory_keypair.hex-keypair]
+}
+
+data "artifactory_remote_hex_repository" "my-remote-hex" {
+  key = artifactory_remote_hex_repository.my-remote-hex.key
 }
 
 resource "artifactory_remote_rpm_repository" "my-remote-rpm" {
@@ -715,6 +753,25 @@ resource "artifactory_virtual_terraform_repository" "terraform-virtual" {
   excludes_pattern = "com/google/**"
 }
 
+resource "artifactory_virtual_hex_repository" "my-hex-virtual" {
+  key                     = "my-hex-virtual"
+  hex_primary_keypair_ref = artifactory_keypair.hex-keypair.pair_name
+  repositories           = [
+    artifactory_local_hex_repository.hex-local.key,
+    artifactory_remote_hex_repository.my-remote-hex.key
+  ]
+  description             = "A test virtual repo"
+  notes                   = "Internal description"
+  depends_on              = [
+    artifactory_keypair.hex-keypair,
+    artifactory_local_hex_repository.hex-local,
+    artifactory_remote_hex_repository.my-remote-hex
+  ]
+}
+
+data "artifactory_virtual_hex_repository" "my-hex-virtual" {
+  key = artifactory_virtual_hex_repository.my-hex-virtual.key
+}
 
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
   key = "generic-federated-1"

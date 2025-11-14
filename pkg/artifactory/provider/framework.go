@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	datasource_artifact "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/artifact"
 	datasource_repository "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository"
+	datasource_local "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository/local"
+	datasource_remote "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository/remote"
+	datasource_virtual "github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/datasource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/artifact"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/configuration"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/lifecycle"
@@ -23,6 +26,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/virtual"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/user"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/webhook"
@@ -277,6 +281,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewDockerV1LocalRepositoryResource,
 			local.NewHelmLocalRepositoryResource,
 			local.NewHelmOCILocalRepositoryResource,
+			local.NewHexLocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
 			local.NewNugetLocalRepositoryResource,
 			local.NewOCILocalRepositoryResource,
@@ -296,6 +301,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			remote.NewGradleRemoteRepositoryResource,
 			remote.NewHelmRemoteRepositoryResource,
 			remote.NewHelmOCIRemoteRepositoryResource,
+			remote.NewHexRemoteRepositoryResource,
 			remote.NewHuggingFaceMLRemoteRepositoryResource,
 			remote.NewJavaRemoteRepositoryResource(repository.IvyPackageType, true),
 			remote.NewMavenRemoteRepositoryResource,
@@ -330,6 +336,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			webhook.NewReleaseBundleV2PromotionCustomWebhookResource,
 			webhook.NewUserWebhookResource,
 			webhook.NewUserCustomWebhookResource,
+			virtual.NewHexVirtualRepositoryResource,
 		}...,
 	)
 }
@@ -339,6 +346,9 @@ func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource
 	return []func() datasource.DataSource{
 		datasource_repository.NewRepositoriesDataSource,
 		datasource_artifact.NewFileListDataSource,
+		datasource_local.NewLocalHexRepositoryDataSource,
+		datasource_remote.NewRemoteHexRepositoryDataSource,
+		datasource_virtual.NewVirtualHexRepositoryDataSource,
 	}
 }
 

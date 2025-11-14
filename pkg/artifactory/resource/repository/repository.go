@@ -58,6 +58,7 @@ const (
 	GradlePackageType            = "gradle"
 	HelmPackageType              = "helm"
 	HelmOCIPackageType           = "helmoci"
+	HexPackageType               = "hex"
 	HuggingFacePackageType       = "huggingfaceml"
 	IvyPackageType               = "ivy"
 	MachineLearningType          = "machinelearning"
@@ -94,6 +95,7 @@ var PackageNameLookup = map[string]string{
 	GoPackageType:               "Go",
 	GradlePackageType:           "Gradle",
 	HelmPackageType:             "Helm",
+	HexPackageType:              "Hex",
 	HuggingFacePackageType:      "HuggingFace ML",
 	IvyPackageType:              "Ivy",
 	NPMPackageType:              "Npm",
