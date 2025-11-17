@@ -280,6 +280,13 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	ReleasebundlesPackageType: {
+		RepoLayoutRef: "maven-2-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"federated": true,
+		},
+	},
 	RPMPackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

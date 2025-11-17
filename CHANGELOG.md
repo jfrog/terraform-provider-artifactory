@@ -1,8 +1,18 @@
-### 12.10.3 (Unreleased)
+### 12.11.1 (Unreleased)
 
 IMPROVEMENTS:
 
 * provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
+
+### 12.11.0 (Nov 14 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
+
+BUG FIXES: 
+
+* resource/artifactory_oauth_settings: Fix explicitly disable OAuth integration on resource deletion
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_releasebundles_repository: New resource added. Issue: [#1335](https://github.com/jfrog/terraform-provider-artifactory/issues/1335). PR: [#1340](https://github.com/jfrog/terraform-provider-artifactory/pull/1340).
 
 ### 12.10.2 (Oct 28, 2025). Tested on Artifactory 7.117.19 with Terraform 1.13.4 and OpenTofu 1.10.6
 

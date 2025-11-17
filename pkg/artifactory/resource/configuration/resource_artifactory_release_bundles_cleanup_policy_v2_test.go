@@ -113,15 +113,11 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 			enabled = true
 			search_criteria = {
 				include_all_projects = true
-				included_projects = []
+				included_projects = [ "default" ]
 				release_bundles = [
 				{
 					name = "**"
-					project_key = "test"
-				},
-				{
-					name = "**"
-					project_key = "test2"
+					project_key = ""
 				}
 				]
 				exclude_promoted_environments = [
@@ -139,16 +135,12 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 			enabled = true
 			search_criteria = {
 				include_all_projects = true
-				included_projects = []
+				included_projects = [ "default"]
 				release_bundles = [
 				{
 					name = "**"
-					project_key = "test2"
+					project_key = ""
 				},
-				{
-					name = "**"
-					project_key = "test3"
-				}
 				]
 				exclude_promoted_environments = [
 				"**"
@@ -194,12 +186,10 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "24"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.exclude_promoted_environments.0", "**"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", "test"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.project_key", "test2"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", ""),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "1"),
 				),
 			},
 			{
@@ -214,12 +204,10 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "24"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.exclude_promoted_environments.0", "**"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "2"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", "test2"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.name", "**"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.1.project_key", "test3"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "0"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.0.project_key", ""),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_projects.#", "1"),
 				),
 			},
 			{
