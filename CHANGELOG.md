@@ -1,8 +1,21 @@
-### 12.10.2 (Oct 28, 2025). Tested on Artifactory 7.117.19 with Terraform 1.13.4 and OpenTofu 1.10.6
+### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
+
+FEATURES:
+
+**New Resource:** `artifactory_*_hex_repository` to support local, remote, virtual Hex repository. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+**New Data Source** `datasource_artifactory_*_hex_repository` : Adds new data sources for all hex repository types. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+
+### 12.11.0 (Nov 14 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
 
 BUG FIXES: 
 
-* resource/artifactory_build_webhook, resource/artifactory_release_bundle_webhook, resource/artifactory_release_bundle_v2_webhook: Fix to send selected_builds, registered_release_bundle_names, and selected_release_bundles as null instead of empty array when any_build or any_release_bundle is set to true. PR: [#1333](https://github.com/jfrog/terraform-provider-artifactory/pull/1333)
+* resource/artifactory_oauth_settings: Fix explicitly disable OAuth integration on resource deletion
+
+IMPROVEMENTS:
+
+* resource/artifactory_federated_releasebundles_repository: New resource added. Issue: [#1335](https://github.com/jfrog/terraform-provider-artifactory/issues/1335). PR: [#1340](https://github.com/jfrog/terraform-provider-artifactory/pull/1340).
 
 ### 12.10.1 (Oct 3, 2025). Tested on Artifactory 7.117.17 with Terraform 1.13.3 and OpenTofu 1.10.6
 

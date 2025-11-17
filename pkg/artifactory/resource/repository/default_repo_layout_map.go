@@ -172,6 +172,14 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	HexPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":   true,
+			"remote":  true,
+			"virtual": true,
+		},
+	},
 	HuggingFacePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
@@ -277,6 +285,13 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"local":     true,
 			"remote":    true,
 			"virtual":   true,
+			"federated": true,
+		},
+	},
+	ReleasebundlesPackageType: {
+		RepoLayoutRef: "maven-2-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
 			"federated": true,
 		},
 	},
