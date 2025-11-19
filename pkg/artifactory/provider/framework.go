@@ -145,7 +145,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	if !config.Url.IsNull() && !config.Url.IsUnknown() && config.Url.ValueString() != "" {
+	if config.Url.ValueString() != "" {
 		url = config.Url.ValueString()
 	}
 
@@ -188,7 +188,7 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 
 	// Check configuration data, which should take precedence over
 	// environment variable data, if found.
-	if !config.AccessToken.IsNull() && !config.AccessToken.IsUnknown() && config.AccessToken.ValueString() != "" {
+	if config.AccessToken.ValueString() != "" {
 		accessToken = config.AccessToken.ValueString()
 	}
 
