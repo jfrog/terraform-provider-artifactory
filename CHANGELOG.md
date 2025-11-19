@@ -1,8 +1,16 @@
-### 12.11.1 (Unreleased)
+### 12.11.2 (Unreleased)
 
 IMPROVEMENTS:
 
 * provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
+
+### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
+
+FEATURES:
+
+**New Resource:** `artifactory_*_hex_repository` to support local, remote, virtual Hex repository. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+**New Data Source** `datasource_artifactory_*_hex_repository` : Adds new data sources for all hex repository types. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
 
 ### 12.11.0 (Nov 14 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
 
