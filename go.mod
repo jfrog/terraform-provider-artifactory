@@ -10,7 +10,7 @@ toolchain go1.24.2
 require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/hashicorp/go-cty v1.5.0
-	github.com/hashicorp/go-version v1.7.0
+	github.com/hashicorp/go-version v1.8.0
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
