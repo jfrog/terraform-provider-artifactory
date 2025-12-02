@@ -224,9 +224,11 @@ func toReleaseBundleV2APIModel(ctx context.Context, baseCriteria BaseCriteriaAPI
 	}
 
 	return ReleaseBundleV2CriteriaAPIModel{
-		BaseCriteriaAPIModel:   baseCriteria,
-		AnyReleaseBundle:       anyReleaseBundle,
-		SelectedReleaseBundles: releaseBundleNames,
+		BaseCriteriaAPIModel: baseCriteria,
+		AnyReleaseBundle:     anyReleaseBundle,
+		SelectedReleaseBundles: map[string][]string{
+			"release-bundles-v2": releaseBundleNames,
+		},
 	}, diags
 }
 
@@ -270,11 +272,15 @@ func fromReleaseBundleV2APIModel(ctx context.Context, criteriaAPIModel map[strin
 		diags.Append(d...)
 	}
 	if v, ok := criteriaAPIModel["selectedReleaseBundles"]; ok && v != nil {
-		rb, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
+		if selectedReleaseBundles, ok := v.(map[string]interface{}); ok {
+			if rbv2, ok := selectedReleaseBundles["release-bundles-v2"]; ok && rbv2 != nil {
+				rb, d := types.SetValueFrom(ctx, types.StringType, rbv2)
+				if d.HasError() {
+					diags.Append(d...)
+				}
+				releaseBundleNames = rb
+			}
 		}
-		releaseBundleNames = rb
 	}
 
 	anyReleaseBundle := false
@@ -331,6 +337,6 @@ func (m *ReleaseBundleV2WebhookResourceModel) fromAPIModel(ctx context.Context, 
 
 type ReleaseBundleV2CriteriaAPIModel struct {
 	BaseCriteriaAPIModel
-	AnyReleaseBundle       bool     `json:"anyReleaseBundle"`
-	SelectedReleaseBundles []string `json:"selectedReleaseBundles"`
+	AnyReleaseBundle       bool                `json:"anyReleaseBundle"`
+	SelectedReleaseBundles map[string][]string `json:"selectedReleaseBundles"`
 }
