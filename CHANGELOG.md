@@ -1,4 +1,4 @@
-### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
+### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
 
 FEATURES:
 
