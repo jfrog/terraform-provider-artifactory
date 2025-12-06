@@ -31,9 +31,10 @@ func NewArtifactoryReleaseBundleCustomWebhookResource() resource.Resource {
 	return &ReleaseBundleCustomWebhookResource{
 		CustomWebhookResource: CustomWebhookResource{
 			WebhookResource: WebhookResource{
-				TypeName:    fmt.Sprintf("artifactory_%s_custom_webhook", ArtifactoryReleaseBundleDomain),
-				Domain:      ArtifactoryReleaseBundleDomain,
-				Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+				TypeName: fmt.Sprintf("artifactory_%s_custom_webhook", ArtifactoryReleaseBundleDomain),
+				Domain:   ArtifactoryReleaseBundleDomain,
+				Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
+					"!>This resource is being deprecated and replaced by `artifactory_destination_custom_webhook` resource.",
 			},
 		},
 	}
@@ -67,10 +68,9 @@ func NewReleaseBundleCustomWebhookResource() resource.Resource {
 	return &ReleaseBundleCustomWebhookResource{
 		CustomWebhookResource: CustomWebhookResource{
 			WebhookResource: WebhookResource{
-				TypeName: fmt.Sprintf("artifactory_%s_custom_webhook", ReleaseBundleDomain),
-				Domain:   ReleaseBundleDomain,
-				Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
-					"!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.",
+				TypeName:    fmt.Sprintf("artifactory_%s_custom_webhook", ReleaseBundleDomain),
+				Domain:      ReleaseBundleDomain,
+				Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
 			},
 		},
 	}
@@ -90,7 +90,7 @@ func (r *ReleaseBundleCustomWebhookResource) Metadata(ctx context.Context, req r
 
 func (r *ReleaseBundleCustomWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = r.CreateSchema(r.Domain, &releaseBundleCriteriaBlock)
-	if r.Domain == ReleaseBundleDomain {
+	if r.Domain == ArtifactoryReleaseBundleDomain {
 		resp.Schema.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
 	}
 }

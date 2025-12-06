@@ -66,7 +66,7 @@ var releaseBundleV2CriteriaBlock = schema.SetNestedBlock{
 				},
 				"selected_release_bundles": schema.SetAttribute{
 					ElementType: types.StringType,
-					Required:    true,
+					Optional:    true,
 					Description: "Trigger on this list of release bundle names",
 				},
 			},
@@ -229,7 +229,7 @@ func (r *ReleaseBundleV2WebhookResource) ImportState(ctx context.Context, req re
 func toReleaseBundleV2APIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel ReleaseBundleV2CriteriaAPIModel, diags diag.Diagnostics) {
 	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
 
-	var releaseBundleNames []string
+	releaseBundleNames := []string{}
 	if !anyReleaseBundle {
 		d := criteriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
 		if d.HasError() {
@@ -352,5 +352,5 @@ func (m *ReleaseBundleV2WebhookResourceModel) fromAPIModel(ctx context.Context, 
 type ReleaseBundleV2CriteriaAPIModel struct {
 	BaseCriteriaAPIModel
 	AnyReleaseBundle       bool                `json:"anyReleaseBundle"`
-	SelectedReleaseBundles map[string][]string `json:"selectedReleaseBundles"`
+	SelectedReleaseBundles map[string][]string `json:"selectedReleaseBundles,omitempty"`
 }

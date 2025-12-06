@@ -314,8 +314,8 @@ type CustomHandlerAPIModel struct {
 	HandlerType string                 `json:"handler_type"`
 	Url         string                 `json:"url"`
 	Method      *string                `json:"method"`
-	Secrets     []KeyValuePairAPIModel `json:"secrets"`
-	Proxy       *string                `json:"proxy"`
-	HttpHeaders []KeyValuePairAPIModel `json:"http_headers"`
+	Secrets     []KeyValuePairAPIModel `json:"secrets,omitempty"`
+	Proxy       *string                `json:"proxy,omitempty"`
+	HttpHeaders []KeyValuePairAPIModel `json:"http_headers,omitempty"`
 	Payload     string                 `json:"payload,omitempty"`
 }
