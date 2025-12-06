@@ -66,7 +66,7 @@ var buildCriteriaBlock = schema.SetNestedBlock{
 				},
 				"selected_builds": schema.SetAttribute{
 					ElementType: types.StringType,
-					Required:    true,
+					Optional: true,
 					Description: "Trigger on this list of build IDs",
 				},
 			},
@@ -98,8 +98,9 @@ func buildValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateCon
 	anyBuild := criteriaAttrs["any_build"].(types.Bool)
 	selectedBuilds := criteriaAttrs["selected_builds"].(types.Set)
 	includePatterns := criteriaAttrs["include_patterns"].(types.Set)
+	excludePatterns := criteriaAttrs["exclude_patterns"].(types.Set)
 
-	if anyBuild.IsUnknown() || selectedBuilds.IsUnknown() || includePatterns.IsUnknown() {
+	if anyBuild.IsUnknown() || selectedBuilds.IsUnknown() || includePatterns.IsUnknown() || excludePatterns.IsUnknown() {
 		return
 	}
 
@@ -108,6 +109,22 @@ func buildValidateConfig(criteria basetypes.SetValue, resp *resource.ValidateCon
 			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_build"),
 			"Invalid Attribute Configuration",
 			"selected_builds or include_patterns cannot be empty when any_build is false",
+		)
+	}
+
+	if anyBuild.ValueBool() && (!includePatterns.IsNull() && len(includePatterns.Elements()) > 0) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("criteria").AtSetValue(criteriaObj).AtName("include_patterns"),
+			"Invalid Attribute Configuration",
+			"include_patterns cannot be set when any_build is true",
+		)
+	}
+
+	if anyBuild.ValueBool() && (!excludePatterns.IsNull() && len(excludePatterns.Elements()) > 0) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("criteria").AtSetValue(criteriaObj).AtName("exclude_patterns"),
+			"Invalid Attribute Configuration",
+			"exclude_patterns cannot be set when any_build is true",
 		)
 	}
 }
@@ -230,7 +247,7 @@ func (r *BuildWebhookResource) ImportState(ctx context.Context, req resource.Imp
 func toBuildCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel BuildCriteriaAPIModel, diags diag.Diagnostics) {
 	anyBuild := criteriaAttrs["any_build"].(types.Bool).ValueBool()
 
-	var selectedBuilds []string
+	selectedBuilds := []string{}
 	if !anyBuild {
 		d := criteriaAttrs["selected_builds"].(types.Set).ElementsAs(ctx, &selectedBuilds, false)
 		if d.HasError() {
@@ -349,5 +366,5 @@ func (m *BuildWebhookResourceModel) fromAPIModel(ctx context.Context, apiModel W
 type BuildCriteriaAPIModel struct {
 	BaseCriteriaAPIModel
 	AnyBuild       bool     `json:"anyBuild"`
-	SelectedBuilds []string `json:"selectedBuilds"`
+	SelectedBuilds []string `json:"selectedBuilds,omitempty"`
 }
