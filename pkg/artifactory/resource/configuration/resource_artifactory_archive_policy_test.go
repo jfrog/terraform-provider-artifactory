@@ -1422,6 +1422,10 @@ func TestAccArchivePolicy_valid_update_scenarios(t *testing.T) {
 
 func TestAccArchivePolicy_with_variable_last_downloaded_before_in_days(t *testing.T) {
 	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
@@ -1488,6 +1492,10 @@ func TestAccArchivePolicy_with_variable_last_downloaded_before_in_days(t *testin
 
 func TestAccArchivePolicy_with_variable_created_before_in_days(t *testing.T) {
 	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
@@ -1554,6 +1562,10 @@ func TestAccArchivePolicy_with_variable_created_before_in_days(t *testing.T) {
 
 func TestAccArchivePolicy_with_variable_keep_last_n_versions(t *testing.T) {
 	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
@@ -1620,6 +1632,10 @@ func TestAccArchivePolicy_with_variable_keep_last_n_versions(t *testing.T) {
 
 func TestAccArchivePolicy_with_variable_duration_in_minutes(t *testing.T) {
 	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
@@ -1686,6 +1702,10 @@ func TestAccArchivePolicy_with_variable_duration_in_minutes(t *testing.T) {
 
 func TestAccArchivePolicy_with_variable_no_default_should_fail(t *testing.T) {
 	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
@@ -1748,6 +1768,10 @@ func TestAccArchivePolicy_with_variable_no_default_should_fail(t *testing.T) {
 
 func TestAccArchivePolicy_with_variable_duration_in_minutes_no_default_should_fail(t *testing.T) {
 	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
 	version, err := util.GetArtifactoryVersion(client)
 	if err != nil {
 		t.Fatal(err)
