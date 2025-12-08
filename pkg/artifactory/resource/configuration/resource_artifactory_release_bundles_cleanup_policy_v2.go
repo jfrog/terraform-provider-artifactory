@@ -288,6 +288,7 @@ func (r *ResourceBundleCleanupPolicyV2Resource) Schema(ctx context.Context, req 
 							"~>This setting is relevant only on the global level, for Platform Admins.",
 					},
 					"created_before_in_months": schema.Int64Attribute{
+						Optional:            true,
 						Computed:            true,
 						Default:             int64default.StaticInt64(24),
 						MarkdownDescription: "Specifies the time frame for filtering based on item creation date (for example, 24 months).",
