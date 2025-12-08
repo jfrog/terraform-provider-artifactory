@@ -137,6 +137,7 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 				exclude_promoted_environments = [
 				"**"
 				]
+				created_before_in_months = 56
 			}
 		}`
 
@@ -197,7 +198,7 @@ func TestAccReleaseBundleV2Cleanup_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "60"),
 					resource.TestCheckResourceAttr(fqrn, "enabled", "true"),
 					resource.TestCheckResourceAttr(fqrn, "item_type", "releaseBundle"),
-					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "24"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "56"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.exclude_promoted_environments.0", "**"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.include_all_projects", "true"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.release_bundles.#", "1"),
@@ -256,4 +257,270 @@ func testAccReleaseBundleV2CleanupPolicyDestroy(id string) func(*terraform.State
 
 		return fmt.Errorf("error: Resource  Policy %s still exists", rs.Primary.ID)
 	}
+}
+
+func TestAccReleaseBundleV2Cleanup_with_variable_duration_in_minutes(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.104.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.104.2", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-release-bundle-v2", "artifactory_release_bundle_v2_cleanup_policy")
+
+	temp := `
+	variable "release_bundle_cleanup_duration_in_minutes" {
+		type = number
+		default = 120
+	}
+
+	resource "artifactory_release_bundle_v2_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for duration_in_minutes"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = var.release_bundle_cleanup_duration_in_minutes
+		enabled = true
+		search_criteria = {
+			include_all_projects = true
+			included_projects = []
+			release_bundles = [
+			{
+				name = "**"
+				project_key = ""
+			}
+			]
+			exclude_promoted_environments = [
+			"**"
+			]
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccReleaseBundleV2CleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for duration_in_minutes"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "120"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccReleaseBundleV2Cleanup_with_variable_duration_in_minutes_no_default_should_fail(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.104.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.104.2", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-release-bundle-v2", "artifactory_release_bundle_v2_cleanup_policy")
+
+	temp := `
+	variable "release_bundle_cleanup_duration_in_minutes" {
+		type = number
+		# No default - should require value
+	}
+
+	resource "artifactory_release_bundle_v2_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for duration_in_minutes without default"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = var.release_bundle_cleanup_duration_in_minutes
+		enabled = true
+		search_criteria = {
+			include_all_projects = true
+			included_projects = []
+			release_bundles = [
+			{
+				name = "**"
+				project_key = ""
+			}
+			]
+			exclude_promoted_environments = [
+			"**"
+			]
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*(No value for required variable|Missing required argument|Required variable not set|variable.*must be set).*"),
+				PlanOnly:    true,
+			},
+		},
+	})
+}
+
+func TestAccReleaseBundleV2Cleanup_with_variable_created_before_in_months(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.104.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.104.2", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-release-bundle-v2", "artifactory_release_bundle_v2_cleanup_policy")
+
+	temp := `
+	variable "release_bundle_cleanup_created_before_in_months" {
+		type = number
+		default = 36
+	}
+
+	resource "artifactory_release_bundle_v2_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for created_before_in_months"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = true
+		search_criteria = {
+			include_all_projects = true
+			included_projects = []
+			release_bundles = [
+			{
+				name = "**"
+				project_key = ""
+			}
+			]
+			exclude_promoted_environments = [
+			"**"
+			]
+			created_before_in_months = var.release_bundle_cleanup_created_before_in_months
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccReleaseBundleV2CleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for created_before_in_months"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_months", "36"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccReleaseBundleV2Cleanup_with_variable_created_before_in_months_no_default_should_fail(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.104.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.104.2", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-release-bundle-v2", "artifactory_release_bundle_v2_cleanup_policy")
+
+	temp := `
+	variable "release_bundle_cleanup_created_before_in_months" {
+		type = number
+		# No default - should require value
+	}
+
+	resource "artifactory_release_bundle_v2_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for created_before_in_months without default"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = true
+		search_criteria = {
+			include_all_projects = true
+			included_projects = []
+			release_bundles = [
+			{
+				name = "**"
+				project_key = ""
+			}
+			]
+			exclude_promoted_environments = [
+			"**"
+			]
+			created_before_in_months = var.release_bundle_cleanup_created_before_in_months
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*(No value for required variable|Missing required argument|Required variable not set|variable.*must be set).*"),
+				PlanOnly:    true,
+			},
+		},
+	})
 }

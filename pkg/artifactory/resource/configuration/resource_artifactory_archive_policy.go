@@ -62,6 +62,14 @@ func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validat
 	// Get the attributes
 	attrs := obj.Attributes()
 
+	// Helper function to check if a value is unknown
+	isUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
+
 	// Helper function to get int64 value
 	getInt64 := func(key string) types.Int64 {
 		if v, ok := attrs[key]; ok && !v.IsNull() && !v.IsUnknown() {
@@ -82,6 +90,25 @@ func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validat
 
 	// Version-based condition (available in both versions)
 	keepLastNVersions := getInt64("keep_last_n_versions")
+
+	// Helper function to check if properties are unknown
+	checkPropertiesUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
+
+	// If any condition-related attribute is unknown (e.g., when using variables),
+	// skip validation to avoid false positives during terraform validate
+	if isUnknown("created_before_in_days") ||
+		isUnknown("last_downloaded_before_in_days") ||
+		isUnknown("created_before_in_months") ||
+		isUnknown("last_downloaded_before_in_months") ||
+		isUnknown("keep_last_n_versions") ||
+		checkPropertiesUnknown("included_properties") {
+		return
+	}
 
 	// Helper function to check if properties are set
 	checkPropertiesSet := func(key string) bool {
