@@ -1,3 +1,9 @@
+### 12.11.2 (Dec 02, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
+
+BUG FIXES:
+
+* resource/artifactory_release_bundle_v2_webhook: Fix use nested map for selectedReleaseBundles in release_bundle_v2 webhook PR: [#1353](https://github.com/jfrog/terraform-provider-artifactory/pull/1353)
+
 ### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
 
 FEATURES:
