@@ -726,6 +726,72 @@ func TestAccPackageCleanupPolicy_days_based_conditions(t *testing.T) {
 	})
 }
 
+func TestAccPackageCleanupPolicy_with_variable_last_downloaded_before_in_days(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.111.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.111.2", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+	temp := `
+	variable "cleanup_policy_last_downloaded_before_in_days" {
+		type = number
+		default = 10
+	}
+
+	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for last_downloaded_before_in_days"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = true
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			last_downloaded_before_in_days = var.cleanup_policy_last_downloaded_before_in_days
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for last_downloaded_before_in_days"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_days", "10"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPackageCleanupPolicy_included_properties(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)
