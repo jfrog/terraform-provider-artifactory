@@ -1,3 +1,9 @@
+### 12.11.2 (Dec 16, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
+
+BUG FIXES:
+
+* resource/artifactory_local_helm_repository.go: Fix prevent force_non_duplicate_chart and force_metadata_name_version state drift in local helm repositories. Issue: [#1243](https://github.com/jfrog/terraform-provider-artifactory/issues/1243). PR: [#1362](https://github.com/jfrog/terraform-provider-artifactory/pull/1362)
+
 ### 12.11.1 (Dec 8, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
 
 FEATURES:
