@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package webhook
 
 import (
@@ -22,9 +36,10 @@ var _ resource.Resource = &ReleaseBundleWebhookResource{}
 func NewArtifactoryReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ArtifactoryReleaseBundleDomain),
-			Domain:      ArtifactoryReleaseBundleDomain,
-			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
+			TypeName: fmt.Sprintf("artifactory_%s_webhook", ArtifactoryReleaseBundleDomain),
+			Domain:   ArtifactoryReleaseBundleDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
+				"!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.",
 		},
 	}
 }
@@ -52,10 +67,9 @@ func NewDistributionWebhookResource() resource.Resource {
 func NewReleaseBundleWebhookResource() resource.Resource {
 	return &ReleaseBundleWebhookResource{
 		WebhookResource: WebhookResource{
-			TypeName: fmt.Sprintf("artifactory_%s_webhook", ReleaseBundleDomain),
-			Domain:   ReleaseBundleDomain,
-			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.\n\n" +
-				"!>This resource is being deprecated and replaced by `artifactory_destination_webhook` resource.",
+			TypeName:    fmt.Sprintf("artifactory_%s_webhook", ReleaseBundleDomain),
+			Domain:      ReleaseBundleDomain,
+			Description: "Provides an Artifactory webhook resource. This can be used to register and manage Artifactory webhook subscription which enables you to be notified or notify other users when such events take place in Artifactory.:",
 		},
 	}
 }
@@ -83,7 +97,7 @@ var releaseBundleCriteriaBlock = schema.SetNestedBlock{
 				},
 				"registered_release_bundle_names": schema.SetAttribute{
 					ElementType: types.StringType,
-					Required:    true,
+					Optional:    true,
 					Description: "Trigger on this list of release bundle names",
 				},
 			},
@@ -98,7 +112,7 @@ var releaseBundleCriteriaBlock = schema.SetNestedBlock{
 
 func (r *ReleaseBundleWebhookResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = r.CreateSchema(r.Domain, &releaseBundleCriteriaBlock, handlerBlock)
-	if r.Domain == ReleaseBundleDomain {
+	if r.Domain == ArtifactoryReleaseBundleDomain {
 		resp.Schema.DeprecationMessage = "This resource is being deprecated and replaced by artifactory_destination_webhook resource"
 	}
 }
@@ -117,16 +131,34 @@ func releaseBundleValidateConfig(criteria basetypes.SetValue, resp *resource.Val
 
 	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool)
 	registeredReleaseBundleNames := criteriaAttrs["registered_release_bundle_names"].(types.Set)
+	includePatterns := criteriaAttrs["include_patterns"].(types.Set)
+	excludePatterns := criteriaAttrs["exclude_patterns"].(types.Set)
 
-	if anyReleaseBundle.IsUnknown() || registeredReleaseBundleNames.IsUnknown() {
+	if anyReleaseBundle.IsUnknown() || registeredReleaseBundleNames.IsUnknown() || includePatterns.IsUnknown() || excludePatterns.IsUnknown() {
 		return
 	}
 
-	if !anyReleaseBundle.ValueBool() && len(registeredReleaseBundleNames.Elements()) == 0 {
+	if !anyReleaseBundle.ValueBool() && len(registeredReleaseBundleNames.Elements()) == 0 && len(includePatterns.Elements()) == 0 {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("criteria").AtSetValue(criteriaObj).AtName("any_release_bundle"),
 			"Invalid Attribute Configuration",
 			"registered_release_bundle_names cannot be empty when any_release_bundle is false",
+		)
+	}
+
+	if anyReleaseBundle.ValueBool() && (!includePatterns.IsNull() && len(includePatterns.Elements()) > 0) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("criteria").AtSetValue(criteriaObj).AtName("include_patterns"),
+			"Invalid Attribute Configuration",
+			"include_patterns cannot be set when any_release_bundle is true",
+		)
+	}
+
+	if anyReleaseBundle.ValueBool() && (!excludePatterns.IsNull() && len(excludePatterns.Elements()) > 0) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("criteria").AtSetValue(criteriaObj).AtName("exclude_patterns"),
+			"Invalid Attribute Configuration",
+			"exclude_patterns cannot be set when any_release_bundle is true",
 		)
 	}
 }
@@ -249,7 +281,7 @@ func (r *ReleaseBundleWebhookResource) ImportState(ctx context.Context, req reso
 func toReleaseBundleCriteriaAPIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel ReleaseBundleCriteriaAPIModel, diags diag.Diagnostics) {
 	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
 
-	var releaseBundleNames []string
+	releaseBundleNames := []string{}
 	if !anyReleaseBundle {
 		d := criteriaAttrs["registered_release_bundle_names"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
 		if d.HasError() {
@@ -368,5 +400,5 @@ func (m *ReleaseBundleWebhookResourceModel) fromAPIModel(ctx context.Context, ap
 type ReleaseBundleCriteriaAPIModel struct {
 	BaseCriteriaAPIModel
 	AnyReleaseBundle              bool     `json:"anyReleaseBundle"`
-	RegisteredReleaseBundlesNames []string `json:"registeredReleaseBundlesNames"`
+	RegisteredReleaseBundlesNames []string `json:"registeredReleaseBundlesNames,omitempty"`
 }

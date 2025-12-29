@@ -23,8 +23,8 @@ The following arguments are supported, along with the [common list of arguments 
 * `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
-* `force_non_duplicate_chart` - (Optional) Prevents the deployment of charts with the same name and version in different repository paths. Only available for 7.104.5 onward. Cannot be updated after it is set.
-* `force_metadata_name_version` - (Optional) Ensures that the chart name and version in the file name match the values in Chart.yaml and adhere to SemVer standards. Only available for 7.104.5 onward. Cannot be updated after it is set.
+* `force_non_duplicate_chart` - (Optional) Prevents the deployment of charts with the same name and version in different repository paths. Only available for 7.104.0 onward. Cannot be updated after it is set.
+* `force_metadata_name_version` - (Optional) Ensures that the chart name and version in the file name match the values in Chart.yaml and adhere to SemVer standards. Only available for 7.104.0 onward. Cannot be updated after it is set.
 
 ## Import
 

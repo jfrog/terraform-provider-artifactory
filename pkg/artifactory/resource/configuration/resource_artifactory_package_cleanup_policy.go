@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configuration
 
 import (
@@ -49,6 +63,14 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 	// Get the attributes
 	attrs := obj.Attributes()
 
+	// Helper function to check if a value is unknown
+	isUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
+
 	// Helper function to get int64 value
 	getInt64 := func(key string) types.Int64 {
 		if v, ok := attrs[key]; ok && !v.IsNull() && !v.IsUnknown() {
@@ -69,6 +91,25 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 
 	// Version-based condition (available in both versions)
 	keepLastNVersions := getInt64("keep_last_n_versions")
+
+	// Helper function to check if properties are unknown
+	checkPropertiesUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
+
+	// If any condition-related attribute is unknown (e.g., when using variables),
+	// skip validation to avoid false positives during terraform validate
+	if isUnknown("created_before_in_days") ||
+		isUnknown("last_downloaded_before_in_days") ||
+		isUnknown("created_before_in_months") ||
+		isUnknown("last_downloaded_before_in_months") ||
+		isUnknown("keep_last_n_versions") ||
+		checkPropertiesUnknown("included_properties") {
+		return
+	}
 
 	// Helper function to check if properties are set
 	checkPropertiesSet := func(key string) bool {

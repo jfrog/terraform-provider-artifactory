@@ -12,7 +12,7 @@ resource "artifactory_build_custom_webhook" "build-custom-webhook" {
   key         = "build-custom-webhook"
   event_types = ["uploaded", "deleted", "promoted"]
   criteria {
-    any_build         = true
+    any_build         = false
     selected_builds   = ["build-id"]
     include_patterns  = ["foo/**"]
     exclude_patterns  = ["bar/**"]
@@ -46,9 +46,9 @@ The following arguments are supported:
 * `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: `uploaded`, `deleted`, `promoted`.
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_build` - (Required) Trigger on any build.
-  * `selected_builds` - (Required) Trigger on this list of build names.
-  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`.
-  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`.
+  * `selected_builds` - (Optional) Trigger on this list of build names.
+  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`. **Cannot be set if `any_build` is set to `true`.**
+  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`. **Cannot be set if `any_build` is set to `true`.**
 * `handler` - (Required) At least one is required.
   * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
   * `method` - (Optional) Specifies the HTTP method for the URL that the Webhook invokes. Allowed values are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.

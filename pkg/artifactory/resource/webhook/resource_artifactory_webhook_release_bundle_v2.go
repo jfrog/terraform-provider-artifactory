@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package webhook
 
 import (
@@ -52,7 +66,7 @@ var releaseBundleV2CriteriaBlock = schema.SetNestedBlock{
 				},
 				"selected_release_bundles": schema.SetAttribute{
 					ElementType: types.StringType,
-					Required:    true,
+					Optional:    true,
 					Description: "Trigger on this list of release bundle names",
 				},
 			},
@@ -215,7 +229,7 @@ func (r *ReleaseBundleV2WebhookResource) ImportState(ctx context.Context, req re
 func toReleaseBundleV2APIModel(ctx context.Context, baseCriteria BaseCriteriaAPIModel, criteriaAttrs map[string]attr.Value) (criteriaAPIModel ReleaseBundleV2CriteriaAPIModel, diags diag.Diagnostics) {
 	anyReleaseBundle := criteriaAttrs["any_release_bundle"].(types.Bool).ValueBool()
 
-	var releaseBundleNames []string
+	releaseBundleNames := []string{}
 	if !anyReleaseBundle {
 		d := criteriaAttrs["selected_release_bundles"].(types.Set).ElementsAs(ctx, &releaseBundleNames, false)
 		if d.HasError() {
@@ -224,9 +238,11 @@ func toReleaseBundleV2APIModel(ctx context.Context, baseCriteria BaseCriteriaAPI
 	}
 
 	return ReleaseBundleV2CriteriaAPIModel{
-		BaseCriteriaAPIModel:   baseCriteria,
-		AnyReleaseBundle:       anyReleaseBundle,
-		SelectedReleaseBundles: releaseBundleNames,
+		BaseCriteriaAPIModel: baseCriteria,
+		AnyReleaseBundle:     anyReleaseBundle,
+		SelectedReleaseBundles: map[string][]string{
+			"release-bundles-v2": releaseBundleNames,
+		},
 	}, diags
 }
 
@@ -270,11 +286,15 @@ func fromReleaseBundleV2APIModel(ctx context.Context, criteriaAPIModel map[strin
 		diags.Append(d...)
 	}
 	if v, ok := criteriaAPIModel["selectedReleaseBundles"]; ok && v != nil {
-		rb, d := types.SetValueFrom(ctx, types.StringType, v)
-		if d.HasError() {
-			diags.Append(d...)
+		if selectedReleaseBundles, ok := v.(map[string]interface{}); ok {
+			if rbv2, ok := selectedReleaseBundles["release-bundles-v2"]; ok && rbv2 != nil {
+				rb, d := types.SetValueFrom(ctx, types.StringType, rbv2)
+				if d.HasError() {
+					diags.Append(d...)
+				}
+				releaseBundleNames = rb
+			}
 		}
-		releaseBundleNames = rb
 	}
 
 	anyReleaseBundle := false
@@ -331,6 +351,6 @@ func (m *ReleaseBundleV2WebhookResourceModel) fromAPIModel(ctx context.Context, 
 
 type ReleaseBundleV2CriteriaAPIModel struct {
 	BaseCriteriaAPIModel
-	AnyReleaseBundle       bool     `json:"anyReleaseBundle"`
-	SelectedReleaseBundles []string `json:"selectedReleaseBundles"`
+	AnyReleaseBundle       bool                `json:"anyReleaseBundle"`
+	SelectedReleaseBundles map[string][]string `json:"selectedReleaseBundles,omitempty"`
 }

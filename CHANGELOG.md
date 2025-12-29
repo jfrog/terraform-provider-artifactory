@@ -1,16 +1,30 @@
-### 12.11.2 (Unreleased)
+### 12.11.3 (Unreleased)
 
 IMPROVEMENTS:
 
 * provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
 
-### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
+### 12.11.2 (Dec 16, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.2 and OpenTofu 1.11.1
+
+BUG FIXES:
+
+* resource/artifactory_local_helm_repository.go: Fix prevent force_non_duplicate_chart and force_metadata_name_version state drift in local helm repositories. Issue: [#1243](https://github.com/jfrog/terraform-provider-artifactory/issues/1243). PR: [#1362](https://github.com/jfrog/terraform-provider-artifactory/pull/1362)
+
+### 12.11.1 (Dec 8, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
 
 FEATURES:
 
 **New Resource:** `artifactory_*_hex_repository` to support local, remote, virtual Hex repository. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
 
 **New Data Source** `datasource_artifactory_*_hex_repository` : Adds new data sources for all hex repository types. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+BUG FIXES:
+
+* resource/artifactory_release_bundle_v2_webhook: Fix use nested map for selectedReleaseBundles in release_bundle_v2 webhook PR: [#1353](https://github.com/jfrog/terraform-provider-artifactory/pull/1353)
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Allow variables to be used for condition fields (last_downloaded_before_in_days, created_before_in_days, keep_last_n_versions, etc.) without validation errors during terraform validate. The validator now skips validation when values are unknown (variables) and validates normally when values are known. Issue: [#1306](https://github.com/jfrog/terraform-provider-artifactory/issues/1306) PR: [#1354](https://github.com/jfrog/terraform-provider-artifactory/pull/1354)
 
 ### 12.11.0 (Nov 14 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
 

@@ -14,8 +14,6 @@ resource "artifactory_release_bundle_v2_custom_webhook" "release-bundle-v2-custo
   criteria {
     any_release_bundle       = false
     selected_release_bundles = ["bundle-name"]
-    include_patterns         = ["foo/**"]
-    exclude_patterns         = ["bar/**"]
   }
 
   handler {
@@ -46,9 +44,7 @@ The following arguments are supported:
 * `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: `release_bundle_v2_started`, `release_bundle_v2_failed`, `release_bundle_v2_completed`.
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_release_bundle` - (Required) Trigger on any release bundle.
-  * `selected_release_bundles` - (Required) Trigger on this list of release bundle names.
-  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: "org/apache/**".
-  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: "org/apache/**".
+  * `selected_release_bundles` - (Optional) Trigger on this list of release bundle names.
 * `handler` - (Required) At least one is required.
   * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
   * `method` - (Optional) Specifies the HTTP method for the URL that the Webhook invokes. Allowed values are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.

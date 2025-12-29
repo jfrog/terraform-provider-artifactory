@@ -137,6 +137,48 @@ resource "artifactory_archive_policy" "my-archive-policy" {
 }
 ```
 
+### Using Variables for Condition Fields
+
+You can use Terraform variables for condition fields (`created_before_in_days`, `last_downloaded_before_in_days`, `created_before_in_months`, `last_downloaded_before_in_months`, `keep_last_n_versions`, `included_properties`) and `duration_in_minutes`. The validator will skip validation when values are unknown (variables), allowing `terraform validate` to pass without requiring variable values.
+
+**Example with variables:**
+
+```terraform
+variable "archive_policy_last_downloaded_before_in_days" {
+  type    = number
+  default = 30
+}
+
+variable "archive_policy_duration_in_minutes" {
+  type    = number
+  default = 60
+}
+
+resource "artifactory_archive_policy" "my-archive-policy" {
+  key = "my-archive-policy"
+  description = "My archive policy with variables"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = var.archive_policy_duration_in_minutes
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+    repos = ["**"]
+    include_all_projects = false
+    included_projects = ["default"]
+    included_packages = ["**"]
+    excluded_packages = ["com/jfrog/latest"]
+    last_downloaded_before_in_days = var.archive_policy_last_downloaded_before_in_days
+  }
+}
+```
+
+**Important Notes:**
+- Variables with default values allow `terraform validate` to pass without requiring variable values
+- Variables without default values will require values to be provided during `terraform plan` or `terraform apply`
+- The validator automatically skips validation when condition field values are unknown (variables), preventing false validation errors during `terraform validate`
+
 ## Validation Rules
 
 The archive policy resource enforces the following validation rules:
