@@ -18,3 +18,6 @@ coverage.txt
 *.code-workspace
 scripts/artifactory*/
 *.hcl
+GNUmakefile
+GNUmakefile
+sample.tf
