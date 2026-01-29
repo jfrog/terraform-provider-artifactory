@@ -1,3 +1,9 @@
+### 12.11.3 (Unreleased)
+
+IMPROVEMENTS:
+
+* resource/artifactory_virtual_huggingfaceml_repository: New resource added.
+
 ### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 FEATURES:
