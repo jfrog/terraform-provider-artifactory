@@ -199,7 +199,7 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 		SupportedRepoTypes: map[string]bool{
 			"local":     true,
 			"remote":    true,
-			"virtual":   false,
+			"virtual":   true,
 			"federated": true,
 		},
 	},
