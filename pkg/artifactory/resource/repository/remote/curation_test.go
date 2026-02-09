@@ -51,6 +51,7 @@ func TestAccRemoteRepository_with_curated(t *testing.T) {
 					url                     		= "https://tempurl.org/"
 					repo_layout_ref         		= "simple-default"
 					curated                         = true
+					pass_through                    = false
 				}
 			`
 
@@ -70,6 +71,7 @@ func TestAccRemoteRepository_with_curated(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr(fqrn, "key", resourceName),
 							resource.TestCheckResourceAttr(fqrn, "curated", "true"),
+							resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
 						),
 					},
 					{

@@ -98,7 +98,8 @@ func (r remoteGradleResourceModel) ToAPIModel(ctx context.Context, packageType s
 	return RemoteGradleAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		JavaAPIModel: JavaAPIModel{
 			FetchJarsEagerly:             r.FetchJarsEagerly.ValueBool(),
@@ -122,6 +123,7 @@ func (r *remoteGradleResourceModel) FromAPIModel(ctx context.Context, apiModel i
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.FetchJarsEagerly = types.BoolValue(model.JavaAPIModel.FetchJarsEagerly)
 	r.FetchSourcesEagerly = types.BoolValue(model.JavaAPIModel.FetchSourcesEagerly)
 	r.RemoteRepoChecksumPolicyType = types.StringValue(model.JavaAPIModel.RemoteRepoChecksumPolicyType)

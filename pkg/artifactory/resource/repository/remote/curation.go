@@ -22,11 +22,13 @@ import (
 )
 
 type CurationResourceModel struct {
-	Curated types.Bool `tfsdk:"curated"`
+	Curated     types.Bool `tfsdk:"curated"`
+	PassThrough types.Bool `tfsdk:"pass_through"`
 }
 
 type CurationAPIModel struct {
-	Curated bool `json:"curated"`
+	Curated     bool `json:"curated"`
+	PassThrough bool `json:"passThrough"`
 }
 
 var CurationAttributes = map[string]schema.Attribute{
@@ -36,11 +38,18 @@ var CurationAttributes = map[string]schema.Attribute{
 		Default:             booldefault.StaticBool(false),
 		MarkdownDescription: "Enable repository to be protected by the Curation service.",
 	},
+	"pass_through": schema.BoolAttribute{
+		Optional:            true,
+		Computed:            true,
+		Default:             booldefault.StaticBool(false),
+		MarkdownDescription: "Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.",
+	},
 }
 
 // SDKv2
 type RepositoryCurationParams struct {
-	Curated bool `json:"curated"`
+	Curated     bool `json:"curated"`
+	PassThrough bool `json:"passThrough"`
 }
 
 var CurationRemoteRepoSchema = map[string]*sdkv2_schema.Schema{
@@ -49,5 +58,11 @@ var CurationRemoteRepoSchema = map[string]*sdkv2_schema.Schema{
 		Optional:    true,
 		Default:     false,
 		Description: "Enable repository to be protected by the Curation service.",
+	},
+	"pass_through": {
+		Type:        sdkv2_schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.",
 	},
 }

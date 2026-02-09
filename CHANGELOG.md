@@ -1,10 +1,13 @@
-### 12.11.3 (Unreleased)
+### 12.11.2 (Feb 09, 2026).
 
 IMPROVEMENTS:
 
 * provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
 
-### 12.11.2 (Dec 16, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.2 and OpenTofu 1.11.1
+FEATURES:
+
+* resource/artifactory_remote_*_repository: Add `pass_through` attribute to Curation settings for all remote repositories that support Curation (Conan, Docker, Gems, Go, Gradle, Hugging Face, Maven, NPM, NuGet, PyPI). This enables Pass-through for Curation Audit. PR: [#1371](https://github.com/jfrog/terraform-provider-artifactory/pull/1371)
+
 
 BUG FIXES:
 

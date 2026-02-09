@@ -32,6 +32,7 @@ func TestAccRemoteNPMRepository(t *testing.T) {
 		"mismatching_mime_types_override_list": "application/json,application/xml",
 		"missed_cache_period_seconds":          1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
 		"curated":                              false,
+		"pass_through":                         false,
 	}))
 }
 

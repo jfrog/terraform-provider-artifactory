@@ -108,7 +108,8 @@ func (r remoteDockerResourceModel) ToAPIModel(ctx context.Context, packageType s
 	var apiModel = RemoteDockerAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		ExternalDependenciesEnabled: r.ExternalDependenciesEnabled.ValueBool(),
 		EnableTokenAuthentication:   r.EnableTokenAuthentication.ValueBool(),
@@ -130,6 +131,7 @@ func (r *remoteDockerResourceModel) FromAPIModel(ctx context.Context, apiModel i
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
 
 	r.ExternalDependenciesPatterns = types.ListNull(types.StringType)

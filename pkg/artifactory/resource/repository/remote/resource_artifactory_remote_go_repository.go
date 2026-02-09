@@ -105,7 +105,8 @@ func (r remoteGoResourceModel) ToAPIModel(ctx context.Context, packageType strin
 	return RemoteGoAPIModel{
 		RemoteGenericAPIModel: remoteAPIModel.(RemoteGenericAPIModel),
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		VCSGitProvider: r.VCSGitProvider.ValueString(),
 	}, diags
@@ -120,6 +121,7 @@ func (r *remoteGoResourceModel) FromAPIModel(ctx context.Context, apiModel inter
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.VCSGitProvider = types.StringValue(model.VCSGitProvider)
 
 	return diags

@@ -98,7 +98,8 @@ func (r remotePyPIResourceModel) ToAPIModel(ctx context.Context, packageType str
 	return RemotePyPIAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		PyPIRegistryURL:      r.PyPIRegistryURL.ValueString(),
 		PyPIRepositorySuffix: r.PyPIRepositorySuffix.ValueString(),
@@ -114,6 +115,7 @@ func (r *remotePyPIResourceModel) FromAPIModel(ctx context.Context, apiModel int
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.PyPIRegistryURL = types.StringValue(model.PyPIRegistryURL)
 	r.PyPIRepositorySuffix = types.StringValue(model.PyPIRepositorySuffix)
 	return diags

@@ -31,6 +31,8 @@ func TestAccRemoteHuggingFaceRepository(t *testing.T) {
 	remoteRepositoryBasic := fmt.Sprintf(`
 		resource "artifactory_remote_huggingfaceml_repository" "%s" {
 			key = "%s"
+			curated = false
+			pass_through = false
 		}
 	`, name, name)
 
@@ -43,6 +45,8 @@ func TestAccRemoteHuggingFaceRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://huggingface.co"),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
+					resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
 				),
 			},
 			{
