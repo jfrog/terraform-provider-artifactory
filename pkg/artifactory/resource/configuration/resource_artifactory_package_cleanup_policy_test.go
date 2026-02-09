@@ -1169,6 +1169,73 @@ func TestAccPackageCleanupPolicy_with_project_key(t *testing.T) {
 	})
 }
 
+func TestAccPackageCleanupPolicy_project_key_for_each_valid_prefix(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.90.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+	temp := `
+	locals {
+		cleanup_policies = {
+			delete-old-snapshots = {
+				description = "Delete snapshot artifacts older than 90 days"
+			}
+		}
+	}
+
+	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+		for_each = local.cleanup_policies
+
+		key = "myproj-${each.key}"
+		project_key = "myproj"
+		description = each.value.description
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+
+		search_criteria = {
+			package_types = ["docker"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = []
+			included_packages = ["**"]
+			created_before_in_months = 1
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             config,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccPackageCleanupPolicy_import_with_project_key(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)

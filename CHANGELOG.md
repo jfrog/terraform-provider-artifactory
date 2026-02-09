@@ -1,4 +1,4 @@
-### 12.11.2 (Feb 09, 2026).
+### 12.11.2 (Feb 10, 2026).
 
 IMPROVEMENTS:
 
@@ -11,7 +11,9 @@ FEATURES:
 
 BUG FIXES:
 
+* resource/artifactory_package_cleanup_policy: Fix project-level policy key validation failing with `for_each` when the key contains dynamic expressions (e.g., `"proj-${each.key}"`). The key is now validated during the plan phase via `ModifyPlan` when values are resolved, instead of failing during `ValidateConfig` when values are unknown. Issue: [#1339](https://github.com/jfrog/terraform-provider-artifactory/issues/1339). PR: [#1371](https://github.com/jfrog/terraform-provider-artifactory/pull/1371)
 * resource/artifactory_local_helm_repository.go: Fix prevent force_non_duplicate_chart and force_metadata_name_version state drift in local helm repositories. Issue: [#1243](https://github.com/jfrog/terraform-provider-artifactory/issues/1243). PR: [#1362](https://github.com/jfrog/terraform-provider-artifactory/pull/1362)
+
 
 ### 12.11.1 (Dec 8, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
 

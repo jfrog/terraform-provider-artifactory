@@ -297,6 +297,7 @@ func NewPackageCleanupPolicyResource() resource.Resource {
 }
 
 var _ resource.Resource = (*PackageCleanupPolicyResource)(nil)
+var _ resource.ResourceWithModifyPlan = (*PackageCleanupPolicyResource)(nil)
 
 type PackageCleanupPolicyResource struct {
 	util.JFrogResource
@@ -914,16 +915,22 @@ func (r PackageCleanupPolicyResource) ValidateConfig(ctx context.Context, req re
 	if !data.ProjectKey.IsNull() && !data.ProjectKey.IsUnknown() && data.ProjectKey.ValueString() != "" {
 		// When project_key is specified, this is a project-level policy
 		projectKey := data.ProjectKey.ValueString()
-		policyKey := data.Key.ValueString()
 
-		// Check that policy key starts with project key prefix
-		expectedPrefix := projectKey + "-"
-		if !strings.HasPrefix(policyKey, expectedPrefix) {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("key"),
-				"Invalid Project-Level Policy Key",
-				fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
-			)
+		// Only validate key prefix if the key value is known.
+		// When using expressions like `for_each`, the key may be unknown
+		// during validation and its value can't be checked yet.
+		if !data.Key.IsUnknown() {
+			policyKey := data.Key.ValueString()
+
+			// Check that policy key starts with project key prefix
+			expectedPrefix := projectKey + "-"
+			if !strings.HasPrefix(policyKey, expectedPrefix) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("key"),
+					"Invalid Project-Level Policy Key",
+					fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
+				)
+			}
 		}
 
 		attrs := data.SearchCriteria.Attributes()
@@ -952,6 +959,37 @@ func (r PackageCleanupPolicyResource) ValidateConfig(ctx context.Context, req re
 	}
 
 	// Schema-level validation handles the condition validation rules
+}
+
+func (r PackageCleanupPolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on resource destruction
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan PackageCleanupPolicyResourceModelV1
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate project-level policy key prefix during plan when values are resolved.
+	// This catches dynamic keys (e.g., from for_each) that are unknown during ValidateConfig.
+	if !plan.ProjectKey.IsNull() && !plan.ProjectKey.IsUnknown() && plan.ProjectKey.ValueString() != "" &&
+		!plan.Key.IsNull() && !plan.Key.IsUnknown() {
+		projectKey := plan.ProjectKey.ValueString()
+		policyKey := plan.Key.ValueString()
+
+		expectedPrefix := projectKey + "-"
+		if !strings.HasPrefix(policyKey, expectedPrefix) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("key"),
+				"Invalid Project-Level Policy Key",
+				fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
+			)
+		}
+	}
 }
 
 func (r *PackageCleanupPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
