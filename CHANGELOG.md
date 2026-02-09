@@ -1,3 +1,9 @@
+### 12.11.3 (Unreleased)
+
+IMPROVEMENTS:
+
+* provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
+
 ### 12.11.2 (Dec 16, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.2 and OpenTofu 1.11.1
 
 BUG FIXES:
