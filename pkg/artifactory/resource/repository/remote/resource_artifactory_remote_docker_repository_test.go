@@ -35,6 +35,8 @@ func TestAccRemoteDockerRepository_with_external_dependencies_patterns(t *testin
 		"priority_resolution":            false,
 		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"curated":                        false,
+		"pass_through":                   false,
 	})
 	resource.Test(t, testCase)
 }
@@ -83,6 +85,8 @@ func TestAccRemoteDockerRepository_DependenciesTrueAndFalseToggle(t *testing.T) 
 		"list_remote_folder_items":       "true",
 		"external_dependencies_enabled":  "true",
 		"enable_token_authentication":    "true",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -103,6 +107,8 @@ func TestAccRemoteDockerRepository_DependenciesTrueAndFalseToggle(t *testing.T) 
 		"list_remote_folder_items":       "false",
 		"external_dependencies_enabled":  "false",
 		"enable_token_authentication":    "false",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -150,6 +156,8 @@ func TestAccRemoteDockerRepository_full(t *testing.T) {
 		"list_remote_folder_items":       "true",
 		"external_dependencies_enabled":  "true",
 		"enable_token_authentication":    "true",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -170,6 +178,8 @@ func TestAccRemoteDockerRepository_full(t *testing.T) {
 		"list_remote_folder_items":       "false",
 		"external_dependencies_enabled":  "true",
 		"enable_token_authentication":    "false",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 
 	resource.Test(t, resource.TestCase{

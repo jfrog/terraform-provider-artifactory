@@ -1,14 +1,19 @@
-### 12.11.3 (Unreleased)
+### 12.11.2 (Feb 10, 2026). Tested on Artifactory 7.133.6 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 IMPROVEMENTS:
 
 * provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
 
-### 12.11.2 (Dec 16, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.2 and OpenTofu 1.11.1
+FEATURES:
+
+* resource/artifactory_remote_*_repository: Add `pass_through` attribute to Curation settings for all remote repositories that support Curation (Conan, Docker, Gems, Go, Gradle, Hugging Face, Maven, NPM, NuGet, PyPI). This enables Pass-through for Curation Audit. PR: [#1371](https://github.com/jfrog/terraform-provider-artifactory/pull/1371)
+
 
 BUG FIXES:
 
+* resource/artifactory_package_cleanup_policy: Fix project-level policy key validation failing with `for_each` when the key contains dynamic expressions (e.g., `"proj-${each.key}"`). The key is now validated during the plan phase via `ModifyPlan` when values are resolved, instead of failing during `ValidateConfig` when values are unknown. Issue: [#1339](https://github.com/jfrog/terraform-provider-artifactory/issues/1339). PR: [#1371](https://github.com/jfrog/terraform-provider-artifactory/pull/1371)
 * resource/artifactory_local_helm_repository.go: Fix prevent force_non_duplicate_chart and force_metadata_name_version state drift in local helm repositories. Issue: [#1243](https://github.com/jfrog/terraform-provider-artifactory/issues/1243). PR: [#1362](https://github.com/jfrog/terraform-provider-artifactory/pull/1362)
+
 
 ### 12.11.1 (Dec 8, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
 

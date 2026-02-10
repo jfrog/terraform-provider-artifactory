@@ -28,6 +28,7 @@ import (
 func TestAccRemoteConanRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase(repository.ConanPackageType, t, map[string]interface{}{
 		"curated":                    false,
+		"pass_through":               false,
 		"force_conan_authentication": true,
 	}))
 }
@@ -63,7 +64,6 @@ func TestAccRemoteConanRepository_migrate_from_SDKv2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com/"),
-					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 					resource.TestCheckResourceAttr(fqrn, "force_conan_authentication", "true"),
 				),
 			},

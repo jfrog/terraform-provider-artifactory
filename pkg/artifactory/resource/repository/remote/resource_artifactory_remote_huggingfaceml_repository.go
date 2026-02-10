@@ -95,7 +95,8 @@ func (r remoteHuggingFaceMLResourceModel) ToAPIModel(ctx context.Context, packag
 	return RemoteHuggingFaceMLAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 	}, diags
 }
@@ -109,6 +110,7 @@ func (r *remoteHuggingFaceMLResourceModel) FromAPIModel(ctx context.Context, api
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	return diags
 }
 

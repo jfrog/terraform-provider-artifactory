@@ -31,6 +31,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `url` - (Required) The remote repo URL.
 * `vcs_git_provider` - (Optional) Artifactory supports proxying the following Git providers out-of-the-box: GitHub (`GITHUB`), GitHub Enterprise (`GITHUBENTERPRISE`), BitBucket Cloud (`BITBUCKET`), BitBucket Server (`STASH`), GitLab (`GITLAB`), or a remote Artifactory instance (`ARTIFACTORY`). Default value is `ARTIFACTORY`.
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `pass_through` - (Optional, Default: `false`) Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.
 
 
 ## Import

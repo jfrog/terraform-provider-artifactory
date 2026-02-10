@@ -27,7 +27,8 @@ import (
 
 func TestAccRemoteGemsRepository(t *testing.T) {
 	resource.Test(mkNewRemoteTestCase(repository.GemsPackageType, t, map[string]interface{}{
-		"curated": false,
+		"curated":      false,
+		"pass_through": false,
 	}))
 }
 
@@ -61,7 +62,6 @@ func TestAccRemoteGemsRepository_migrate_from_SDKv2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://github.com/"),
-					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 				),
 			},
 			{

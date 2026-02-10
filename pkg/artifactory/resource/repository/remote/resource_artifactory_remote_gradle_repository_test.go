@@ -38,6 +38,7 @@ func TestAccRemoteGradleRepository(t *testing.T) {
 		"reject_invalid_jars":              true,
 		"max_unique_snapshots":             6,
 		"curated":                          false,
+		"pass_through":                     false,
 	}))
 }
 

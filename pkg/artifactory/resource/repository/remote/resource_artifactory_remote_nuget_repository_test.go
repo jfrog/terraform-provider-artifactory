@@ -32,6 +32,8 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 		"force_nuget_authentication":  true,
 		"missed_cache_period_seconds": 1800,
 		"symbol_server_url":           "https://symbols.nuget.org/download/symbols",
+		"curated":                     false,
+		"pass_through":                false,
 	}))
 }
 

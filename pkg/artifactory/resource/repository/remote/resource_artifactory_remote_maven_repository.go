@@ -97,7 +97,8 @@ func (r remoteMavenResourceModel) ToAPIModel(ctx context.Context, packageType st
 	return RemoteMavenAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		JavaAPIModel: JavaAPIModel{
 			FetchJarsEagerly:             r.FetchJarsEagerly.ValueBool(),
@@ -121,6 +122,7 @@ func (r *remoteMavenResourceModel) FromAPIModel(ctx context.Context, apiModel in
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.FetchJarsEagerly = types.BoolValue(model.JavaAPIModel.FetchJarsEagerly)
 	r.FetchSourcesEagerly = types.BoolValue(model.JavaAPIModel.FetchSourcesEagerly)
 	r.RemoteRepoChecksumPolicyType = types.StringValue(model.JavaAPIModel.RemoteRepoChecksumPolicyType)

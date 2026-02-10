@@ -310,6 +310,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 		    block_pushing_schema1          = true
 		    external_dependencies_patterns = ["*foo"]
 			curated                        = false
+			pass_through                   = false
 		}
 
 		data "artifactory_remote_docker_repository" "{{ .name }}" {
@@ -335,6 +336,7 @@ func TestAccDataSourceRemoteDockerRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.#", "1"),
 					resource.TestCheckResourceAttr(fqrn, "external_dependencies_patterns.0", "*foo"),
 					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
+					resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
 				),
 			},
 		},
@@ -578,6 +580,7 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 	params["resource_name"] = "artifactory_remote_maven_repository"
 	params["suppress_pom_consistency_checks"] = false
 	params["curated"] = false
+	params["pass_through"] = false
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
@@ -595,6 +598,7 @@ func TestAccDataSourceRemoteMavenRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "suppress_pom_consistency_checks", fmt.Sprintf("%t", params["suppress_pom_consistency_checks"])),
 					resource.TestCheckResourceAttr(fqrn, "reject_invalid_jars", fmt.Sprintf("%t", params["reject_invalid_jars"])),
 					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
+					resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
 				),
 			},
 		},
@@ -696,6 +700,8 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 		    key     = "{{ .name }}"
 		    url     = "http://tempurl.org"
 			curated = false
+			pass_through = false
+
 		}
 
 		data "artifactory_remote_pypi_repository" "{{ .name }}" {
@@ -718,6 +724,7 @@ func TestAccDataSourceRemotePypiRepository(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "pypi_registry_url", "https://pypi.org"),
 					resource.TestCheckResourceAttr(fqrn, "pypi_repository_suffix", "simple"),
 					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
+					resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
 				),
 			},
 		},

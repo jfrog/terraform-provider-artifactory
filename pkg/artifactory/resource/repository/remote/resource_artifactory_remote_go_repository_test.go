@@ -33,6 +33,8 @@ func TestAccRemoteGoRepository(t *testing.T) {
 				"url":                         "https://proxy.golang.org/",
 				"vcs_git_provider":            vcsGitProvider,
 				"missed_cache_period_seconds": 1800,
+				"curated":                     false,
+				"pass_through":                false,
 			}))
 		})
 	}

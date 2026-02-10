@@ -38,6 +38,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `external_dependencies_enabled` - (Optional) Also known as 'Foreign Layers Caching' on the UI.
 * `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. Default to `["**"]`
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `pass_through` - (Optional, Default: `false`) Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.
 * `project_id` (Optional) Use this attribute to enter your GCR, GAR Project Id to limit the scope of this remote repo to a specific project in your third-party registry. When leaving this field blank or unset, remote repositories that support project id will default to their default project as you have set up in your account.
 
 ## Import

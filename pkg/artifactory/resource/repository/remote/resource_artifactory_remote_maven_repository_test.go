@@ -28,5 +28,6 @@ func TestAccRemoteMavenRepository(t *testing.T) {
 		"list_remote_folder_items":        true,
 		"max_unique_snapshots":            6,
 		"curated":                         false,
+		"pass_through":                    false,
 	}))
 }

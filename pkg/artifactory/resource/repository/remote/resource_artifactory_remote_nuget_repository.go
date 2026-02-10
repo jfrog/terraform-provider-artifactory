@@ -102,7 +102,8 @@ func (r remoteNugetResourceModel) ToAPIModel(ctx context.Context, packageType st
 	return RemoteNugetAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		FeedContextPath:          r.FeedContextPath.ValueString(),
 		DownloadContextPath:      r.DownloadContextPath.ValueString(),
@@ -121,6 +122,7 @@ func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel in
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.FeedContextPath = types.StringValue(model.FeedContextPath)
 	r.DownloadContextPath = types.StringValue(model.DownloadContextPath)
 	r.V3FeedURL = types.StringValue(model.V3FeedURL)

@@ -93,7 +93,8 @@ func (r remoteConanResourceModel) ToAPIModel(ctx context.Context, packageType st
 	return RemoteConanAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		ConanAPIModel: repository.ConanAPIModel{
 			EnableConanSupport:       true,
@@ -111,6 +112,7 @@ func (r *remoteConanResourceModel) FromAPIModel(ctx context.Context, apiModel in
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.ForceConanAuthentication = types.BoolValue(model.ConanAPIModel.ForceConanAuthentication)
 
 	return diags

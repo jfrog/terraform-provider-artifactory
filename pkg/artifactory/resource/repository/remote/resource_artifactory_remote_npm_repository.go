@@ -95,7 +95,8 @@ func (r remoteNPMResourceModel) ToAPIModel(ctx context.Context, packageType stri
 	return RemoteNPMAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 	}, diags
 }
@@ -109,6 +110,7 @@ func (r *remoteNPMResourceModel) FromAPIModel(ctx context.Context, apiModel inte
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	return diags
 }
 
