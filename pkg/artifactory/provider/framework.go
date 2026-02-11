@@ -342,6 +342,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			configuration.NewPropertySetResource,
 			configuration.NewProxyResource,
 			configuration.NewRepositoryLayoutResource,
+			configuration.NewTrashCanConfigResource,
 			lifecycle.NewReleaseBundleV2Resource,
 			lifecycle.NewReleaseBundleV2PromotionResource,
 			replication.NewLocalRepositorySingleReplicationResource,

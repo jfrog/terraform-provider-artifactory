@@ -1,3 +1,9 @@
+### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
+
+FEATURES:
+
+**New Resource:** `artifactory_trashcan_config` for managing Artifactory trash can configuration. When enabled, deleted items are stored in the trash can for a specified retention period before being permanently deleted. Issue: [#1307](https://github.com/jfrog/terraform-provider-artifactory/issues/1307) PR: [#1373](https://github.com/jfrog/terraform-provider-artifactory/pull/1373)
+
 ### 12.11.2 (Feb 10, 2026). Tested on Artifactory 7.133.6 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 IMPROVEMENTS:
