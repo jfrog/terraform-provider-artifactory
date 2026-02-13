@@ -756,13 +756,13 @@ resource "artifactory_virtual_terraform_repository" "terraform-virtual" {
 resource "artifactory_virtual_hex_repository" "my-hex-virtual" {
   key                     = "my-hex-virtual"
   hex_primary_keypair_ref = artifactory_keypair.hex-keypair.pair_name
-  repositories           = [
+  repositories = [
     artifactory_local_hex_repository.hex-local.key,
     artifactory_remote_hex_repository.my-remote-hex.key
   ]
-  description             = "A test virtual repo"
-  notes                   = "Internal description"
-  depends_on              = [
+  description = "A test virtual repo"
+  notes       = "Internal description"
+  depends_on = [
     artifactory_keypair.hex-keypair,
     artifactory_local_hex_repository.hex-local,
     artifactory_remote_hex_repository.my-remote-hex

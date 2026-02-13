@@ -285,9 +285,13 @@ Optional:
   > **Requires Artifactory 7.111.2 or later.**
 ~>JFrog recommends using the `last_downloaded_before_in_days` condition to ensure that packages currently in use are not deleted.
 
+~> Note: It also deletes packages that have never been downloaded, based on the creation date if it is older than the specified `last_downloaded_before_in_days` duration. 
+
 - `created_before_in_months` (Number) The cleanup policy will delete packages based on how long ago they were created. For example, if this parameter is 2 then packages created more than 2 months ago will be deleted as part of the policy.
 
 - `last_downloaded_before_in_months` (Number) The cleanup policy will delete packages based on how long ago they were downloaded. For example, if this parameter is 5 then packages downloaded more than 5 months ago will be deleted as part of the policy.
+
+~>Note: It also deletes packages that have never been downloaded, based on the creation date if it is older than the specified `last_downloaded_before_in_months` duration.
 
 ~>**Deprecated:** Use `created_before_in_days` instead of `created_before_in_months`. Renamed to `created_before_in_days` starting in version 7.111.2.
 
