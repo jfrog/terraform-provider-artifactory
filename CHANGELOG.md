@@ -1,3 +1,9 @@
+### 12.11.4 (Feb 13, 2026)
+
+IMPROVEMENTS:
+
+**New Resource:** `artifactory_virtual_huggingfaceml_repository` to support virtual Hugging Face ML repository. PR: [#1369](https://github.com/jfrog/terraform-provider-artifactory/pull/1369)
+
 ### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 FEATURES:
