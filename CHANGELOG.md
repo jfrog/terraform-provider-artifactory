@@ -1,3 +1,9 @@
+### 12.11.4 (Feb 14, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
+
+IMPROVEMENTS:
+
+* resource/artifactory_ldap_group_setting_v2: Add `refresh_operation` and `refresh_username` attributes to trigger LDAP group import/refresh after create and update operations. PR: [#1374](https://github.com/jfrog/terraform-provider-artifactory/pull/1374)
+
 ### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 FEATURES:
