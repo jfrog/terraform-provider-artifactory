@@ -109,6 +109,84 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 	})
 }
 
+func TestAccLdapGroupSettingV2_withRefresh(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("ldap-", "artifactory_ldap_group_setting_v2")
+
+	const ldapGroupSetting = `
+	resource "artifactory_ldap_group_setting_v2" "{{ .name }}" {
+		name = "{{ .name }}"
+		enabled_ldap = "{{ .enabled_ldap }}"
+		group_base_dn = "{{ .group_base_dn }}"
+		group_name_attribute = "cn"
+		group_member_attribute = "{{ .group_member_attribute }}"
+		sub_tree = true
+		force_attribute_search = false
+		filter = "(objectClass=groupOfNames)"
+		description_attribute = "description"
+		strategy = "{{ .strategy }}"
+		refresh_operation = "{{ .refresh_operation }}"
+		refresh_username = "{{ .refresh_username }}"
+	}
+	`
+	params := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap2",
+		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
+		"group_member_attribute": "uniqueMember",
+		"strategy":               "STATIC",
+		"refresh_operation":      "UPDATE_AND_IMPORT",
+		"refresh_username":       "",
+	}
+	configCreate := util.ExecuteTemplate("TestLdapRefresh", ldapGroupSetting, params)
+
+	paramsUpdate := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap3",
+		"group_base_dn":          "CN=Users,DC=MyDomain,DC=org",
+		"group_member_attribute": "uniqueMember1",
+		"strategy":               "DYNAMIC",
+		"refresh_operation":      "IMPORT",
+		"refresh_username":       "admin",
+	}
+	configUpdate := util.ExecuteTemplate("TestLdapRefresh", ldapGroupSetting, paramsUpdate)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccLdapGroupSettingV2Destroy(fqrn),
+
+		Steps: []resource.TestStep{
+			{
+				Config: configCreate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", name),
+					resource.TestCheckResourceAttr(fqrn, "enabled_ldap", "ldap2"),
+					resource.TestCheckResourceAttr(fqrn, "strategy", "STATIC"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_operation", "UPDATE_AND_IMPORT"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_username", ""),
+				),
+			},
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "name", name),
+					resource.TestCheckResourceAttr(fqrn, "enabled_ldap", "ldap3"),
+					resource.TestCheckResourceAttr(fqrn, "strategy", "DYNAMIC"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_operation", "IMPORT"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_username", "admin"),
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
+				ImportStateVerifyIgnore: []string{"refresh_operation", "refresh_username"},
+			},
+		},
+	})
+}
+
 func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 	_, _, name := testutil.MkNames("ldap-", "artifactory_ldap_group_setting_v2")
 
@@ -165,6 +243,20 @@ func TestAccLdapGroupSettingV2_failingValidators(t *testing.T) {
 	t.Run("StrategyCaseSensitive", func(t *testing.T) {
 		resource.Test(makeLdapGroupValidatorsTestCase(paramsStrategy, errorMessageMatch, t))
 	})
+
+	paramsRefreshOp := map[string]interface{}{
+		"name":                   name,
+		"enabled_ldap":           "ldap2",
+		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
+		"group_member_attribute": "uniqueMember",
+		"filter":                 "(objectClass=groupOfNames)",
+		"sub_tree":               "false",
+		"strategy":               "STATIC",
+		"refresh_operation":      "INVALID",
+	}
+	t.Run("InvalidRefreshOperation", func(t *testing.T) {
+		resource.Test(makeLdapGroupValidatorsTestCase(paramsRefreshOp, errorMessageMatch, t))
+	})
 }
 
 func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage string, t *testing.T) (*testing.T, resource.TestCase) {
@@ -191,6 +283,7 @@ func makeLdapGroupValidatorsTestCase(params map[string]interface{}, errorMessage
 		filter = var.filter
 		description_attribute = "description"
 		strategy = "{{ .strategy }}"
+		{{ if .refresh_operation }}refresh_operation = "{{ .refresh_operation }}"{{ end }}
 	}
 	`
 	LdapSettingIncorrectDnPattern := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)

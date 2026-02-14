@@ -16,9 +16,12 @@ package configuration
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -61,6 +64,8 @@ type ArtifactoryLdapGroupSettingResourceModel struct {
 	Filter               types.String `tfsdk:"filter"`
 	DescriptionAttribute types.String `tfsdk:"description_attribute"`
 	Strategy             types.String `tfsdk:"strategy"`
+	RefreshOperation     types.String `tfsdk:"refresh_operation"`
+	RefreshUsername      types.String `tfsdk:"refresh_username"`
 }
 
 // ArtifactoryLdapGroupSettingResourceAPIModel describes the API data model.
@@ -154,8 +159,41 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 					stringvalidator.OneOf("STATIC", "DYNAMIC", "HIERARCHICAL"),
 				},
 			},
+			"refresh_operation": schema.StringAttribute{
+				MarkdownDescription: "Operation to perform after creating or updating the LDAP group " +
+					"setting. Triggers a sync of LDAP groups into Artifactory. Valid values: " +
+					"`UPDATE` (update existing groups), `IMPORT` (import new groups), " +
+					"`UPDATE_AND_IMPORT` (both). Defaults to `UPDATE_AND_IMPORT`.",
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("UPDATE_AND_IMPORT"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("UPDATE", "IMPORT", "UPDATE_AND_IMPORT"),
+				},
+			},
+			"refresh_username": schema.StringAttribute{
+				MarkdownDescription: "Optional username to limit the group refresh to a specific " +
+					"user's group membership. When empty (default), all group memberships are refreshed.",
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString(""),
+			},
 		},
 	}
+}
+
+func refreshLdapGroup(client *resty.Client, groupName, operation, username string) error {
+	groupNameEscaped := url.PathEscape(groupName)
+	refreshURL := fmt.Sprintf("%s%s/refresh?operation=%s", LdapGroupEndpoint, groupNameEscaped, operation)
+	refreshURL += "&username=" + url.QueryEscape(username)
+	resp, err := client.R().Post(refreshURL)
+	if err != nil {
+		return fmt.Errorf("failed to trigger LDAP group refresh: %w", err)
+	}
+	if resp.IsError() {
+		return fmt.Errorf("LDAP group refresh failed: %s", resp.String())
+	}
+	return nil
 }
 
 func (r *ArtifactoryLdapGroupSettingResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -213,6 +251,14 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 	// Assign the resource ID for the resource in the state
 	data.Id = types.StringValue(ldapGroup.Name)
 
+	// Trigger LDAP group refresh
+	operation := data.RefreshOperation.ValueString()
+	username := data.RefreshUsername.ValueString()
+	if err := refreshLdapGroup(r.ProviderData.Client, ldapGroup.Name, operation, username); err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -253,10 +299,18 @@ func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req reso
 
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
+	// Preserve refresh fields (not returned by API)
+	refreshOp := data.RefreshOperation
+	refreshUser := data.RefreshUsername
+
 	resp.Diagnostics.Append(data.ToState(ctx, ldapGroup)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Restore refresh fields from prior state
+	data.RefreshOperation = refreshOp
+	data.RefreshUsername = refreshUser
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -303,10 +357,26 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 		return
 	}
 
+	// Trigger LDAP group refresh
+	operation := data.RefreshOperation.ValueString()
+	username := data.RefreshUsername.ValueString()
+	if err := refreshLdapGroup(r.ProviderData.Client, ldapGroup.Name, operation, username); err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+
+	// Preserve refresh fields from plan (not returned by API)
+	refreshOp := data.RefreshOperation
+	refreshUser := data.RefreshUsername
+
 	resp.Diagnostics.Append(data.ToState(ctx, ldapGroup)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Restore refresh fields after ToState
+	data.RefreshOperation = refreshOp
+	data.RefreshUsername = refreshUser
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
