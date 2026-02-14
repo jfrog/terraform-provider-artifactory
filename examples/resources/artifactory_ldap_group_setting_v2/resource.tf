@@ -9,4 +9,6 @@ resource "artifactory_ldap_group_setting_v2" "ldap_group_name" {
   filter                 = "(objectClass=groupOfNames)"
   description_attribute  = "description"
   strategy               = "STATIC"
+  refresh_operation      = "UPDATE_AND_IMPORT"
+  refresh_username       = ""
 }

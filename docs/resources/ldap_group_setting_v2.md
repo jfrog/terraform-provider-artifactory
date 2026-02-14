@@ -28,6 +28,8 @@ resource "artifactory_ldap_group_setting_v2" "ldap_group_name" {
   filter                 = "(objectClass=groupOfNames)"
   description_attribute  = "description"
   strategy               = "STATIC"
+  refresh_operation      = "UPDATE_AND_IMPORT"
+  refresh_username       = ""
 }
 ```
 
@@ -50,6 +52,8 @@ resource "artifactory_ldap_group_setting_v2" "ldap_group_name" {
 - `enabled_ldap` (String) The LDAP setting key you want to use for group retrieval.
 - `force_attribute_search` (Boolean) This attribute is used in very specific cases of LDAP group settings. Don't switch it to `false`, unless instructed by the JFrog support team. Default value is `false`.
 - `group_base_dn` (String) A search base for group entry DNs, relative to the DN on the LDAP server’s URL (and not relative to the LDAP Setting’s “Search Base”). Used when importing groups.
+- `refresh_operation` (String) Operation to perform after creating or updating the LDAP group setting. Triggers a sync of LDAP groups into Artifactory. Valid values: `UPDATE` (update existing groups), `IMPORT` (import new groups), `UPDATE_AND_IMPORT` (both). Defaults to `UPDATE_AND_IMPORT`.
+- `refresh_username` (String) Optional username to limit the group refresh to a specific user's group membership. When empty (default), all group memberships are refreshed.
 - `sub_tree` (Boolean) When set, enables deep search through the sub-tree of the LDAP URL + Search Base. `true` by default. `sub_tree` can be set to true only with `STATIC` or `DYNAMIC` strategy.
 
 ### Read-Only
