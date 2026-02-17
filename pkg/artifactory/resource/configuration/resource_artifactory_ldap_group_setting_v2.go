@@ -21,7 +21,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -182,11 +181,11 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 	}
 }
 
-func refreshLdapGroup(client *resty.Client, groupName, operation, username string) error {
+func (r *ArtifactoryLdapGroupSettingResource) refreshLdapGroup(groupName, operation, username string) error {
 	groupNameEscaped := url.PathEscape(groupName)
 	refreshURL := fmt.Sprintf("%s%s/refresh?operation=%s", LdapGroupEndpoint, groupNameEscaped, operation)
 	refreshURL += "&username=" + url.QueryEscape(username)
-	resp, err := client.R().Post(refreshURL)
+	resp, err := r.ProviderData.Client.R().Post(refreshURL)
 	if err != nil {
 		return fmt.Errorf("failed to trigger LDAP group refresh: %w", err)
 	}
@@ -254,7 +253,7 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 	// Trigger LDAP group refresh
 	operation := data.RefreshOperation.ValueString()
 	username := data.RefreshUsername.ValueString()
-	if err := refreshLdapGroup(r.ProviderData.Client, ldapGroup.Name, operation, username); err != nil {
+	if err := r.refreshLdapGroup(ldapGroup.Name, operation, username); err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
 		return
 	}
@@ -360,7 +359,7 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 	// Trigger LDAP group refresh
 	operation := data.RefreshOperation.ValueString()
 	username := data.RefreshUsername.ValueString()
-	if err := refreshLdapGroup(r.ProviderData.Client, ldapGroup.Name, operation, username); err != nil {
+	if err := r.refreshLdapGroup(ldapGroup.Name, operation, username); err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
 		return
 	}
