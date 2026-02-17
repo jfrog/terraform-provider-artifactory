@@ -210,6 +210,19 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 		return
 	}
 
+	// Refresh LDAP group settings so the new configuration is applied
+	refreshResp, err := r.ProviderData.Client.R().
+		SetQueryParam("operation", "UPDATE_AND_IMPORT").
+		Post(LdapGroupEndpoint + ldapGroup.Name + "/refresh")
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+	if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
+		utilfw.UnableToCreateResourceError(resp, refreshResp.String())
+		return
+	}
+
 	// Assign the resource ID for the resource in the state
 	data.Id = types.StringValue(ldapGroup.Name)
 
@@ -300,6 +313,19 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 
 	if response.IsError() {
 		utilfw.UnableToUpdateResourceError(resp, response.String())
+		return
+	}
+
+	// Refresh LDAP group settings after update so changes take effect
+	refreshResp, err := r.ProviderData.Client.R().
+		SetQueryParam("operation", "UPDATE").
+		Post(LdapGroupEndpoint + ldapGroup.Name + "/refresh")
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+	if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, refreshResp.String())
 		return
 	}
 
