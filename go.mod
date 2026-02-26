@@ -3,9 +3,7 @@ module github.com/jfrog/terraform-provider-artifactory/v12
 // if you need to do local dev, literally just uncomment the line below
 // replace github.com/jfrog/terraform-provider-shared => ../terraform-provider-shared
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.0
 
 require (
 	github.com/go-resty/resty/v2 v2.17.1
@@ -24,7 +22,7 @@ require (
 	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20260209203927-2842357ff358
-	golang.org/x/net v0.50.0
+	golang.org/x/net v0.51.0
 	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
 )
