@@ -1,3 +1,9 @@
+### 12.11.4 (Mar 13, 2026). 
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_vcs_repository: Add `GITLAB` and `GITHUBENTERPRISE` to `vcs_git_provider` validation. Artifactory supports proxying GitLab and GitHub Enterprise in addition to existing providers; the attribute description was updated to list all supported providers. PR: [#1383](https://github.com/jfrog/terraform-provider-artifactory/pull/1383)
+
 ### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 FEATURES:
