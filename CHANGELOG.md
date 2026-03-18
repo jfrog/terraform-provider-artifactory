@@ -1,3 +1,13 @@
+### 12.11.5 (May 22, 2026).
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Use `types.String` to support "unknown" `project_environments` elements during `terraform plan`. This fixes a `Value Conversion Error` when `project_environments` contains values from other resources (e.g., `project_environment` resource IDs). Issue: [#1251](https://github.com/jfrog/terraform-provider-artifactory/issues/1251). PR: [#1252](https://github.com/jfrog/terraform-provider-artifactory/pull/1252)
+
+IMPROVEMENTS:
+
+* resource/artifactory_ldap_group_setting_v2: Add `refresh_operation` attribute (`UPDATE`, `IMPORT`, `UPDATE_AND_IMPORT`, default: `UPDATE_AND_IMPORT`) to trigger LDAP group synchronization automatically after create or update. Previously, the group config was saved but Artifactory did not sync groups until a manual UI click or API call. Existing resources upgrading to this version will see `+ refresh_operation = "UPDATE_AND_IMPORT"` in the plan and a one-time sync on apply — safe and idempotent. Since the Artifactory API does not return this field, the value is preserved in state. PR: [#1400](https://github.com/jfrog/terraform-provider-artifactory/pull/1400)
+
 ### 12.11.4 (Apr 30, 2026). Tested on Artifactory 7.146.8 with Terraform 1.15.1 and OpenTofu 1.11.6
 
 FEATURES:
@@ -13,6 +23,7 @@ IMPROVEMENTS:
 
 * resource/artifactory_archive_policy, resource/artifactory_package_cleanup_policy: Relax search criteria validation so **time-based** conditions (days or months) and **properties-based** conditions (`included_properties`) can be used together. **Version-based** condition (`keep_last_n_versions`) remains mutually exclusive and cannot be combined with time-based or properties-based conditions. For package cleanup policies, combined time + properties behavior follows Artifactory **7.129+** (AND semantics). JTFPR-173.
 * resource/artifactory_remote_vcs_repository: Add `GITLAB` and `GITHUBENTERPRISE` to `vcs_git_provider` validation. Artifactory supports proxying GitLab and GitHub Enterprise in addition to existing providers; the attribute description was updated to list all supported providers. PR: [#1383](https://github.com/jfrog/terraform-provider-artifactory/pull/1383) 
+
 
 ### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
 
