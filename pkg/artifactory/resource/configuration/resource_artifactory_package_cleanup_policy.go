@@ -44,11 +44,11 @@ import (
 type cleanupSearchCriteriaValidator struct{}
 
 func (v cleanupSearchCriteriaValidator) Description(ctx context.Context) string {
-	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (keep_last_n_versions) is mutually exclusive with all other condition types"
 }
 
 func (v cleanupSearchCriteriaValidator) MarkdownDescription(ctx context.Context) string {
-	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (`keep_last_n_versions`) is mutually exclusive with all other condition types"
 }
 
 func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
@@ -174,34 +174,22 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 	// Check for time-based conditions (either days or months)
 	timeBasedSet := timeBasedDaysSet || timeBasedMonthsSet
 
-	// Count how many different condition types are set
-	conditionTypes := 0
-	if timeBasedSet {
-		conditionTypes++
-	}
-	if keepVersionBasedSet {
-		conditionTypes++
-	}
-	if propertiesBasedSet {
-		conditionTypes++
-	}
-
 	// Must specify at least one condition
-	if conditionTypes == 0 {
+	if !timeBasedSet && !keepVersionBasedSet && !propertiesBasedSet {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy must use exactly one of the following condition types: time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+			"A policy must specify at least one condition: time-based conditions (days-based or months-based), version-based condition (`keep_last_n_versions`), or properties-based condition (`included_properties`). Time-based and properties-based conditions can be combined (AND semantics) starting from Artifactory 7.129.",
 		)
 		return
 	}
 
-	// Cannot use multiple condition types together
-	if conditionTypes > 1 {
+	// Version-based condition is mutually exclusive with time-based and properties-based conditions
+	if keepVersionBasedSet && (timeBasedSet || propertiesBasedSet) {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy can only use one type of condition: either time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+			"Version-based condition (`keep_last_n_versions`) cannot be combined with time-based conditions or properties-based condition (`included_properties`). Use `keep_last_n_versions` alone, or use time-based and/or properties-based conditions without `keep_last_n_versions`.",
 		)
 		return
 	}

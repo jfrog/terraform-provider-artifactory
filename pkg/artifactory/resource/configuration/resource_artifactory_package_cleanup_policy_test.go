@@ -361,7 +361,7 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = true
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					package_types = ["docker"]
 					repos = ["**"]
@@ -373,19 +373,46 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  "A policy can only use one type of condition",
+			errorRegex:  "Version-based condition.*cannot be combined",
 		},
 		{
-			name: "invalid mixed condition types (time and properties)",
+			// time + property is now a valid AND combination (supported from Artifactory 7.129)
+			name: "valid combined time and properties (days and included_properties)",
 			config: `
 			resource "artifactory_package_cleanup_policy" "test" {
-				key = "test-invalid-time-props"
+				key = "test-valid-time-props"
 				description = "Test policy"
 				cron_expression = "0 0 2 ? * MON-SAT *"
 				duration_in_minutes = 60
 				enabled = true
 				skip_trashcan = false
-				
+
+				search_criteria = {
+					package_types = ["docker"]
+					repos = ["**"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					created_before_in_days = 30
+					included_properties = {
+						"release.status" = ["prod"]
+					}
+				}
+			}`,
+			expectError: false,
+		},
+		{
+			// time (months) + property is also valid (AND combination)
+			name: "valid combined time (months) and properties",
+			config: `
+			resource "artifactory_package_cleanup_policy" "test" {
+				key = "test-valid-time-months-props"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = true
+				skip_trashcan = false
+
 				search_criteria = {
 					package_types = ["docker"]
 					repos = ["**"]
@@ -398,8 +425,7 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 					}
 				}
 			}`,
-			expectError: true,
-			errorRegex:  "A policy can only use one type of condition",
+			expectError: false,
 		},
 		{
 			name: "invalid mixed condition types (version and properties)",
@@ -411,7 +437,7 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = true
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					package_types = ["docker"]
 					repos = ["**"]
@@ -425,7 +451,34 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  "A policy can only use one type of condition",
+			errorRegex:  "Version-based condition.*cannot be combined",
+		},
+		{
+			name: "invalid mixed condition types (version, time and properties)",
+			config: `
+			resource "artifactory_package_cleanup_policy" "test" {
+				key = "test-invalid-all-three"
+				description = "Test policy"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = true
+				skip_trashcan = false
+
+				search_criteria = {
+					package_types = ["docker"]
+					repos = ["**"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					created_before_in_days = 30
+					keep_last_n_versions = 5
+					included_properties = {
+						"test_key" = ["test_value"]
+					}
+				}
+			}`,
+			expectError: true,
+			errorRegex:  "Version-based condition.*cannot be combined",
 		},
 		{
 			name: "invalid zero value for time-based condition (months)",
@@ -567,7 +620,7 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  "A policy must use exactly one of the following condition types",
+			errorRegex:  "A policy must specify at least one condition",
 		},
 	}
 
