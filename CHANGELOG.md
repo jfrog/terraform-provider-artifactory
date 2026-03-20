@@ -1,3 +1,10 @@
+### 12.11.4 (Mar 20, 2026). Tested on Artifactory 7.133.15 with Terraform 1.14.7 and OpenTofu 1.11.5
+
+IMPROVEMENTS:
+
+* resource/artifactory_archive_policy, resource/artifactory_package_cleanup_policy: Relax search criteria validation so **time-based** conditions (days or months) and **properties-based** conditions (`included_properties`) can be used together. **Version-based** condition (`keep_last_n_versions`) remains mutually exclusive and cannot be combined with time-based or properties-based conditions. For package cleanup policies, combined time + properties behavior follows Artifactory **7.129+** (AND semantics). JTFPR-173.
+* resource/artifactory_remote_vcs_repository: Add `GITLAB` and `GITHUBENTERPRISE` to `vcs_git_provider` validation. Artifactory supports proxying GitLab and GitHub Enterprise in addition to existing providers; the attribute description was updated to list all supported providers. PR: [#1383](https://github.com/jfrog/terraform-provider-artifactory/pull/1383) 
+
 ### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
 
 FEATURES:

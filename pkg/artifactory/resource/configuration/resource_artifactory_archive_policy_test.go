@@ -126,7 +126,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -137,7 +137,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy must use exactly one of the following condition types.*",
+			errorRegex:  ".*A policy must specify at least one condition.*",
 		},
 		{
 			name: "mixed_days_and_months",
@@ -174,7 +174,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -187,36 +187,11 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
+			errorRegex:  ".*Version-based condition.*cannot be combined.*",
 		},
 		{
-			name: "time_and_properties_based",
-			config: `
-			resource "artifactory_archive_policy" "test" {
-				key = "test-time-properties"
-				description = "Test policy"
-				cron_expression = "0 0 2 ? * MON-SAT *"
-				duration_in_minutes = 60
-				enabled = false
-				skip_trashcan = false
-				
-				search_criteria = {
-					repos = ["**"]
-					package_types = ["docker"]
-					include_all_projects = true
-					included_projects = []
-					included_packages = ["**"]
-					excluded_packages = ["com/jfrog/latest"]
-					created_before_in_days = 30
-					included_properties = {
-						"build.name" = ["my-app"]
-					}
-				}
-			}`,
-			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
-		},
-		{
+			// time + property is now valid (AND semantics, supported from Artifactory 7.129)
+			// This case is tested in TestAccArchivePolicy_valid_combined_conditions
 			name: "version_and_properties_based",
 			config: `
 			resource "artifactory_archive_policy" "test" {
@@ -226,7 +201,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -241,10 +216,10 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
+			errorRegex:  ".*Version-based condition.*cannot be combined.*",
 		},
 		{
-			name: "all_three_condition_types",
+			name: "version_time_and_properties_based",
 			config: `
 			resource "artifactory_archive_policy" "test" {
 				key = "test-all-three"
@@ -253,7 +228,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -269,7 +244,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
+			errorRegex:  ".*Version-based condition.*cannot be combined.*",
 		},
 	}
 
@@ -638,7 +613,7 @@ func TestAccArchivePolicy_invalid_properties_validation(t *testing.T) {
 					included_properties = {}
 				}
 			}`,
-			errorRegex: ".*A policy must use exactly one of the following condition types.*",
+			errorRegex: ".*A policy must specify at least one condition.*",
 		},
 	}
 
@@ -1019,6 +994,104 @@ func TestAccArchivePolicy_valid_properties_based(t *testing.T) {
 				enabled = false
 				skip_trashcan = false
 				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					%s
+				}
+			}`, policyKey, policyKey, tc.description, tc.config)
+
+			resource.Test(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				CheckDestroy:             testAccArchivePolicyDestroy(fmt.Sprintf("artifactory_archive_policy.%s", policyKey)),
+				Steps: []resource.TestStep{
+					{
+						Config: config,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(fmt.Sprintf("artifactory_archive_policy.%s", policyKey), "key", policyKey),
+							resource.TestCheckResourceAttr(fmt.Sprintf("artifactory_archive_policy.%s", policyKey), "description", tc.description),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccArchivePolicy_valid_combined_time_and_properties(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.129.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.129.0 which is required for combined time + property conditions", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-combined-policy", "artifactory_archive_policy")
+
+	testCases := []struct {
+		name        string
+		description string
+		config      string
+	}{
+		{
+			name:        "time_and_included_properties",
+			description: "Policy combining time-based and included_properties (AND semantics)",
+			config: `
+			created_before_in_days = 30
+			included_properties = {
+				"release.status" = ["prod"]
+			}`,
+		},
+		{
+			name:        "time_and_included_properties_with_downloaded",
+			description: "Policy combining last_downloaded and included_properties",
+			config: `
+			last_downloaded_before_in_days = 90
+			included_properties = {
+				"build.name" = ["my-app"]
+			}`,
+		},
+		{
+			name:        "both_time_conditions_and_included_properties",
+			description: "Policy combining both time conditions and included_properties",
+			config: `
+			created_before_in_days = 30
+			last_downloaded_before_in_days = 60
+			included_properties = {
+				"env" = ["staging"]
+			}`,
+		},
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policyKey := fmt.Sprintf("%s-%d", policyName, i)
+
+			config := fmt.Sprintf(`
+			resource "artifactory_archive_policy" "%s" {
+				key = "%s"
+				description = "%s"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]

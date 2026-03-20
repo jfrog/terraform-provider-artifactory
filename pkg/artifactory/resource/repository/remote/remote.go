@@ -623,9 +623,9 @@ var vcsAttributes = map[string]schema.Attribute{
 		Computed: true,
 		Default:  stringdefault.StaticString("GITHUB"),
 		Validators: []validator.String{
-			stringvalidator.OneOf("GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"),
+			stringvalidator.OneOf("GITHUB", "GITHUBENTERPRISE", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "GITLAB", "CUSTOM"),
 		},
-		MarkdownDescription: `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "GITHUB".`,
+		MarkdownDescription: `Artifactory supports proxying the following Git providers out-of-the-box: GitHub (GITHUB), GitHub Enterprise (GITHUBENTERPRISE), BitBucket Cloud (BITBUCKET), BitBucket Server (STASH), GitLab (GITLAB), or a remote Artifactory instance. Use CUSTOM for a custom URL. Default value is "GITHUB".`,
 	},
 	"vcs_git_download_url": schema.StringAttribute{
 		Optional: true,
