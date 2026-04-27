@@ -786,3 +786,10 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
     enabled = true
   }
 }
+
+resource "artifactory_remote_vcs_repository" "gitlab_vcs" {
+  key         = "my-gitlab-vcs-remote"
+  url         = "https://gitlab.com/your-group/your-repo"
+  description = "VCS remote for GitLab"
+  vcs_git_provider = "GITLAB"
+}

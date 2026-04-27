@@ -43,6 +43,22 @@ func TestAccRemoteVCSRepository_WithFormattedUrl(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteVCSRepository_WithGitLab(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase(repository.VCSPackageType, t, map[string]interface{}{
+		"url":                  "https://gitlab.com/",
+		"vcs_git_provider":     "GITLAB",
+		"max_unique_snapshots": 0,
+	}))
+}
+
+func TestAccRemoteVCSRepository_WithGitHubEnterprise(t *testing.T) {
+	resource.Test(mkNewRemoteTestCase(repository.VCSPackageType, t, map[string]interface{}{
+		"url":                  "https://github.example.com/",
+		"vcs_git_provider":     "GITHUBENTERPRISE",
+		"max_unique_snapshots": 0,
+	}))
+}
+
 func TestAccRemoteVCSRepository_migrate_from_SDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-vcs-remote", "artifactory_remote_vcs_repository")
 

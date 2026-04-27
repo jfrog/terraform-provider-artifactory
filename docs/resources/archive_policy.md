@@ -139,7 +139,7 @@ resource "artifactory_archive_policy" "my-archive-policy" {
 
 ### Using Variables for Condition Fields
 
-You can use Terraform variables for condition fields (`created_before_in_days`, `last_downloaded_before_in_days`, `created_before_in_months`, `last_downloaded_before_in_months`, `keep_last_n_versions`, `included_properties`) and `duration_in_minutes`. The validator will skip validation when values are unknown (variables), allowing `terraform validate` to pass without requiring variable values.
+You can use Terraform variables for condition fields (`created_before_in_days`, `last_downloaded_before_in_days`, `created_before_in_months`, `last_downloaded_before_in_months`, `keep_last_n_versions`, `included_properties`, `excluded_properties`) and `duration_in_minutes`. The validator will skip validation when values are unknown (variables), allowing `terraform validate` to pass without requiring variable values.
 
 **Example with variables:**
 
@@ -179,22 +179,47 @@ resource "artifactory_archive_policy" "my-archive-policy" {
 - Variables without default values will require values to be provided during `terraform plan` or `terraform apply`
 - The validator automatically skips validation when condition field values are unknown (variables), preventing false validation errors during `terraform validate`
 
+### Time-based and properties-based combined
+
+You may combine **time-based** fields (e.g. `created_before_in_days`, `last_downloaded_before_in_days`) with **`included_properties`** in the same policy. **`keep_last_n_versions`** cannot be used together with time-based or properties-based conditions—use version-based logic alone, or time and/or properties without `keep_last_n_versions`.
+
+```terraform
+resource "artifactory_archive_policy" "time-and-properties" {
+  key                 = "time-and-properties"
+  description         = "Archive old packages that match a property"
+  cron_expression     = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled             = true
+  skip_trashcan       = false
+
+  search_criteria = {
+    package_types       = ["docker"]
+    repos               = ["**"]
+    include_all_projects = true
+    included_projects   = []
+    included_packages   = ["**"]
+    excluded_packages   = []
+    last_downloaded_before_in_days = 90
+    included_properties = {
+      "retention.archive" = ["true"]
+    }
+  }
+}
+```
+
 ## Validation Rules
 
 The archive policy resource enforces the following validation rules:
 
-1. **Condition Types**: A policy must use exactly one of the following condition types:
-   - Time-based conditions (`days-based`)
-   - Version-based condition (`keep_last_n_versions`)
-   - Properties-based condition (`included_properties`)
+1. **At least one condition**: A policy must specify at least one of: time-based (days or months), version-based (`keep_last_n_versions`), or properties-based (`included_properties`).
 
-2. **Mutual Exclusivity**: Cannot use multiple condition types together.
+2. **Version-based exclusivity**: `keep_last_n_versions` cannot be combined with time-based conditions or with `included_properties`. Time-based and properties-based conditions **may** be combined.
 
-3. **Zero Values**: Time-based and version-based conditions must have values greater than 0.
+3. **Zero Values**: When set, time-based and version-based condition values must be greater than 0.
 
 4. **Days vs Months**: Cannot use both days-based conditions (`created_before_in_days`, `last_downloaded_before_in_days`) and months-based conditions (`created_before_in_months`, `last_downloaded_before_in_months`) together.
 
-5. **Properties Validation**: Properties-based conditions must have exactly one key with exactly one string value.
+5. **Properties Validation**: When using `included_properties` or `excluded_properties`, each map must have exactly one key with exactly one string value.
 
 6. **Project Configuration**: When `include_all_projects` is set to `true`, the `included_projects` field can be empty array. When `include_all_projects` is `false`, `included_projects` must contain at least one project key.
 
