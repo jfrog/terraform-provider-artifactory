@@ -1,8 +1,12 @@
-### 12.11.4 (Apr 30, 2026). Tested on Artifactory 7.146.8 with Terraform 1.15.0 and OpenTofu 1.11.6
+### 12.11.4 (Apr 30, 2026).
 
 FEATURES:
 
 * resource/`artifactory_remote_generic_repository`: Add `custom_http_headers` — a list of up to 5 custom HTTP headers (`name`, `value`, `sensitive`) sent on every outbound request to the remote URL. `sensitive` defaults to `false`; when set to `true`, Artifactory encrypts the value server-side. Header values are masked in Terraform plan output. Requires Artifactory support for the `customHttpHeaders` repository configuration. PR: [#1393](https://github.com/jfrog/terraform-provider-artifactory/pull/1393)
+
+BUG FIXES:
+
+* resource/artifactory_remote_nuget_repository: Fix `v3_feed_url` and `symbol_server_url` rejecting empty string values. The Artifactory API accepts empty values for these fields and applies its own defaults server-side; the provider now allows `""` to clear the field. Non-empty values are still validated as valid HTTP/HTTPS URLs. Since the API does not return these fields in GET responses, the configured value is preserved in state to prevent perpetual drift. PR: [#1394](https://github.com/jfrog/terraform-provider-artifactory/pull/1394)
 
 IMPROVEMENTS:
 
