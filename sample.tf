@@ -793,3 +793,13 @@ resource "artifactory_remote_vcs_repository" "gitlab_vcs" {
   description = "VCS remote for GitLab"
   vcs_git_provider = "GITLAB"
 }
+
+resource "artifactory_remote_generic_repository" "mixed-sensitivity" {
+  key = "custom-headers-mixed"
+  url = "https://httpbin.org/anything"
+
+  custom_http_headers = [
+    { name = "x-api-key",    value = "plaintext-key",  sensitive = false },
+    { name = "x-auth-token", value = "encrypted-token", sensitive = true },
+  ]
+}
