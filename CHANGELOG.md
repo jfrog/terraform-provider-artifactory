@@ -1,4 +1,8 @@
-### 12.11.4 (Mar 20, 2026). Tested on Artifactory 7.133.15 with Terraform 1.14.7 and OpenTofu 1.11.5
+### 12.11.4 (Apr 30, 2026). Tested on Artifactory 7.146.8 with Terraform 1.15.0 and OpenTofu 1.11.6
+
+FEATURES:
+
+* resource/`artifactory_remote_generic_repository`: Add `custom_http_headers` — a list of up to 5 custom HTTP headers (`name`, `value`, `sensitive`) sent on every outbound request to the remote URL. `sensitive` defaults to `false`; when set to `true`, Artifactory encrypts the value server-side. Header values are masked in Terraform plan output. Requires Artifactory support for the `customHttpHeaders` repository configuration. PR: [#1393](https://github.com/jfrog/terraform-provider-artifactory/pull/1393)
 
 IMPROVEMENTS:
 
