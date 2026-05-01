@@ -5,6 +5,10 @@ FEATURES:
 **New Resource:** `artifactory_*_nix_repository` to support local, remote, virtual Nix repository. Issue: [#1388](https://github.com/jfrog/terraform-provider-artifactory/issues/1388)
 * resource/`artifactory_remote_generic_repository`: Add `custom_http_headers` — a list of up to 5 custom HTTP headers (`name`, `value`, `sensitive`) sent on every outbound request to the remote URL. `sensitive` defaults to `false`; when set to `true`, Artifactory encrypts the value server-side. Header values are masked in Terraform plan output. Requires Artifactory support for the `customHttpHeaders` repository configuration. PR: [#1393](https://github.com/jfrog/terraform-provider-artifactory/pull/1393)
 
+BUG FIXES:
+
+* resource/artifactory_remote_nuget_repository: Fix `v3_feed_url` and `symbol_server_url` rejecting empty string values. The Artifactory API accepts empty values for these fields and applies its own defaults server-side; the provider now allows `""` to clear the field. Non-empty values are still validated as valid HTTP/HTTPS URLs. Since the API does not return these fields in GET responses, the configured value is preserved in state to prevent perpetual drift. PR: [#1394](https://github.com/jfrog/terraform-provider-artifactory/pull/1394)
+
 IMPROVEMENTS:
 
 * resource/artifactory_archive_policy, resource/artifactory_package_cleanup_policy: Relax search criteria validation so **time-based** conditions (days or months) and **properties-based** conditions (`included_properties`) can be used together. **Version-based** condition (`keep_last_n_versions`) remains mutually exclusive and cannot be combined with time-based or properties-based conditions. For package cleanup policies, combined time + properties behavior follows Artifactory **7.129+** (AND semantics). JTFPR-173.
