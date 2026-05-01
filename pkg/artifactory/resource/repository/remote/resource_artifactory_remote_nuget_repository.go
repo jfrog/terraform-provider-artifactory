@@ -125,9 +125,13 @@ func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel in
 	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.FeedContextPath = types.StringValue(model.FeedContextPath)
 	r.DownloadContextPath = types.StringValue(model.DownloadContextPath)
-	r.V3FeedURL = types.StringValue(model.V3FeedURL)
+	if model.V3FeedURL != "" {
+		r.V3FeedURL = types.StringValue(model.V3FeedURL)
+	}
 	r.ForceNugetAuthentication = types.BoolValue(model.ForceNugetAuthentication)
-	r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
+	if model.SymbolServerURL != "" {
+		r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
+	}
 	return diags
 }
 
@@ -167,8 +171,10 @@ func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 				Default:  stringdefault.StaticString("https://api.nuget.org/v3/index.json"),
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-					validatorfw_string.IsURLHttpOrHttps(),
+					stringvalidator.Any(
+						stringvalidator.LengthAtMost(0),
+						validatorfw_string.IsURLHttpOrHttps(),
+					),
 				},
 				MarkdownDescription: "The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.",
 			},
@@ -183,8 +189,10 @@ func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 				Default:  stringdefault.StaticString("https://symbols.nuget.org/download/symbols"),
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-					validatorfw_string.IsURLHttpOrHttps(),
+					stringvalidator.Any(
+						stringvalidator.LengthAtMost(0),
+						validatorfw_string.IsURLHttpOrHttps(),
+					),
 				},
 				MarkdownDescription: "NuGet symbol server URL.",
 			},
