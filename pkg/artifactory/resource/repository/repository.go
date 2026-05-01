@@ -80,6 +80,7 @@ const (
 	MachineLearningType          = "machinelearning"
 	MavenPackageType             = "maven"
 	NPMPackageType               = "npm"
+	NixPackageType               = "nix"
 	NugetPackageType             = "nuget"
 	OCIPackageType               = "oci"
 	OpkgPackageType              = "opkg"
@@ -116,6 +117,7 @@ var PackageNameLookup = map[string]string{
 	HuggingFacePackageType:      "HuggingFace ML",
 	IvyPackageType:              "Ivy",
 	NPMPackageType:              "Npm",
+	NixPackageType:              "Nix",
 	OpkgPackageType:             "Opkg",
 	PubPackageType:              "Pub",
 	PuppetPackageType:           "Puppet",
