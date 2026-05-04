@@ -1,7 +1,8 @@
-### 12.11.4 (Apr 30, 2026).
+### 12.11.4 (Apr 30, 2026). Tested on Artifactory 7.146.8 with Terraform 1.15.1 and OpenTofu 1.11.6
 
 FEATURES:
 
+**New Resource:** `artifactory_*_nix_repository` to support local, remote, virtual Nix repository. Issue: [#1388](https://github.com/jfrog/terraform-provider-artifactory/issues/1388)
 * resource/`artifactory_remote_generic_repository`: Add `custom_http_headers` — a list of up to 5 custom HTTP headers (`name`, `value`, `sensitive`) sent on every outbound request to the remote URL. `sensitive` defaults to `false`; when set to `true`, Artifactory encrypts the value server-side. Header values are masked in Terraform plan output. Requires Artifactory support for the `customHttpHeaders` repository configuration. PR: [#1393](https://github.com/jfrog/terraform-provider-artifactory/pull/1393)
 
 BUG FIXES:

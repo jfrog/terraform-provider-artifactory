@@ -358,6 +358,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewHelmLocalRepositoryResource,
 			local.NewHelmOCILocalRepositoryResource,
 			local.NewHexLocalRepositoryResource,
+			local.NewNixLocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
 			local.NewNugetLocalRepositoryResource,
 			local.NewOCILocalRepositoryResource,
@@ -378,6 +379,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			remote.NewHelmRemoteRepositoryResource,
 			remote.NewHelmOCIRemoteRepositoryResource,
 			remote.NewHexRemoteRepositoryResource,
+			remote.NewNixRemoteRepositoryResource,
 			remote.NewHuggingFaceMLRemoteRepositoryResource,
 			remote.NewJavaRemoteRepositoryResource(repository.IvyPackageType, true),
 			remote.NewMavenRemoteRepositoryResource,
@@ -413,6 +415,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			webhook.NewUserWebhookResource,
 			webhook.NewUserCustomWebhookResource,
 			virtual.NewHexVirtualRepositoryResource,
+			virtual.NewNixVirtualRepositoryResource,
 		}...,
 	)
 }
@@ -423,8 +426,11 @@ func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource
 		datasource_repository.NewRepositoriesDataSource,
 		datasource_artifact.NewFileListDataSource,
 		datasource_local.NewLocalHexRepositoryDataSource,
+		datasource_local.NewLocalNixRepositoryDataSource,
 		datasource_remote.NewRemoteHexRepositoryDataSource,
+		datasource_remote.NewRemoteNixRepositoryDataSource,
 		datasource_virtual.NewVirtualHexRepositoryDataSource,
+		datasource_virtual.NewVirtualNixRepositoryDataSource,
 	}
 }
 
