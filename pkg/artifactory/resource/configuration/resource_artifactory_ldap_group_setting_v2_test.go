@@ -43,6 +43,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		filter = "(objectClass=groupOfNames)"
 		description_attribute = "description"
 		strategy = "{{ .strategy }}"
+		refresh_operation = "{{ .refresh_operation }}"
 	}
 	`
 	params := map[string]interface{}{
@@ -51,6 +52,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
 		"group_member_attribute": "uniqueMember",
 		"strategy":               "STATIC",
+		"refresh_operation":      "UPDATE_AND_IMPORT",
 	}
 	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
 
@@ -60,6 +62,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=org",
 		"group_member_attribute": "uniqueMember1",
 		"strategy":               "DYNAMIC",
+		"refresh_operation":      "UPDATE",
 	}
 	LdapSettingTemplateFullUpdate := util.ExecuteTemplate("TestLdap", ldapGroupSetting, paramsUpdate)
 
@@ -82,6 +85,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "filter", "(objectClass=groupOfNames)"),
 					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 					resource.TestCheckResourceAttr(fqrn, "strategy", "STATIC"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_operation", "UPDATE_AND_IMPORT"),
 				),
 			},
 			{
@@ -97,13 +101,15 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "filter", "(objectClass=groupOfNames)"),
 					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 					resource.TestCheckResourceAttr(fqrn, "strategy", "DYNAMIC"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_operation", "UPDATE"),
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "name"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"refresh_operation"},
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
 			},
 		},
 	})

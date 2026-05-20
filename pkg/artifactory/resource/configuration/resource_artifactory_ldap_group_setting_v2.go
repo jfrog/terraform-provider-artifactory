@@ -61,6 +61,7 @@ type ArtifactoryLdapGroupSettingResourceModel struct {
 	Filter               types.String `tfsdk:"filter"`
 	DescriptionAttribute types.String `tfsdk:"description_attribute"`
 	Strategy             types.String `tfsdk:"strategy"`
+	RefreshOperation     types.String `tfsdk:"refresh_operation"`
 }
 
 // ArtifactoryLdapGroupSettingResourceAPIModel describes the API data model.
@@ -154,6 +155,18 @@ func (r *ArtifactoryLdapGroupSettingResource) Schema(ctx context.Context, req re
 					stringvalidator.OneOf("STATIC", "DYNAMIC", "HIERARCHICAL"),
 				},
 			},
+			"refresh_operation": schema.StringAttribute{
+				MarkdownDescription: "Operation used when refreshing LDAP groups after create/update. Valid values: `UPDATE`, `IMPORT`, `UPDATE_AND_IMPORT`. Defaults to `UPDATE_AND_IMPORT`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("UPDATE_AND_IMPORT"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("UPDATE", "IMPORT", "UPDATE_AND_IMPORT"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 	}
 }
@@ -190,6 +203,11 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 		Strategy:             data.Strategy.ValueString(),
 	}
 
+	refreshOperation := data.RefreshOperation.ValueString()
+	if refreshOperation == "" {
+		refreshOperation = "UPDATE_AND_IMPORT"
+	}
+
 	response, err := r.ProviderData.Client.R().
 		SetBody(ldapGroup).
 		Post(LdapGroupEndpoint)
@@ -210,8 +228,21 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 		return
 	}
 
+	refreshResp, err := r.ProviderData.Client.R().
+		SetQueryParam("operation", refreshOperation).
+		Post(LdapGroupEndpoint + ldapGroup.Name + "/refresh")
+	if err != nil {
+		utilfw.UnableToCreateResourceError(resp, err.Error())
+		return
+	}
+	if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
+		utilfw.UnableToCreateResourceError(resp, refreshResp.String())
+		return
+	}
+
 	// Assign the resource ID for the resource in the state
 	data.Id = types.StringValue(ldapGroup.Name)
+	data.RefreshOperation = types.StringValue(refreshOperation)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -251,11 +282,18 @@ func (r *ArtifactoryLdapGroupSettingResource) Read(ctx context.Context, req reso
 		return
 	}
 
+	// Preserve configured refresh_operation from state (API does not return it)
+	currentRefreshOperation := data.RefreshOperation
+
 	// Convert from the API data model to the Terraform data model
 	// and refresh any attribute values.
 	resp.Diagnostics.Append(data.ToState(ctx, ldapGroup)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !currentRefreshOperation.IsNull() && !currentRefreshOperation.IsUnknown() {
+		data.RefreshOperation = currentRefreshOperation
 	}
 
 	// Save updated data into Terraform state
@@ -284,6 +322,11 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 		Strategy:             data.Strategy.ValueString(),
 	}
 
+	refreshOperation := data.RefreshOperation.ValueString()
+	if refreshOperation == "" {
+		refreshOperation = "UPDATE_AND_IMPORT"
+	}
+
 	response, err := r.ProviderData.Client.R().
 		SetBody(ldapGroup).
 		Put(LdapGroupEndpoint)
@@ -303,10 +346,24 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 		return
 	}
 
+	refreshResp, err := r.ProviderData.Client.R().
+		SetQueryParam("operation", refreshOperation).
+		Post(LdapGroupEndpoint + ldapGroup.Name + "/refresh")
+	if err != nil {
+		utilfw.UnableToUpdateResourceError(resp, err.Error())
+		return
+	}
+	if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
+		utilfw.UnableToUpdateResourceError(resp, refreshResp.String())
+		return
+	}
+
 	resp.Diagnostics.Append(data.ToState(ctx, ldapGroup)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	data.RefreshOperation = types.StringValue(refreshOperation)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
