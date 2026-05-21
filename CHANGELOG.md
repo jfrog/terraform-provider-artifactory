@@ -1,4 +1,8 @@
-### 12.11.5 (May 21, 2026)
+### 12.11.5 (May 21, 2026).
+
+IMPROVEMENTS:
+
+* More sample blocks in sample tf file
 
 BUG FIXES:
 
