@@ -840,3 +840,13 @@ resource "artifactory_remote_generic_repository" "mixed-sensitivity" {
     { name = "x-auth-token", value = "encrypted-token", sensitive = true },
   ]
 }
+
+resource "artifactory_local_generic_repository" "fork-test-repo" {
+  key         = "fork-test-repo"
+  description = "Temporary repo added for fork PR CI testing"
+}
+
+data "artifactory_local_generic_repository" "fork-test-repo" {
+  key        = artifactory_local_generic_repository.fork-test-repo.key
+  depends_on = [artifactory_local_generic_repository.fork-test-repo]
+}
