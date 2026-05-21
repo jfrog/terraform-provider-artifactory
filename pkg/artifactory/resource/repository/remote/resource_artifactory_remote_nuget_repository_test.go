@@ -37,6 +37,74 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteNugetRepository_url_fields(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-nuget-remote", "artifactory_remote_nuget_repository")
+
+	const temp = `
+		resource "artifactory_remote_nuget_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			url                        = "https://www.nuget.org/"
+			v3_feed_url                = "{{ .v3FeedUrl }}"
+			symbol_server_url          = "{{ .symbolServerUrl }}"
+			force_nuget_authentication = true
+		}
+	`
+
+	const tempEmpty = `
+		resource "artifactory_remote_nuget_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			url                        = "https://www.nuget.org/"
+			v3_feed_url                = ""
+			symbol_server_url          = ""
+			force_nuget_authentication = true
+		}
+	`
+
+	params := map[string]interface{}{
+		"name":            name,
+		"v3FeedUrl":       "https://api.nuget.org/v3/index.json",
+		"symbolServerUrl": "https://symbols.nuget.org/download/symbols",
+	}
+
+	configWithURLs := util.ExecuteTemplate("TestAccRemoteNugetRepository_url_fields_with_urls", temp, params)
+	configEmpty := util.ExecuteTemplate("TestAccRemoteNugetRepository_url_fields_empty", tempEmpty, map[string]interface{}{"name": name})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: configWithURLs,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", "https://api.nuget.org/v3/index.json"),
+					resource.TestCheckResourceAttr(fqrn, "symbol_server_url", "https://symbols.nuget.org/download/symbols"),
+				),
+			},
+			{
+				Config: configEmpty,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", ""),
+					resource.TestCheckResourceAttr(fqrn, "symbol_server_url", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: configEmpty,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccRemoteNugetRepository_migrate_from_SDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-nuget-remote", "artifactory_remote_nuget_repository")
 

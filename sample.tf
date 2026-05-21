@@ -211,6 +211,15 @@ data "artifactory_local_hex_repository" "hex-local" {
   key = artifactory_local_hex_repository.hex-local.key
 }
 
+resource "artifactory_local_nix_repository" "nix-local" {
+  key         = "nix-local"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+data "artifactory_local_nix_repository" "nix-local" {
+  key = artifactory_local_nix_repository.nix-local.key
+}
+
 resource "random_id" "randid" {
   byte_length = 16
 }
@@ -476,6 +485,16 @@ resource "artifactory_remote_hex_repository" "my-remote-hex" {
 
 data "artifactory_remote_hex_repository" "my-remote-hex" {
   key = artifactory_remote_hex_repository.my-remote-hex.key
+}
+
+resource "artifactory_remote_nix_repository" "my-remote-nix" {
+  key         = "my-remote-nix"
+  url         = "https://cache.nixos.org"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+data "artifactory_remote_nix_repository" "my-remote-nix" {
+  key = artifactory_remote_nix_repository.my-remote-nix.key
 }
 
 resource "artifactory_remote_rpm_repository" "my-remote-rpm" {
@@ -773,6 +792,24 @@ data "artifactory_virtual_hex_repository" "my-hex-virtual" {
   key = artifactory_virtual_hex_repository.my-hex-virtual.key
 }
 
+resource "artifactory_virtual_nix_repository" "my-nix-virtual" {
+  key            = "my-nix-virtual"
+  repositories   = [
+    artifactory_local_nix_repository.nix-local.key,
+    artifactory_remote_nix_repository.my-remote-nix.key
+  ]
+  description    = "A test virtual repo"
+  notes          = "Internal description"
+  depends_on     = [
+    artifactory_local_nix_repository.nix-local,
+    artifactory_remote_nix_repository.my-remote-nix
+  ]
+}
+
+data "artifactory_virtual_nix_repository" "my-nix-virtual" {
+  key = artifactory_virtual_nix_repository.my-nix-virtual.key
+}
+
 resource "artifactory_federated_generic_repository" "generic-federated-1" {
   key = "generic-federated-1"
 
@@ -792,4 +829,14 @@ resource "artifactory_remote_vcs_repository" "gitlab_vcs" {
   url         = "https://gitlab.com/your-group/your-repo"
   description = "VCS remote for GitLab"
   vcs_git_provider = "GITLAB"
+}
+
+resource "artifactory_remote_generic_repository" "mixed-sensitivity" {
+  key = "custom-headers-mixed"
+  url = "https://httpbin.org/anything"
+
+  custom_http_headers = [
+    { name = "x-api-key",    value = "plaintext-key",  sensitive = false },
+    { name = "x-auth-token", value = "encrypted-token", sensitive = true },
+  ]
 }

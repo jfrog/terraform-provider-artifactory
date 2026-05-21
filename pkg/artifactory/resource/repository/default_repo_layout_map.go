@@ -194,6 +194,14 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"virtual": true,
 		},
 	},
+	NixPackageType: {
+		RepoLayoutRef: "nix-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":   true,
+			"remote":  true,
+			"virtual": true,
+		},
+	},
 	HuggingFacePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

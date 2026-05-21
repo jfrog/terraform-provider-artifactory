@@ -22,3 +22,11 @@ mc:
 event:
     webhooks:
         tlsInsecure: true
+    security:
+        blacklist:
+            enabled: true
+        whitelist:
+            - google.com
+            - yahoo.com
+            - tempurl.com
+            - example.com
