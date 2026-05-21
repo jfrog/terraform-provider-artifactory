@@ -1,3 +1,9 @@
+### 12.11.5 (May 21, 2026)
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Use `types.String` to support "unknown" `project_environments` elements during `terraform plan`. This fixes a `Value Conversion Error` when `project_environments` contains values from other resources (e.g., `project_environment` resource IDs). Issue: [#1251](https://github.com/jfrog/terraform-provider-artifactory/issues/1251). PR: [#1252](https://github.com/jfrog/terraform-provider-artifactory/pull/1252)
+
 ### 12.11.4 (Apr 30, 2026). Tested on Artifactory 7.146.8 with Terraform 1.15.1 and OpenTofu 1.11.6
 
 FEATURES:
