@@ -233,16 +233,17 @@ func (r *ArtifactoryLdapGroupSettingResource) Create(ctx context.Context, req re
 		SetQueryParam("operation", refreshOperation).
 		Post(LdapGroupEndpoint + ldapGroup.Name + "/refresh")
 	if err != nil {
-		utilfw.UnableToCreateResourceError(resp, err.Error())
-		return
-	}
-	
-	if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
-	    resp.Diagnostics.AddWarning(
-	        "LDAP Group Refresh Failed",
-	        fmt.Sprintf("Group config saved but refresh failed: %s. "+
-	            "Groups may need manual synchronization.", refreshResp.String()),
-	    )
+		resp.Diagnostics.AddWarning(
+			"LDAP Group Refresh Failed",
+			fmt.Sprintf("Group config saved but refresh failed: %s. "+
+				"Groups may need manual synchronization.", err.Error()),
+		)
+	} else if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
+		resp.Diagnostics.AddWarning(
+			"LDAP Group Refresh Failed",
+			fmt.Sprintf("Group config saved but refresh failed: %s. "+
+				"Groups may need manual synchronization.", refreshResp.String()),
+		)
 	}
 
 	// Assign the resource ID for the resource in the state
@@ -355,12 +356,17 @@ func (r *ArtifactoryLdapGroupSettingResource) Update(ctx context.Context, req re
 		SetQueryParam("operation", refreshOperation).
 		Post(LdapGroupEndpoint + ldapGroup.Name + "/refresh")
 	if err != nil {
-		utilfw.UnableToUpdateResourceError(resp, err.Error())
-		return
-	}
-	if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
-		utilfw.UnableToUpdateResourceError(resp, refreshResp.String())
-		return
+		resp.Diagnostics.AddWarning(
+			"LDAP Group Refresh Failed",
+			fmt.Sprintf("Group config saved but refresh failed: %s. "+
+				"Groups may need manual synchronization.", err.Error()),
+		)
+	} else if refreshResp.StatusCode() != http.StatusOK || refreshResp.IsError() {
+		resp.Diagnostics.AddWarning(
+			"LDAP Group Refresh Failed",
+			fmt.Sprintf("Group config saved but refresh failed: %s. "+
+				"Groups may need manual synchronization.", refreshResp.String()),
+		)
 	}
 
 	resp.Diagnostics.Append(data.ToState(ctx, ldapGroup)...)
