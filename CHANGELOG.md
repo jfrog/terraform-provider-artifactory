@@ -1,3 +1,9 @@
+### Unreleased
+
+BUG FIXES:
+
+* resource/artifactory_saml_settings: Fix documentation incorrectly stating the resource supports `terraform import`. The resource has no import implementation.
+
 ### 12.11.5 (May 21, 2026). Tested on Artifactory 7.146.13 with Terraform 1.15.4 and OpenTofu 1.12.0
 
 BUG FIXES:
