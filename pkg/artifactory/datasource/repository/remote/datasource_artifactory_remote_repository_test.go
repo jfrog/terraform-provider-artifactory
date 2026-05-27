@@ -378,6 +378,45 @@ func TestAccDataSourceRemoteGenericRepository(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceRemoteGemsRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("gems-remote", "data.artifactory_remote_gems_repository")
+	params := map[string]interface{}{
+		"name": name,
+	}
+	config := util.ExecuteTemplate(
+		"TestAccDataSourceRemoteGemsRepository",
+		`resource "artifactory_remote_gems_repository" "{{ .name }}" {
+		    key          = "{{ .name }}"
+		    url          = "http://tempurl.org"
+		    curated      = false
+		    pass_through = false
+		}
+
+		data "artifactory_remote_gems_repository" "{{ .name }}" {
+		    key = artifactory_remote_gems_repository.{{ .name }}.key
+		}`,
+		params,
+	)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "gems"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "simple-default"),
+					resource.TestCheckResourceAttr(fqrn, "url", "http://tempurl.org"),
+					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
+					resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceRemoteGoRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("go-remote", "data.artifactory_remote_go_repository")
 	params := map[string]interface{}{
