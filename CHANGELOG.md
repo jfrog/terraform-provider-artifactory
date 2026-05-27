@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/artifactory_package_cleanup_policy: Preserve omitted `cron_expression` as null when Artifactory returns an empty string, avoiding an inconsistent result after apply. Issue: [#1406](https://github.com/jfrog/terraform-provider-artifactory/issues/1406)
 * resource/artifactory_\*\_repository: Use `types.String` to support "unknown" `project_environments` elements during `terraform plan`. This fixes a `Value Conversion Error` when `project_environments` contains values from other resources (e.g., `project_environment` resource IDs). Issue: [#1251](https://github.com/jfrog/terraform-provider-artifactory/issues/1251). PR: [#1252](https://github.com/jfrog/terraform-provider-artifactory/pull/1252)
 
 IMPROVEMENTS:
