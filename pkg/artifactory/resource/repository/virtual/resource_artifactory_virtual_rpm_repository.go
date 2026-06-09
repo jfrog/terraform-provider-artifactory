@@ -25,6 +25,7 @@ import (
 var rpmSchema = lo.Assign(
 	repository.PrimaryKeyPairRefSDKv2,
 	repository.SecondaryKeyPairRefSDKv2,
+	RetrievalCachePeriodSecondsSchema,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.RPMPackageType),
 )
 
@@ -37,7 +38,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 	}
 
 	type RpmVirtualRepositoryParams struct {
-		RepositoryBaseParams
+		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		CommonRpmDebianVirtualRepositoryParams
 	}
 
@@ -45,7 +46,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := RpmVirtualRepositoryParams{
-			RepositoryBaseParams: UnpackBaseVirtRepo(s, "rpm"),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, "rpm"),
 			CommonRpmDebianVirtualRepositoryParams: CommonRpmDebianVirtualRepositoryParams{
 				PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 					PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
@@ -62,9 +63,11 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 
 	constructor := func() (interface{}, error) {
 		return &RpmVirtualRepositoryParams{
-			RepositoryBaseParams: RepositoryBaseParams{
-				Rclass:      Rclass,
-				PackageType: repository.RPMPackageType,
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+				RepositoryBaseParams: RepositoryBaseParams{
+					Rclass:      Rclass,
+					PackageType: repository.RPMPackageType,
+				},
 			},
 		}, nil
 	}

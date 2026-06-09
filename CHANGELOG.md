@@ -1,3 +1,9 @@
+### 12.11.6 (Jun 9, 2026). Tested on Artifactory 7.146.15 with Terraform 1.15.5 and OpenTofu 1.12.1
+
+IMPROVEMENTS:
+
+* resource/artifactory_virtual_rpm_repository: Add `retrieval_cache_period_seconds` attribute. This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default value is `7200`. PR: [#1413](https://github.com/jfrog/terraform-provider-artifactory/pull/1413)
+
 ### 12.11.5 (May 21, 2026). Tested on Artifactory 7.146.13 with Terraform 1.15.4 and OpenTofu 1.12.0
 
 BUG FIXES:
