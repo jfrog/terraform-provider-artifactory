@@ -405,9 +405,10 @@ EOF
 		}
 
 		resource "artifactory_virtual_rpm_repository" "{{ .repo_name }}" {
-			key 	              = "{{ .repo_name }}"
-			primary_keypair_ref   = artifactory_keypair.{{ .kp_name }}.pair_name
-			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
+			key 	                       = "{{ .repo_name }}"
+			primary_keypair_ref            = artifactory_keypair.{{ .kp_name }}.pair_name
+			secondary_keypair_ref          = artifactory_keypair.{{ .kp_name2 }}.pair_name
+			retrieval_cache_period_seconds = 650
 
 			depends_on = [
 				artifactory_keypair.{{ .kp_name }},
@@ -440,6 +441,7 @@ EOF
 					resource.TestCheckResourceAttr(fqrn, "package_type", packageType),
 					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
 					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "650"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
 						r, _ := repository.GetDefaultRepoLayoutRef(virtual.Rclass, packageType)
 						return r

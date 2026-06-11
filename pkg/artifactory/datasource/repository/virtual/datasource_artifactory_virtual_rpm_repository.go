@@ -31,10 +31,12 @@ func DatasourceArtifactoryVirtualRpmRepository() *schema.Resource {
 			return nil, err
 		}
 
-		return &virtual.RepositoryBaseParams{
-			PackageType:   resource_repository.RPMPackageType,
-			Rclass:        virtual.Rclass,
-			RepoLayoutRef: repoLayout,
+		return &virtual.RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+			RepositoryBaseParams: virtual.RepositoryBaseParams{
+				PackageType:   resource_repository.RPMPackageType,
+				Rclass:        virtual.Rclass,
+				RepoLayoutRef: repoLayout,
+			},
 		}, nil
 	}
 

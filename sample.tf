@@ -744,8 +744,9 @@ resource "artifactory_virtual_pypi_repository" "foo-pypi" {
 resource "artifactory_virtual_rpm_repository" "foo-rpm-virtual" {
   key = "foo-rpm-virtual"
 
-  primary_keypair_ref   = artifactory_keypair.some-keypairGPG1.pair_name
-  secondary_keypair_ref = artifactory_keypair.some-keypairGPG2.pair_name
+  primary_keypair_ref            = artifactory_keypair.some-keypairGPG1.pair_name
+  secondary_keypair_ref          = artifactory_keypair.some-keypairGPG2.pair_name
+  retrieval_cache_period_seconds = 650
 
   depends_on = [
     artifactory_keypair.some-keypairGPG1,
