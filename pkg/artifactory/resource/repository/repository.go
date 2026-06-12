@@ -55,6 +55,7 @@ import (
 )
 
 const (
+	AgentPluginsPackageType      = "agentplugins"
 	AlpinePackageType            = "alpine"
 	AnsiblePackageType           = "ansible"
 	BowerPackageType             = "bower"
