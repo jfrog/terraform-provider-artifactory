@@ -2,7 +2,7 @@
 
 FEATURES:
 
-**New Resource:** `artifactory_local_agentplugins_repository` to support local Agent Plugins repository. PR: [#XXXX](https://github.com/jfrog/terraform-provider-artifactory/pull/XXXX)
+**New Resource:** `artifactory_local_agentplugins_repository` to support local Agent Plugins repository. PR: [#1421](https://github.com/jfrog/terraform-provider-artifactory/pull/1421)
 
 ### 12.11.6 (Jun 9, 2026). Tested on Artifactory 7.146.15 with Terraform 1.15.5 and OpenTofu 1.12.1
 
