@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* **New Resource:** `artifactory_local_agentplugins_repository` to support local Agent Plugins repository. PR: [#XXXX](https://github.com/jfrog/terraform-provider-artifactory/pull/XXXX)
+* **New Resource:** `artifactory_local_agentplugins_repository` to support local Agent Plugins repository. PR: [#1421](https://github.com/jfrog/terraform-provider-artifactory/pull/1421)
 
 ### 12.11.14 (Aug 25, 2026).
 
