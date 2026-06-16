@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
@@ -120,6 +121,15 @@ func (r *remoteAnsibleResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:            true,
 				Default:             stringdefault.StaticString("https://galaxy.ansible.com"),
 				MarkdownDescription: "The remote repo URL. Default to 'https://galaxy.ansible.com'",
+			},
+			"bypass_head_requests": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+				MarkdownDescription: "Before caching an artifact, Artifactory first sends a HEAD request to the remote resource. " +
+					"In some remote resources, HEAD requests are disallowed and therefore rejected, even though downloading the " +
+					"artifact is allowed. When checked, Artifactory will bypass the HEAD request and cache the artifact directly using a GET request. " +
+					"Default to 'true' for Ansible repositories as 'https://galaxy.ansible.com' rejects HEAD requests.",
 			},
 		},
 	)

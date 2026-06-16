@@ -43,6 +43,7 @@ func TestAccRemoteAnsibleRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://galaxy.ansible.com"),
+					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "true"),
 				),
 			},
 			{
@@ -62,7 +63,8 @@ func TestAccRemoteAnsibleRepository_migrate_from_SDKv2(t *testing.T) {
 
 	const temp = `
 		resource "artifactory_remote_ansible_repository" "{{ .name }}" {
-			key = "{{ .name }}"
+			key                  = "{{ .name }}"
+			bypass_head_requests = true
 		}
 	`
 
