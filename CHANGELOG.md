@@ -1,8 +1,12 @@
-### 12.11.7 (Jun 11, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
+### 12.11.7 (Jun 16, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
 
 BUG FIXES:
 
-* resource/artifactory_package_cleanup_policy: Preserve omitted `cron_expression` as null when Artifactory returns an empty string, avoiding an inconsistent result after apply. Issue: [#1406](https://github.com/jfrog/terraform-provider-artifactory/issues/1406)
+* resource/artifactory_package_cleanup_policy: Preserve omitted `cron_expression` as null when Artifactory returns an empty string, avoiding an inconsistent result after apply. Issue: [#1406](https://github.com/jfrog/terraform-provider-artifactory/issues/1406) PR: [#1414](https://github.com/jfrog/terraform-provider-artifactory/pull/1414)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_ansible_repository: Change default value of `bypass_head_requests` from `false` to `true`. The `galaxy.ansible.com` registry rejects HEAD requests, so this attribute must be `true` for the remote repository to function correctly. This aligns the provider default with the Artifactory server behavior, which automatically sets this to `true` for Ansible repositories. PR: [#1422](https://github.com/jfrog/terraform-provider-artifactory/pull/1422)
 
 ### 12.11.6 (Jun 9, 2026). Tested on Artifactory 7.146.15 with Terraform 1.15.5 and OpenTofu 1.12.1
 
