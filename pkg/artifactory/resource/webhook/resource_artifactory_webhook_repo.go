@@ -313,6 +313,11 @@ func fromRepoCriteriaAPIMode(ctx context.Context, criteriaAPIModel map[string]in
 		repoKeys = ks
 	}
 
+	anyFederated, ok := criteriaAPIModel["anyFederated"].(bool)
+	if !ok {
+		anyFederated = false
+	}
+
 	criteria, d := types.ObjectValue(
 		repoCriteriaSetResourceModelAttributeTypes,
 		lo.Assign(
@@ -320,7 +325,7 @@ func fromRepoCriteriaAPIMode(ctx context.Context, criteriaAPIModel map[string]in
 			map[string]attr.Value{
 				"any_local":     types.BoolValue(criteriaAPIModel["anyLocal"].(bool)),
 				"any_remote":    types.BoolValue(criteriaAPIModel["anyRemote"].(bool)),
-				"any_federated": types.BoolValue(criteriaAPIModel["anyFederated"].(bool)),
+				"any_federated": types.BoolValue(anyFederated),
 				"repo_keys":     repoKeys,
 			},
 		),
