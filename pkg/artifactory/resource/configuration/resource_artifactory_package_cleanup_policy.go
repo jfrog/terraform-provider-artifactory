@@ -390,7 +390,7 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 
 	r.Key = types.StringValue(apiModel.Key)
 	r.Description = types.StringValue(apiModel.Description)
-	r.CronExpression = types.StringValue(apiModel.CronExpression)
+	r.CronExpression = normalizeEmptyAPIString(apiModel.CronExpression, r.CronExpression)
 	r.DurationInMinutes = types.Int64Value(apiModel.DurationInMinutes)
 	r.Enabled = types.BoolValue(apiModel.Enabled)
 	r.SkipTrashcan = types.BoolValue(apiModel.SkipTrashcan)
@@ -527,6 +527,14 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 	r.SearchCriteria = searchCriteria
 
 	return diags
+}
+
+func normalizeEmptyAPIString(apiValue string, priorValue types.String) types.String {
+	if apiValue == "" && priorValue.IsNull() {
+		return types.StringNull()
+	}
+
+	return types.StringValue(apiValue)
 }
 
 type PackageCleanupPolicyAPIModel struct {

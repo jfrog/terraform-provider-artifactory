@@ -66,7 +66,7 @@ var buildCriteriaBlock = schema.SetNestedBlock{
 				},
 				"selected_builds": schema.SetAttribute{
 					ElementType: types.StringType,
-					Optional: true,
+					Optional:    true,
 					Description: "Trigger on this list of build IDs",
 				},
 			},
