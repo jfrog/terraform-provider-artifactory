@@ -1,3 +1,9 @@
+### 12.12.0 (Jun 22, 2026). Tested on Artifactory 7.156.4 with Terraform 1.15.6 and OpenTofu 1.12.3
+
+FEATURES:
+
+**New Resource:** `artifactory_local_agentplugins_repository` to support local Agent Plugins repository. PR: [#1421](https://github.com/jfrog/terraform-provider-artifactory/pull/1421)
+
 ### 12.11.7 (Jun 16, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
 
 BUG FIXES:

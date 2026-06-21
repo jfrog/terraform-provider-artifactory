@@ -16,6 +16,15 @@ package repository
 
 // Consolidated list of Default Repo Layout for all Package Types with active Repo Types
 var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
+	AgentPluginsPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    false,
+			"virtual":   false,
+			"federated": false,
+		},
+	},
 	AlpinePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{
