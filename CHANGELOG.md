@@ -18,6 +18,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* resource/artifactory_scoped_token: Allow the documented `system:info/storage:r` scope for storage summary read access. Issue: [#1401](https://github.com/jfrog/terraform-provider-artifactory/issues/1401)
 * resource/artifactory_\*\_repository: Use `types.String` to support "unknown" `project_environments` elements during `terraform plan`. This fixes a `Value Conversion Error` when `project_environments` contains values from other resources (e.g., `project_environment` resource IDs). Issue: [#1251](https://github.com/jfrog/terraform-provider-artifactory/issues/1251). PR: [#1252](https://github.com/jfrog/terraform-provider-artifactory/pull/1252)
 
 IMPROVEMENTS:
