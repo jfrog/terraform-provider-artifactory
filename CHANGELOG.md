@@ -18,6 +18,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* datasource/artifactory_remote_gems_repository: Register the documented remote Gems repository data source and add matching acceptance coverage. Issue: [#1387](https://github.com/jfrog/terraform-provider-artifactory/issues/1387).
 * resource/artifactory_\*\_repository: Use `types.String` to support "unknown" `project_environments` elements during `terraform plan`. This fixes a `Value Conversion Error` when `project_environments` contains values from other resources (e.g., `project_environment` resource IDs). Issue: [#1251](https://github.com/jfrog/terraform-provider-artifactory/issues/1251). PR: [#1252](https://github.com/jfrog/terraform-provider-artifactory/pull/1252)
 
 IMPROVEMENTS:
