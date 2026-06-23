@@ -22,6 +22,8 @@ The following arguments are supported, along with the [common list of arguments 
 * `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
+* `primary_keypair_ref` - (Optional) The primary GPG key used to sign packages.
+* `secondary_keypair_ref` - (Optional) The secondary GPG key used to sign packages.
 
 ## Import
 
