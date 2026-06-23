@@ -55,6 +55,8 @@ type localTerraformResource struct {
 
 type LocalTerraformResourceModel struct {
 	LocalResourceModel
+	PrimaryKeyPairRef   types.String `tfsdk:"primary_keypair_ref"`
+	SecondaryKeyPairRef types.String `tfsdk:"secondary_keypair_ref"`
 }
 
 func (r *LocalTerraformResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -113,8 +115,10 @@ func (r LocalTerraformResourceModel) ToAPIModel(ctx context.Context, packageType
 	}
 
 	return LocalTerraformAPIModel{
-		LocalAPIModel: localAPIModel,
-		TerraformType: terraformType,
+		LocalAPIModel:       localAPIModel,
+		TerraformType:       terraformType,
+		PrimaryKeyPairRef:   r.PrimaryKeyPairRef.ValueString(),
+		SecondaryKeyPairRef: r.SecondaryKeyPairRef.ValueString(),
 	}, diags
 }
 
@@ -126,19 +130,25 @@ func (r *LocalTerraformResourceModel) FromAPIModel(ctx context.Context, apiModel
 	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.PrimaryKeyPairRef = types.StringValue(model.PrimaryKeyPairRef)
+	r.SecondaryKeyPairRef = types.StringValue(model.SecondaryKeyPairRef)
 
 	return diags
 }
 
 type LocalTerraformAPIModel struct {
 	LocalAPIModel
-	TerraformType string `json:"terraformType"`
+	TerraformType       string `json:"terraformType"`
+	PrimaryKeyPairRef   string `json:"primaryKeyPairRef"`
+	SecondaryKeyPairRef string `json:"secondaryKeyPairRef"`
 }
 
 func (r *localTerraformResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attributes := lo.Assign(
 		LocalAttributes,
 		repository.RepoLayoutRefAttribute(r.Rclass, r.PackageType),
+		repository.PrimaryKeyPairRefAttribute,
+		repository.SecondaryKeyPairRefAttribute,
 	)
 
 	resp.Schema = schema.Schema{
