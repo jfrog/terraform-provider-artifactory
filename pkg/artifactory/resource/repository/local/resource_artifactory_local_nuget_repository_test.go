@@ -65,6 +65,78 @@ func TestAccLocalNugetRepository(t *testing.T) {
 	})
 }
 
+func TestAccLocalNugetRepository_EnableNormalizedVersion(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
+	params := map[string]interface{}{"name": name}
+
+	config := util.ExecuteTemplate("TestAccLocalNugetRepository_EnableNormalizedVersion", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                      = "{{ .name }}"
+		  enable_normalized_version = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "enable_normalized_version", "true"),
+				),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+			},
+		},
+	})
+}
+
+func TestAccLocalNugetRepository_EnableNormalizedVersion_RequiresReplace(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
+	params := map[string]interface{}{"name": name}
+
+	configFalse := util.ExecuteTemplate("TestAccLocalNugetRepository_EnableNormalizedVersion_false", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                      = "{{ .name }}"
+		  enable_normalized_version = false
+		}
+	`, params)
+
+	configTrue := util.ExecuteTemplate("TestAccLocalNugetRepository_EnableNormalizedVersion_true", `
+		resource "artifactory_local_nuget_repository" "{{ .name }}" {
+		  key                      = "{{ .name }}"
+		  enable_normalized_version = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: configFalse,
+				Check:  resource.TestCheckResourceAttr(fqrn, "enable_normalized_version", "false"),
+			},
+			{
+				Config: configTrue,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(fqrn, "enable_normalized_version", "true"),
+			},
+		},
+	})
+}
+
 func TestAccLocalNugetRepository_UpgradeFromSDKv2(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("nuget-local", "artifactory_local_nuget_repository")
 	params := map[string]interface{}{

@@ -36,6 +36,7 @@ func unpackLocalNugetRepository(data *schema.ResourceData, Rclass string) local.
 		RepositoryBaseParams:     local.UnpackBaseRepo(Rclass, data, repository.NugetPackageType),
 		MaxUniqueSnapshots:       d.GetInt("max_unique_snapshots", false),
 		ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
+		EnableNormalizedVersion:  d.GetBool("enable_normalized_version", false),
 	}
 }
 
