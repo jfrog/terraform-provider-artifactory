@@ -529,6 +529,7 @@ func TestAccVirtualNugetRepository_PackageCreationFull(t *testing.T) {
 			excludes_pattern = "com/google/**"
 			artifactory_requests_can_retrieve_remote_artifacts = true
 			force_nuget_authentication	= true
+			enable_normalized_version   = true
 		}
 	`
 
@@ -544,6 +545,7 @@ func TestAccVirtualNugetRepository_PackageCreationFull(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "package_type", "nuget"),
 					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", "nuget-default"),
 					resource.TestCheckResourceAttr(fqrn, "force_nuget_authentication", "true"),
+					resource.TestCheckResourceAttr(fqrn, "enable_normalized_version", "true"),
 				),
 			},
 			{

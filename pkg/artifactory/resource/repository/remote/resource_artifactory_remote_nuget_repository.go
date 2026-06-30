@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -54,6 +56,7 @@ type remoteNugetResourceModel struct {
 	V3FeedURL                types.String `tfsdk:"v3_feed_url"`
 	ForceNugetAuthentication types.Bool   `tfsdk:"force_nuget_authentication"`
 	SymbolServerURL          types.String `tfsdk:"symbol_server_url"`
+	EnableNormalizedVersion  types.Bool   `tfsdk:"enable_normalized_version"`
 }
 
 func (r *remoteNugetResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -110,6 +113,7 @@ func (r remoteNugetResourceModel) ToAPIModel(ctx context.Context, packageType st
 		V3FeedURL:                r.V3FeedURL.ValueString(),
 		ForceNugetAuthentication: r.ForceNugetAuthentication.ValueBool(),
 		SymbolServerURL:          r.SymbolServerURL.ValueString(),
+		EnableNormalizedVersion:  r.EnableNormalizedVersion.ValueBool(),
 	}, diags
 }
 
@@ -132,6 +136,7 @@ func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel in
 	if model.SymbolServerURL != "" {
 		r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
 	}
+	r.EnableNormalizedVersion = types.BoolValue(model.EnableNormalizedVersion)
 	return diags
 }
 
@@ -143,6 +148,7 @@ type RemoteNugetAPIModel struct {
 	V3FeedURL                string `json:"v3FeedUrl"`
 	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
 	SymbolServerURL          string `json:"symbolServerUrl"`
+	EnableNormalizedVersion  bool   `json:"enableNormalizedVersion"`
 }
 
 func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -195,6 +201,15 @@ func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaReq
 					),
 				},
 				MarkdownDescription: "NuGet symbol server URL.",
+			},
+			"enable_normalized_version": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				MarkdownDescription: "Enables NuGet normalized versions enforced layout. Once set, this value cannot be changed without recreating the repository. Requires Artifactory 7.146.7+.",
 			},
 		},
 	)

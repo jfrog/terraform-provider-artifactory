@@ -23,7 +23,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -50,6 +52,7 @@ type LocalNugetResourceModel struct {
 	LocalResourceModel
 	MaxUniqueSnapshots       types.Int64 `tfsdk:"max_unique_snapshots"`
 	ForceNugetAuthentication types.Bool  `tfsdk:"force_nuget_authentication"`
+	EnableNormalizedVersion  types.Bool  `tfsdk:"enable_normalized_version"`
 }
 
 func (r *LocalNugetResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -102,6 +105,7 @@ func (r LocalNugetResourceModel) ToAPIModel(ctx context.Context, packageType str
 		LocalAPIModel:            localAPIModel,
 		MaxUniqueSnapshots:       r.MaxUniqueSnapshots.ValueInt64(),
 		ForceNugetAuthentication: r.ForceNugetAuthentication.ValueBool(),
+		EnableNormalizedVersion:  r.EnableNormalizedVersion.ValueBool(),
 	}, diags
 }
 
@@ -115,6 +119,7 @@ func (r *LocalNugetResourceModel) FromAPIModel(ctx context.Context, apiModel int
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.MaxUniqueSnapshots = types.Int64Value(model.MaxUniqueSnapshots)
 	r.ForceNugetAuthentication = types.BoolValue(model.ForceNugetAuthentication)
+	r.EnableNormalizedVersion = types.BoolValue(model.EnableNormalizedVersion)
 
 	return diags
 }
@@ -123,6 +128,7 @@ type LocalNugetAPIModel struct {
 	LocalAPIModel
 	MaxUniqueSnapshots       int64 `json:"maxUniqueSnapshots"`
 	ForceNugetAuthentication bool  `json:"forceNugetAuthentication"`
+	EnableNormalizedVersion  bool  `json:"enableNormalizedVersion"`
 }
 
 func (r *localNugetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -144,6 +150,15 @@ func (r *localNugetResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Force basic authentication credentials in order to use this repository.",
+			},
+			"enable_normalized_version": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				MarkdownDescription: "Enables NuGet normalized versions enforced layout. Once set, this value cannot be changed without recreating the repository. Requires Artifactory 7.146.7+.",
 			},
 		},
 	)
@@ -170,6 +185,13 @@ var nugetSchema = lo.Assign(
 			Default:     false,
 			Description: "Force basic authentication credentials in order to use this repository.",
 		},
+		"enable_normalized_version": {
+			Type:        sdkv2_schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			ForceNew:    true,
+			Description: "Enables NuGet normalized versions enforced layout. Once set, this value cannot be changed without recreating the repository. Requires Artifactory 7.146.7+.",
+		},
 	},
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
 )
@@ -180,6 +202,7 @@ type NugetLocalRepositoryParams struct {
 	RepositoryBaseParams
 	MaxUniqueSnapshots       int  `hcl:"max_unique_snapshots" json:"maxUniqueSnapshots"`
 	ForceNugetAuthentication bool `hcl:"force_nuget_authentication" json:"forceNugetAuthentication"`
+	EnableNormalizedVersion  bool `hcl:"enable_normalized_version" json:"enableNormalizedVersion"`
 }
 
 //

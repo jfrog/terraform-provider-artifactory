@@ -1,3 +1,9 @@
+### 12.11.8 (Unreleased)
+
+FEATURES:
+
+* resource/artifactory_local_nuget_repository, resource/artifactory_remote_nuget_repository, resource/artifactory_virtual_nuget_repository, resource/artifactory_federated_nuget_repository: Add `enable_normalized_version` attribute to support NuGet Enforced Layout introduced in Artifactory 7.146.7. This attribute is immutable after repository creation — changing it forces resource replacement. Issue: [#1418](https://github.com/jfrog/terraform-provider-artifactory/issues/1418)
+
 ### 12.11.7 (Jun 16, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
 
 BUG FIXES:

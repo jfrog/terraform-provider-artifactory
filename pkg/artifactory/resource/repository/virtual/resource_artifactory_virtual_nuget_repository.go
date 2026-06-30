@@ -30,6 +30,13 @@ var nugetSchema = lo.Assign(
 			Default:     false,
 			Description: "If set, user authentication is required when accessing the repository. An anonymous request will display an HTTP 401 error. This is also enforced when aggregated repositories support anonymous requests.",
 		},
+		"enable_normalized_version": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			ForceNew:    true,
+			Description: "Enables NuGet normalized versions enforced layout. Once set, this value cannot be changed without recreating the repository. Requires Artifactory 7.146.7+.",
+		},
 	},
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.NugetPackageType),
 )
@@ -41,6 +48,7 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 	type NugetVirtualRepositoryParams struct {
 		RepositoryBaseParams
 		ForceNugetAuthentication bool `json:"forceNugetAuthentication"`
+		EnableNormalizedVersion  bool `json:"enableNormalizedVersion"`
 	}
 
 	var unpackNugetVirtualRepository = func(s *schema.ResourceData) (interface{}, string, error) {
@@ -49,6 +57,7 @@ func ResourceArtifactoryVirtualNugetRepository() *schema.Resource {
 		repo := NugetVirtualRepositoryParams{
 			RepositoryBaseParams:     UnpackBaseVirtRepo(s, repository.NugetPackageType),
 			ForceNugetAuthentication: d.GetBool("force_nuget_authentication", false),
+			EnableNormalizedVersion:  d.GetBool("enable_normalized_version", false),
 		}
 		repo.PackageType = repository.NugetPackageType
 		return &repo, repo.Key, nil
