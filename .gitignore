@@ -18,3 +18,4 @@ coverage.txt
 *.code-workspace
 scripts/artifactory*/
 *.hcl
+.impeccable/

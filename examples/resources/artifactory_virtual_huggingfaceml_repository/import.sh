@@ -1,0 +1,1 @@
+terraform import artifactory_virtual_huggingfaceml_repository.huggingfaceml-virtual huggingfaceml-virtual

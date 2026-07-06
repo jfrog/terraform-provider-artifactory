@@ -416,6 +416,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			webhook.NewUserCustomWebhookResource,
 			virtual.NewHexVirtualRepositoryResource,
 			virtual.NewNixVirtualRepositoryResource,
+			virtual.NewHuggingFaceMLVirtualRepositoryResource,
 		}...,
 	)
 }
