@@ -90,7 +90,10 @@ func (r *VirtualHuggingFaceMLResourceModel) FromAPIModel(ctx context.Context, ap
 
 	model := apiModel.(*VirtualHuggingFaceMLAPIModel)
 
-	r.VirtualResourceModel.FromAPIModel(ctx, model.VirtualAPIModel)
+	d := r.VirtualResourceModel.FromAPIModel(ctx, model.VirtualAPIModel)
+	if d != nil {
+		diags.Append(d...)
+	}
 
 	return diags
 }

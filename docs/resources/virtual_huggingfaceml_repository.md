@@ -7,6 +7,17 @@ Creates a virtual Hugging Face ML repository that aggregates local and remote Hu
 
 Official documentation can be found [here](https://jfrog.com/help/r/jfrog-artifactory-documentation/set-up-virtual-hugging-face-repositories).
 
+~> **Resolution limitation.** Artifactory virtual Hugging Face repositories support resolving models
+via `snapshot_download` only. They do not implement symbolic-reference resolution (a request for
+revision `main` returns HTTP 400) or the recursive `tree` listing API (returns HTTP 501). As a result,
+the modern `huggingface_hub` client (which uses the `tree` API for `snapshot_download` since v1.22.0)
+fails against a virtual repo. Working options: use `snapshot_download` on `huggingface_hub` `<= 0.34.4`
+(which enumerates via `model_info`), pull single files with an explicit commit SHA
+(`hf_hub_download(..., revision="<sha>")`, resolving `main` to a SHA via `model_info` first), or point
+clients that need full compatibility (`from_pretrained`, single-file resolve) at the **remote** Hugging
+Face repository instead. This is a JFrog platform behavior, not a provider issue. All members must also
+use the new Machine Learning repository layout.
+
 ## Example Usage
 
 ```hcl
