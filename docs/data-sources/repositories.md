@@ -24,7 +24,7 @@ data "artifactory_repositories" "all-alpine-local" {
 
 ### Optional
 
-- `package_type` (String) Filter for repositories of a specific package type. Allowed values are: alpine, bower, cargo, chef, cocoapods, composer, conan, conda, cran, debian, docker, gems, generic, gitlfs, go, gradle, helm, huggingfaceml, ivy, maven, npm, nuget, opkg, p2, pub, puppet, pypi, rpm, sbt, swift,  terraform, terraformbackend, vagrant, yum
+- `package_type` (String) Filter for repositories of a specific package type. Allowed values are: alpine, bazelmodules, bower, cargo, chef, cocoapods, composer, conan, conda, cran, debian, docker, gems, generic, gitlfs, go, gradle, helm, huggingfaceml, ivy, maven, npm, nuget, opkg, p2, pub, puppet, pypi, rpm, sbt, swift,  terraform, terraformbackend, vagrant, yum
 - `project_key` (String) Filter for repositories assigned to a specific project.
 - `repository_type` (String) Filter for repositories of a specific type. Allowed values are: local, remote, virtual, federated, distribution
 

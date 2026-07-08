@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -67,6 +68,10 @@ func TestAccRemoteLikeBasicRepository_with_propagate_fails(t *testing.T) {
 
 func TestAccRemoteLikeBasicRepository_migrate_from_SDKv2(t *testing.T) {
 	for _, packageType := range remote.PackageTypesLikeBasic {
+		if packageType == repository.BazelModulesPackageType {
+			// The pinned SDKv2 provider predates Bazel Modules support.
+			continue
+		}
 		t.Run(packageType, func(t *testing.T) {
 			_, fqrn, name := testutil.MkNames(fmt.Sprintf("test-%s-remote", packageType), fmt.Sprintf("artifactory_remote_%s_repository", packageType))
 
