@@ -487,6 +487,16 @@ data "artifactory_remote_hex_repository" "my-remote-hex" {
   key = artifactory_remote_hex_repository.my-remote-hex.key
 }
 
+resource "artifactory_remote_bazel_repository" "my-remote-bazelmodules" {
+  key         = "my-remote-bazelmodules"
+  url         = "https://bcr.bazel.build/"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+data "artifactory_remote_bazel_repository" "my-remote-bazelmodules" {
+  key = artifactory_remote_bazel_repository.my-remote-bazelmodules.key
+}
+
 resource "artifactory_remote_nix_repository" "my-remote-nix" {
   key         = "my-remote-nix"
   url         = "https://cache.nixos.org"

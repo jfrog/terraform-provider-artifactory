@@ -58,6 +58,7 @@ import (
 const (
 	AlpinePackageType            = "alpine"
 	AnsiblePackageType           = "ansible"
+	BazelModulesPackageType      = "bazelmodules"
 	BowerPackageType             = "bower"
 	CargoPackageType             = "cargo"
 	ChefPackageType              = "chef"
@@ -102,6 +103,7 @@ const (
 )
 
 var PackageNameLookup = map[string]string{
+	BazelModulesPackageType:     "Bazel Modules",
 	BowerPackageType:            "Bower",
 	ChefPackageType:             "Chef",
 	CocoapodsPackageType:        "CocoaPods",
