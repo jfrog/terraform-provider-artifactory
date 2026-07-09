@@ -156,6 +156,7 @@ var HexRemoteDataSourceAttributes = map[string]schema.Attribute{
 var validRepositoryTypes = []string{"local", "remote", "virtual", "federated", "distribution"}
 var validPackageTypes = []string{
 	repository.AlpinePackageType,
+	repository.BazelModulesPackageType,
 	repository.BowerPackageType,
 	repository.CargoPackageType,
 	repository.ChefPackageType,

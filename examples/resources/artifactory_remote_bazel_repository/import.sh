@@ -1,0 +1,1 @@
+terraform import artifactory_remote_bazel_repository.my-bazelmodules-remote my-bazelmodules-remote

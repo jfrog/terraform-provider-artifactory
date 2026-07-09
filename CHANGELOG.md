@@ -1,5 +1,10 @@
 ### 12.11.8 (Jul 9, 2026).
 
+FEATURES:
+
+* **New Resource:** `artifactory_remote_bazel_repository` to support [Bazel Modules Repositories](https://docs.jfrog.com/artifactory/docs/bazel-modules-repositories) for proxying a Bazel registry such as the Bazel Central Registry (`https://bcr.bazel.build/`).
+* **New Data Source:** `artifactory_remote_bazel_repository`. Bazel Modules repositories are supported as remote repositories only; local and virtual are not supported by Artifactory.
+
 IMPROVEMENTS:
 
 * resource/artifactory_package_cleanup_policy: Document that package cleanup policies can now be created and managed with an Enterprise X (EntX) license, in addition to Enterprise+, following the server-side enablement in Artifactory 7.139 (Cloud) and 7.146 (Self-Hosted). This applies to cleanup policies only, not archive policies. No provider code change is required as license enforcement is handled by the Artifactory API.
