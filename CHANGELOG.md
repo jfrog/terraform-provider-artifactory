@@ -1,5 +1,9 @@
 ### 12.11.8 (Jul 9, 2026).
 
+FEATURES:
+
+* resource/artifactory_remote_*_repository: Add write-only `password_wo` attribute (and companion `password_wo_version`) for the remote repository password. When set, the credential is sent to Artifactory but is never stored in Terraform state or plan. Requires Terraform 1.11 or later and conflicts with `password`. Change `password_wo_version` to re-send a rotated secret. Issue: [#1346](https://github.com/jfrog/terraform-provider-artifactory/issues/1346)
+
 IMPROVEMENTS:
 
 * resource/artifactory_package_cleanup_policy: Document that package cleanup policies can now be created and managed with an Enterprise X (EntX) license, in addition to Enterprise+, following the server-side enablement in Artifactory 7.139 (Cloud) and 7.146 (Self-Hosted). This applies to cleanup policies only, not archive policies. No provider code change is required as license enforcement is handled by the Artifactory API.
