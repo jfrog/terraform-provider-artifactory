@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -239,6 +240,15 @@ func (r *BaseResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// Read any write-only attribute values (e.g. `password_wo`) from the
+	// configuration, since they are not available in the plan.
+	if woReader, ok := plan.(WriteOnlyConfigReader); ok {
+		resp.Diagnostics.Append(woReader.ReadWriteOnlyConfig(ctx, req.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	repo, d := plan.ToAPIModel(ctx, r.PackageType)
 	if d != nil {
 		resp.Diagnostics.Append(d...)
@@ -321,6 +331,15 @@ func (r *BaseResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.GetUpdateResourcePlanData(ctx, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Read any write-only attribute values (e.g. `password_wo`) from the
+	// configuration, since they are not available in the plan.
+	if woReader, ok := plan.(WriteOnlyConfigReader); ok {
+		resp.Diagnostics.Append(woReader.ReadWriteOnlyConfig(ctx, req.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	state := reflect.New(r.ResourceModelType).Interface().(ResourceModelIface)
@@ -431,6 +450,16 @@ type ResourceModelIface interface {
 	GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
 	SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse)
 	ProjectKeyValue() basetypes.StringValue
+}
+
+// WriteOnlyConfigReader is an optional interface implemented by resource models
+// that have write-only attributes (e.g. `password_wo`). Write-only attribute
+// values are never stored in the plan or state (Terraform Core sends them as
+// null there), so they can only be read from the configuration during Create
+// and Update. The framework automatically nullifies write-only attributes in
+// the state it returns, so no cleanup is required here.
+type WriteOnlyConfigReader interface {
+	ReadWriteOnlyConfig(ctx context.Context, config tfsdk.Config) diag.Diagnostics
 }
 
 type BaseResourceModel struct {
