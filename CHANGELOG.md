@@ -1,3 +1,9 @@
+### 12.11.8 (Jul 9, 2026).
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Document that package cleanup policies can now be created and managed with an Enterprise X (EntX) license, in addition to Enterprise+, following the server-side enablement in Artifactory 7.139 (Cloud) and 7.146 (Self-Hosted). This applies to cleanup policies only, not archive policies. No provider code change is required as license enforcement is handled by the Artifactory API.
+
 ### 12.11.7 (Jun 16, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
 
 BUG FIXES:
