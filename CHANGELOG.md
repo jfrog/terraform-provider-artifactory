@@ -1,4 +1,9 @@
-### 12.11.8 (Jul 9, 2026).
+### 12.11.8 (Jul 9, 2026). Tested on Artifactory 7.146.25 with Terraform 1.15.8 and OpenTofu 1.12.3
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_bazel_repository` to support [Bazel Modules Repositories](https://docs.jfrog.com/artifactory/docs/bazel-modules-repositories) for proxying a Bazel registry such as the Bazel Central Registry (`https://bcr.bazel.build/`).
+* **New Data Source:** `artifactory_remote_bazel_repository`. Bazel Modules repositories are supported as remote repositories only; local and virtual are not supported by Artifactory.
 
 IMPROVEMENTS:
 
