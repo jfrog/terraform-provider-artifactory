@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package remote
 
 import (
@@ -18,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkv2_validator "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -49,6 +64,8 @@ type RemoteResourceModel struct {
 	URL                               types.String `tfsdk:"url"`
 	Username                          types.String `tfsdk:"username"`
 	Password                          types.String `tfsdk:"password"`
+	PasswordWO                        types.String `tfsdk:"password_wo"`
+	PasswordWOVersion                 types.String `tfsdk:"password_wo_version"`
 	Proxy                             types.String `tfsdk:"proxy"`
 	DisableProxy                      types.Bool   `tfsdk:"disable_proxy"`
 	RemoteRepoLayoutRef               types.String `tfsdk:"remote_repo_layout_ref"`
@@ -127,8 +144,24 @@ func (r RemoteResourceModel) SetUpdateResourceStateData(ctx context.Context, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
 }
 
+// ReadWriteOnlyConfig reads write-only attribute values from the configuration.
+// Write-only values are not present in the plan or state, so they must be read
+// from config during Create and Update. Implements repository.WriteOnlyConfigReader.
+func (r *RemoteResourceModel) ReadWriteOnlyConfig(ctx context.Context, config tfsdk.Config) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+	diags.Append(config.GetAttribute(ctx, path.Root("password_wo"), &r.PasswordWO)...)
+	return diags
+}
+
 func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string) (RemoteAPIModel, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
+
+	// Prefer the write-only password (`password_wo`) when set; otherwise fall
+	// back to the regular `password` attribute. The two are mutually exclusive.
+	password := r.Password.ValueString()
+	if !r.PasswordWO.IsNull() && !r.PasswordWO.IsUnknown() {
+		password = r.PasswordWO.ValueString()
+	}
 
 	model, d := r.LocalResourceModel.ToAPIModel(ctx, packageType)
 	if d != nil {
@@ -154,7 +187,7 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		LocalAPIModel:                     localRepositoryAPIModel,
 		URL:                               r.URL.ValueString(),
 		Username:                          r.Username.ValueString(),
-		Password:                          r.Password.ValueString(),
+		Password:                          password,
 		Proxy:                             r.Proxy.ValueString(),
 		DisableProxy:                      r.DisableProxy.ValueBool(),
 		RemoteRepoLayoutRef:               r.RemoteRepoLayoutRef.ValueString(),
@@ -366,6 +399,23 @@ var RemoteAttributes = lo.Assign(
 		"password": schema.StringAttribute{
 			Optional:  true,
 			Sensitive: true,
+		},
+		"password_wo": schema.StringAttribute{
+			Optional:  true,
+			Sensitive: true,
+			WriteOnly: true,
+			Validators: []validator.String{
+				stringvalidator.ConflictsWith(path.MatchRoot("password")),
+			},
+			MarkdownDescription: "Write-only equivalent of `password`. The value is used to authenticate against the remote registry but is **never stored in Terraform state or plan**. " +
+				"Requires Terraform 1.11 or later. Conflicts with `password`. Because write-only values are not tracked in state, use `password_wo_version` to signal when the secret has changed so it is re-sent to Artifactory.",
+		},
+		"password_wo_version": schema.StringAttribute{
+			Optional: true,
+			Validators: []validator.String{
+				stringvalidator.AlsoRequires(path.MatchRoot("password_wo")),
+			},
+			MarkdownDescription: "A version identifier for `password_wo`. Change this value (for example, after rotating the secret) to trigger an update that re-sends the current `password_wo` value to Artifactory. Only meaningful together with `password_wo`.",
 		},
 		"proxy": schema.StringAttribute{
 			Optional:            true,
@@ -609,9 +659,9 @@ var vcsAttributes = map[string]schema.Attribute{
 		Computed: true,
 		Default:  stringdefault.StaticString("GITHUB"),
 		Validators: []validator.String{
-			stringvalidator.OneOf("GITHUB", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "CUSTOM"),
+			stringvalidator.OneOf("GITHUB", "GITHUBENTERPRISE", "BITBUCKET", "OLDSTASH", "STASH", "ARTIFACTORY", "GITLAB", "CUSTOM"),
 		},
-		MarkdownDescription: `Artifactory supports proxying the following Git providers out-of-the-box: GitHub or a remote Artifactory instance. Default value is "GITHUB".`,
+		MarkdownDescription: `Artifactory supports proxying the following Git providers out-of-the-box: GitHub (GITHUB), GitHub Enterprise (GITHUBENTERPRISE), BitBucket Cloud (BITBUCKET), BitBucket Server (STASH), GitLab (GITLAB), or a remote Artifactory instance. Use CUSTOM for a custom URL. Default value is "GITHUB".`,
 	},
 	"vcs_git_download_url": schema.StringAttribute{
 		Optional: true,

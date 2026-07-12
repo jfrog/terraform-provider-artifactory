@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package remote
 
 import (
@@ -91,7 +105,8 @@ func (r remoteGoResourceModel) ToAPIModel(ctx context.Context, packageType strin
 	return RemoteGoAPIModel{
 		RemoteGenericAPIModel: remoteAPIModel.(RemoteGenericAPIModel),
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		VCSGitProvider: r.VCSGitProvider.ValueString(),
 	}, diags
@@ -106,6 +121,7 @@ func (r *remoteGoResourceModel) FromAPIModel(ctx context.Context, apiModel inter
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.VCSGitProvider = types.StringValue(model.VCSGitProvider)
 
 	return diags

@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package remote_test
 
 import (
@@ -21,6 +35,8 @@ func TestAccRemoteDockerRepository_with_external_dependencies_patterns(t *testin
 		"priority_resolution":            false,
 		"external_dependencies_patterns": []interface{}{"**/hub.docker.io/**", "**/bintray.jfrog.io/**"},
 		"missed_cache_period_seconds":    1800, // https://github.com/jfrog/terraform-provider-artifactory/issues/225
+		"curated":                        false,
+		"pass_through":                   false,
 	})
 	resource.Test(t, testCase)
 }
@@ -69,6 +85,8 @@ func TestAccRemoteDockerRepository_DependenciesTrueAndFalseToggle(t *testing.T) 
 		"list_remote_folder_items":       "true",
 		"external_dependencies_enabled":  "true",
 		"enable_token_authentication":    "true",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -89,6 +107,8 @@ func TestAccRemoteDockerRepository_DependenciesTrueAndFalseToggle(t *testing.T) 
 		"list_remote_folder_items":       "false",
 		"external_dependencies_enabled":  "false",
 		"enable_token_authentication":    "false",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -136,6 +156,8 @@ func TestAccRemoteDockerRepository_full(t *testing.T) {
 		"list_remote_folder_items":       "true",
 		"external_dependencies_enabled":  "true",
 		"enable_token_authentication":    "true",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 	var testDataUpdated = map[string]string{
 		"resource_name":                  name,
@@ -156,6 +178,8 @@ func TestAccRemoteDockerRepository_full(t *testing.T) {
 		"list_remote_folder_items":       "false",
 		"external_dependencies_enabled":  "true",
 		"enable_token_authentication":    "false",
+		"curated":                        "false",
+		"pass_through":                   "false",
 	}
 
 	resource.Test(t, resource.TestCase{

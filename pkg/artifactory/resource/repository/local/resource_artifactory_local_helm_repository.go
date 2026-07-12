@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package local
 
 import (
@@ -8,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
@@ -25,6 +38,8 @@ func NewHelmLocalRepositoryResource() resource.Resource {
 		),
 	}
 }
+
+const HelmEnforceSupportedVersion = "7.104.0"
 
 type localHelmResource struct {
 	localResource
@@ -82,11 +97,15 @@ func (r LocalHelmResourceModel) ToAPIModel(ctx context.Context, packageType stri
 	localAPIModel := model.(LocalAPIModel)
 	localAPIModel.RepoLayoutRef = r.RepoLayoutRef.ValueString()
 
-	return LocalHelmAPIModel{
-		LocalAPIModel:            localAPIModel,
-		ForceNonDuplicateChart:   r.ForceNonDuplicateChart.ValueBoolPointer(),
-		ForceMetadataNameVersion: r.ForceMetadataNameVersion.ValueBoolPointer(),
-	}, diags
+	apiModel := LocalHelmAPIModel{
+		LocalAPIModel: localAPIModel,
+	}
+
+	// Always include the fields - they'll be filtered out in Create/Update if version doesn't support them
+	apiModel.ForceNonDuplicateChart = r.ForceNonDuplicateChart.ValueBoolPointer()
+	apiModel.ForceMetadataNameVersion = r.ForceMetadataNameVersion.ValueBoolPointer()
+
+	return apiModel, diags
 }
 
 func (r *LocalHelmResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
@@ -97,8 +116,21 @@ func (r *LocalHelmResourceModel) FromAPIModel(ctx context.Context, apiModel inte
 	r.LocalResourceModel.FromAPIModel(ctx, model.LocalAPIModel)
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
-	r.ForceNonDuplicateChart = types.BoolPointerValue(model.ForceNonDuplicateChart)
-	r.ForceMetadataNameVersion = types.BoolPointerValue(model.ForceMetadataNameVersion)
+
+	// Only read these fields if they exist in the API response (version supports them)
+	// If the schema didn't include these fields (unsupported version), they'll remain null/unknown
+	if model.ForceNonDuplicateChart != nil {
+		r.ForceNonDuplicateChart = types.BoolPointerValue(model.ForceNonDuplicateChart)
+	} else {
+		// Set to null if not in API response (unsupported version)
+		r.ForceNonDuplicateChart = types.BoolNull()
+	}
+	if model.ForceMetadataNameVersion != nil {
+		r.ForceMetadataNameVersion = types.BoolPointerValue(model.ForceMetadataNameVersion)
+	} else {
+		// Set to null if not in API response (unsupported version)
+		r.ForceMetadataNameVersion = types.BoolNull()
+	}
 
 	return diags
 }
@@ -117,20 +149,18 @@ func (r *localHelmResource) Schema(ctx context.Context, req resource.SchemaReque
 			"force_non_duplicate_chart": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					PreventUpdateModifier(),
 				},
-				MarkdownDescription: "Prevents the deployment of charts with the same name and version in different repository paths. Only available for 7.104.5 onward. Cannot be updated after it is set.",
+				MarkdownDescription: fmt.Sprintf("Prevents the deployment of charts with the same name and version in different repository paths. Only available for %s onward. Cannot be updated after it is set.", HelmEnforceSupportedVersion),
 			},
 			"force_metadata_name_version": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					PreventUpdateModifier(),
 				},
-				MarkdownDescription: "Ensures that the chart name and version in the file name match the values in Chart.yaml and adhere to SemVer standards. Only available for 7.104.5 onward. Cannot be updated after it is set.",
+				MarkdownDescription: fmt.Sprintf("Ensures that the chart name and version in the file name match the values in Chart.yaml and adhere to SemVer standards. Only available for %s onward. Cannot be updated after it is set.", HelmEnforceSupportedVersion),
 			},
 		},
 	)
@@ -163,16 +193,24 @@ func (m preventUpdateModifier) MarkdownDescription(ctx context.Context) string {
 
 // PlanModifyBool implements the plan modification logic.
 func (m preventUpdateModifier) PlanModifyBool(_ context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
-	// Do nothing if there is no state value, e.g. creating first time
+	// If state is null (resource doesn't exist yet or field not in API response)
 	if req.StateValue.IsNull() {
+		// If plan is also null/unknown, keep it null (unsupported version case, no config value)
+		if req.PlanValue.IsNull() || req.PlanValue.IsUnknown() {
+			resp.PlanValue = types.BoolNull()
+			return
+		}
+		// Otherwise, use the plan value from config (creating new resource with explicit value)
 		return
 	}
 
-	// Do nothing if there is planned and state values are identical.
+	// Resource exists and state has a value - check if update is allowed
+	// Do nothing if planned and state values are identical.
 	if req.PlanValue.Equal(req.StateValue) {
 		return
 	}
 
+	// Prevent update if values differ
 	resp.Diagnostics.AddAttributeError(
 		req.Path,
 		"Attribute cannot be updated",

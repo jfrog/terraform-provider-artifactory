@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configuration_test
 
 import (
@@ -112,7 +126,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -123,7 +137,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy must use exactly one of the following condition types.*",
+			errorRegex:  ".*A policy must specify at least one condition.*",
 		},
 		{
 			name: "mixed_days_and_months",
@@ -160,7 +174,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -173,36 +187,11 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
+			errorRegex:  ".*Version-based condition.*cannot be combined.*",
 		},
 		{
-			name: "time_and_properties_based",
-			config: `
-			resource "artifactory_archive_policy" "test" {
-				key = "test-time-properties"
-				description = "Test policy"
-				cron_expression = "0 0 2 ? * MON-SAT *"
-				duration_in_minutes = 60
-				enabled = false
-				skip_trashcan = false
-				
-				search_criteria = {
-					repos = ["**"]
-					package_types = ["docker"]
-					include_all_projects = true
-					included_projects = []
-					included_packages = ["**"]
-					excluded_packages = ["com/jfrog/latest"]
-					created_before_in_days = 30
-					included_properties = {
-						"build.name" = ["my-app"]
-					}
-				}
-			}`,
-			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
-		},
-		{
+			// time + property is now valid (AND semantics, supported from Artifactory 7.129)
+			// This case is tested in TestAccArchivePolicy_valid_combined_conditions
 			name: "version_and_properties_based",
 			config: `
 			resource "artifactory_archive_policy" "test" {
@@ -212,7 +201,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -227,10 +216,10 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
+			errorRegex:  ".*Version-based condition.*cannot be combined.*",
 		},
 		{
-			name: "all_three_condition_types",
+			name: "version_time_and_properties_based",
 			config: `
 			resource "artifactory_archive_policy" "test" {
 				key = "test-all-three"
@@ -239,7 +228,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				duration_in_minutes = 60
 				enabled = false
 				skip_trashcan = false
-				
+
 				search_criteria = {
 					repos = ["**"]
 					package_types = ["docker"]
@@ -255,7 +244,7 @@ func TestAccArchivePolicy_invalid_condition_combinations(t *testing.T) {
 				}
 			}`,
 			expectError: true,
-			errorRegex:  ".*A policy can only use one type of condition.*",
+			errorRegex:  ".*Version-based condition.*cannot be combined.*",
 		},
 	}
 
@@ -624,7 +613,7 @@ func TestAccArchivePolicy_invalid_properties_validation(t *testing.T) {
 					included_properties = {}
 				}
 			}`,
-			errorRegex: ".*A policy must use exactly one of the following condition types.*",
+			errorRegex: ".*A policy must specify at least one condition.*",
 		},
 	}
 
@@ -1034,6 +1023,104 @@ func TestAccArchivePolicy_valid_properties_based(t *testing.T) {
 	}
 }
 
+func TestAccArchivePolicy_valid_combined_time_and_properties(t *testing.T) {
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.129.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.129.0 which is required for combined time + property conditions", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-combined-policy", "artifactory_archive_policy")
+
+	testCases := []struct {
+		name        string
+		description string
+		config      string
+	}{
+		{
+			name:        "time_and_included_properties",
+			description: "Policy combining time-based and included_properties (AND semantics)",
+			config: `
+			created_before_in_days = 30
+			included_properties = {
+				"release.status" = ["prod"]
+			}`,
+		},
+		{
+			name:        "time_and_included_properties_with_downloaded",
+			description: "Policy combining last_downloaded and included_properties",
+			config: `
+			last_downloaded_before_in_days = 90
+			included_properties = {
+				"build.name" = ["my-app"]
+			}`,
+		},
+		{
+			name:        "both_time_conditions_and_included_properties",
+			description: "Policy combining both time conditions and included_properties",
+			config: `
+			created_before_in_days = 30
+			last_downloaded_before_in_days = 60
+			included_properties = {
+				"env" = ["staging"]
+			}`,
+		},
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policyKey := fmt.Sprintf("%s-%d", policyName, i)
+
+			config := fmt.Sprintf(`
+			resource "artifactory_archive_policy" "%s" {
+				key = "%s"
+				description = "%s"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = false
+				skip_trashcan = false
+
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					%s
+				}
+			}`, policyKey, policyKey, tc.description, tc.config)
+
+			resource.Test(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				CheckDestroy:             testAccArchivePolicyDestroy(fmt.Sprintf("artifactory_archive_policy.%s", policyKey)),
+				Steps: []resource.TestStep{
+					{
+						Config: config,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(fmt.Sprintf("artifactory_archive_policy.%s", policyKey), "key", policyKey),
+							resource.TestCheckResourceAttr(fmt.Sprintf("artifactory_archive_policy.%s", policyKey), "description", tc.description),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
 func TestAccArchivePolicy_valid_all_package_types(t *testing.T) {
 	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
 	if strings.ToLower(archivePolicyEnabled) != "true" {
@@ -1401,6 +1488,418 @@ func TestAccArchivePolicy_valid_update_scenarios(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.package_types.#", "3"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_packages.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_with_variable_last_downloaded_before_in_days(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.111.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.111.2", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
+
+	temp := `
+	variable "archive_policy_last_downloaded_before_in_days" {
+		type = number
+		default = 10
+	}
+
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for last_downloaded_before_in_days"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			last_downloaded_before_in_days = var.archive_policy_last_downloaded_before_in_days
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for last_downloaded_before_in_days"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_days", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_with_variable_created_before_in_days(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.111.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.111.2", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
+
+	temp := `
+	variable "archive_policy_created_before_in_days" {
+		type = number
+		default = 45
+	}
+
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for created_before_in_days"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_days = var.archive_policy_created_before_in_days
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for created_before_in_days"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_days", "45"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_with_variable_keep_last_n_versions(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.111.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.111.2", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
+
+	temp := `
+	variable "archive_policy_keep_last_n_versions" {
+		type = number
+		default = 5
+	}
+
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for keep_last_n_versions"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "helm", "helmoci", "nuget", "maven", "npm"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			keep_last_n_versions = var.archive_policy_keep_last_n_versions
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for keep_last_n_versions"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.keep_last_n_versions", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_with_variable_duration_in_minutes(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.102.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.102.0", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
+
+	temp := `
+	variable "archive_policy_duration_in_minutes" {
+		type = number
+		default = 120
+	}
+
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for duration_in_minutes"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = var.archive_policy_duration_in_minutes
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_days = 30
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccArchivePolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with variable for duration_in_minutes"),
+					resource.TestCheckResourceAttr(fqrn, "duration_in_minutes", "120"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_with_variable_no_default_should_fail(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.111.2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.111.2", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
+
+	temp := `
+	variable "archive_policy_last_downloaded_before_in_days" {
+		type = number
+		# No default - should require value
+	}
+
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable without default"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			last_downloaded_before_in_days = var.archive_policy_last_downloaded_before_in_days
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*(No value for required variable|Missing required argument|Required variable not set|variable.*must be set).*"),
+				PlanOnly:    true,
+			},
+		},
+	})
+}
+
+func TestAccArchivePolicy_with_variable_duration_in_minutes_no_default_should_fail(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	archivePolicyEnabled := os.Getenv("JFROG_ARCHIVE_POLICY_ENABLED")
+	if strings.ToLower(archivePolicyEnabled) != "true" {
+		t.Skipf("JFROG_ARCHIVE_POLICY_ENABLED env var is not set to 'true'")
+	}
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.102.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.102.0", version)
+	}
+
+	_, _, policyName := testutil.MkNames("test-archive-policy", "artifactory_archive_policy")
+
+	temp := `
+	variable "archive_policy_duration_in_minutes" {
+		type = number
+		# No default - should require value
+	}
+
+	resource "artifactory_archive_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with variable for duration_in_minutes without default"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = var.archive_policy_duration_in_minutes
+		enabled = false
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["docker", "generic", "helm", "helmoci", "nuget", "terraform"]
+			repos = ["**"]
+			include_all_projects = false
+			included_projects = ["default"]
+			included_packages = ["**"]
+			excluded_packages = ["com/jfrog/latest"]
+			created_before_in_days = 30
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(".*(No value for required variable|Missing required argument|Required variable not set|variable.*must be set).*"),
+				PlanOnly:    true,
 			},
 		},
 	})

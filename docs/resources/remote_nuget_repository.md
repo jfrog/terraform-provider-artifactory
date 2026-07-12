@@ -38,6 +38,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `force_nuget_authentication` - (Optional) Force basic authentication credentials in order to use this repository. Default value is `false`.
 * `symbol_server_url` - (Optional) NuGet symbol server URL. Default value is `https://symbols.nuget.org/download/symbols`.
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `pass_through` - (Optional, Default: `false`) Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.
 
 
 ## Import

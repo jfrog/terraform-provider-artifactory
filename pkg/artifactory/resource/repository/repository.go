@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package repository
 
 import (
@@ -21,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkv2_diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -43,6 +58,7 @@ import (
 const (
 	AlpinePackageType            = "alpine"
 	AnsiblePackageType           = "ansible"
+	BazelModulesPackageType      = "bazelmodules"
 	BowerPackageType             = "bower"
 	CargoPackageType             = "cargo"
 	ChefPackageType              = "chef"
@@ -66,6 +82,7 @@ const (
 	MachineLearningType          = "machinelearning"
 	MavenPackageType             = "maven"
 	NPMPackageType               = "npm"
+	NixPackageType               = "nix"
 	NugetPackageType             = "nuget"
 	OCIPackageType               = "oci"
 	OpkgPackageType              = "opkg"
@@ -86,6 +103,7 @@ const (
 )
 
 var PackageNameLookup = map[string]string{
+	BazelModulesPackageType:     "Bazel Modules",
 	BowerPackageType:            "Bower",
 	ChefPackageType:             "Chef",
 	CocoapodsPackageType:        "CocoaPods",
@@ -102,6 +120,7 @@ var PackageNameLookup = map[string]string{
 	HuggingFacePackageType:      "HuggingFace ML",
 	IvyPackageType:              "Ivy",
 	NPMPackageType:              "Npm",
+	NixPackageType:              "Nix",
 	OpkgPackageType:             "Opkg",
 	PubPackageType:              "Pub",
 	PuppetPackageType:           "Puppet",
@@ -153,7 +172,7 @@ func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 		return
 	}
 
-	var envs []string
+	var envs []types.String
 	resp.Diagnostics.Append(projectEnviroments.ElementsAs(ctx, &envs, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,10 +211,10 @@ func (r BaseResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 	if !isSupported {
 		// Before 7.53.1
 		for _, env := range envs {
-			if !slices.Contains(ProjectEnvironmentsSupported, env) {
+			if !slices.Contains(ProjectEnvironmentsSupported, env.ValueString()) {
 				resp.Diagnostics.AddError(
 					"Invalid project_environment not allowed",
-					env,
+					env.ValueString(),
 				)
 				return
 			}
@@ -219,6 +238,15 @@ func (r *BaseResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.GetCreateResourcePlanData(ctx, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Read any write-only attribute values (e.g. `password_wo`) from the
+	// configuration, since they are not available in the plan.
+	if woReader, ok := plan.(WriteOnlyConfigReader); ok {
+		resp.Diagnostics.Append(woReader.ReadWriteOnlyConfig(ctx, req.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	repo, d := plan.ToAPIModel(ctx, r.PackageType)
@@ -303,6 +331,15 @@ func (r *BaseResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.GetUpdateResourcePlanData(ctx, req, resp)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Read any write-only attribute values (e.g. `password_wo`) from the
+	// configuration, since they are not available in the plan.
+	if woReader, ok := plan.(WriteOnlyConfigReader); ok {
+		resp.Diagnostics.Append(woReader.ReadWriteOnlyConfig(ctx, req.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	state := reflect.New(r.ResourceModelType).Interface().(ResourceModelIface)
@@ -413,6 +450,16 @@ type ResourceModelIface interface {
 	GetUpdateResourceStateData(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse)
 	SetUpdateResourceStateData(ctx context.Context, resp *resource.UpdateResponse)
 	ProjectKeyValue() basetypes.StringValue
+}
+
+// WriteOnlyConfigReader is an optional interface implemented by resource models
+// that have write-only attributes (e.g. `password_wo`). Write-only attribute
+// values are never stored in the plan or state (Terraform Core sends them as
+// null there), so they can only be read from the configuration during Create
+// and Update. The framework automatically nullifies write-only attributes in
+// the state it returns, so no cleanup is required here.
+type WriteOnlyConfigReader interface {
+	ReadWriteOnlyConfig(ctx context.Context, config tfsdk.Config) diag.Diagnostics
 }
 
 type BaseResourceModel struct {

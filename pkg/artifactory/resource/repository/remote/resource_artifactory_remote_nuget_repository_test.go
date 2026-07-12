@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package remote_test
 
 import (
@@ -18,7 +32,77 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 		"force_nuget_authentication":  true,
 		"missed_cache_period_seconds": 1800,
 		"symbol_server_url":           "https://symbols.nuget.org/download/symbols",
+		"curated":                     false,
+		"pass_through":                false,
 	}))
+}
+
+func TestAccRemoteNugetRepository_url_fields(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-nuget-remote", "artifactory_remote_nuget_repository")
+
+	const temp = `
+		resource "artifactory_remote_nuget_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			url                        = "https://www.nuget.org/"
+			v3_feed_url                = "{{ .v3FeedUrl }}"
+			symbol_server_url          = "{{ .symbolServerUrl }}"
+			force_nuget_authentication = true
+		}
+	`
+
+	const tempEmpty = `
+		resource "artifactory_remote_nuget_repository" "{{ .name }}" {
+			key                        = "{{ .name }}"
+			url                        = "https://www.nuget.org/"
+			v3_feed_url                = ""
+			symbol_server_url          = ""
+			force_nuget_authentication = true
+		}
+	`
+
+	params := map[string]interface{}{
+		"name":            name,
+		"v3FeedUrl":       "https://api.nuget.org/v3/index.json",
+		"symbolServerUrl": "https://symbols.nuget.org/download/symbols",
+	}
+
+	configWithURLs := util.ExecuteTemplate("TestAccRemoteNugetRepository_url_fields_with_urls", temp, params)
+	configEmpty := util.ExecuteTemplate("TestAccRemoteNugetRepository_url_fields_empty", tempEmpty, map[string]interface{}{"name": name})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: configWithURLs,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", "https://api.nuget.org/v3/index.json"),
+					resource.TestCheckResourceAttr(fqrn, "symbol_server_url", "https://symbols.nuget.org/download/symbols"),
+				),
+			},
+			{
+				Config: configEmpty,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "v3_feed_url", ""),
+					resource.TestCheckResourceAttr(fqrn, "symbol_server_url", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: configEmpty,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
 }
 
 func TestAccRemoteNugetRepository_migrate_from_SDKv2(t *testing.T) {

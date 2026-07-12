@@ -1,10 +1,98 @@
-### 12.11.1 (Nov 17, 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
+### 12.11.8 (Jul 9, 2026). Tested on Artifactory 7.146.25 with Terraform 1.15.8 and OpenTofu 1.12.3
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_bazel_repository` to support [Bazel Modules Repositories](https://docs.jfrog.com/artifactory/docs/bazel-modules-repositories) for proxying a Bazel registry such as the Bazel Central Registry (`https://bcr.bazel.build/`).
+* **New Data Source:** `artifactory_remote_bazel_repository`. Bazel Modules repositories are supported as remote repositories only; local and virtual are not supported by Artifactory.
+
+FEATURES:
+
+* resource/artifactory_remote_*_repository: Add write-only `password_wo` attribute (and companion `password_wo_version`) for the remote repository password. When set, the credential is sent to Artifactory but is never stored in Terraform state or plan. Requires Terraform 1.11 or later and conflicts with `password`. Change `password_wo_version` to re-send a rotated secret. Issue: [#1346](https://github.com/jfrog/terraform-provider-artifactory/issues/1346)
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Document that package cleanup policies can now be created and managed with an Enterprise X (EntX) license, in addition to Enterprise+, following the server-side enablement in Artifactory 7.139 (Cloud) and 7.146 (Self-Hosted). This applies to cleanup policies only, not archive policies. No provider code change is required as license enforcement is handled by the Artifactory API.
+
+### 12.11.7 (Jun 16, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
+
+BUG FIXES:
+
+* resource/artifactory_package_cleanup_policy: Preserve omitted `cron_expression` as null when Artifactory returns an empty string, avoiding an inconsistent result after apply. Issue: [#1406](https://github.com/jfrog/terraform-provider-artifactory/issues/1406) PR: [#1414](https://github.com/jfrog/terraform-provider-artifactory/pull/1414)
+
+IMPROVEMENTS:
+
+* resource/artifactory_remote_ansible_repository: Change default value of `bypass_head_requests` from `false` to `true`. The `galaxy.ansible.com` registry rejects HEAD requests, so this attribute must be `true` for the remote repository to function correctly. This aligns the provider default with the Artifactory server behavior, which automatically sets this to `true` for Ansible repositories. PR: [#1422](https://github.com/jfrog/terraform-provider-artifactory/pull/1422)
+
+### 12.11.6 (Jun 9, 2026). Tested on Artifactory 7.146.15 with Terraform 1.15.5 and OpenTofu 1.12.1
+
+IMPROVEMENTS:
+
+* resource/artifactory_virtual_rpm_repository: Add `retrieval_cache_period_seconds` attribute. This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. Default value is `7200`. PR: [#1413](https://github.com/jfrog/terraform-provider-artifactory/pull/1413)
+
+### 12.11.5 (May 21, 2026). Tested on Artifactory 7.146.13 with Terraform 1.15.4 and OpenTofu 1.12.0
+
+BUG FIXES:
+
+* resource/artifactory_\*\_repository: Use `types.String` to support "unknown" `project_environments` elements during `terraform plan`. This fixes a `Value Conversion Error` when `project_environments` contains values from other resources (e.g., `project_environment` resource IDs). Issue: [#1251](https://github.com/jfrog/terraform-provider-artifactory/issues/1251). PR: [#1252](https://github.com/jfrog/terraform-provider-artifactory/pull/1252)
+
+IMPROVEMENTS:
+
+* resource/artifactory_ldap_group_setting_v2: Add `refresh_operation` attribute (`UPDATE`, `IMPORT`, `UPDATE_AND_IMPORT`, default: `UPDATE_AND_IMPORT`) to trigger LDAP group synchronization automatically after create or update. Previously, the group config was saved but Artifactory did not sync groups until a manual UI click or API call. Existing resources upgrading to this version will see `+ refresh_operation = "UPDATE_AND_IMPORT"` in the plan and a one-time sync on apply — safe and idempotent. Since the Artifactory API does not return this field, the value is preserved in state. PR: [#1403](https://github.com/jfrog/terraform-provider-artifactory/pull/1403)
+
+### 12.11.4 (Apr 30, 2026). Tested on Artifactory 7.146.8 with Terraform 1.15.1 and OpenTofu 1.11.6
+
+FEATURES:
+
+**New Resource:** `artifactory_*_nix_repository` to support local, remote, virtual Nix repository. Issue: [#1388](https://github.com/jfrog/terraform-provider-artifactory/issues/1388)
+* resource/`artifactory_remote_generic_repository`: Add `custom_http_headers` — a list of up to 5 custom HTTP headers (`name`, `value`, `sensitive`) sent on every outbound request to the remote URL. `sensitive` defaults to `false`; when set to `true`, Artifactory encrypts the value server-side. Header values are masked in Terraform plan output. Requires Artifactory support for the `customHttpHeaders` repository configuration. PR: [#1393](https://github.com/jfrog/terraform-provider-artifactory/pull/1393)
+
+BUG FIXES:
+
+* resource/artifactory_remote_nuget_repository: Fix `v3_feed_url` and `symbol_server_url` rejecting empty string values. The Artifactory API accepts empty values for these fields and applies its own defaults server-side; the provider now allows `""` to clear the field. Non-empty values are still validated as valid HTTP/HTTPS URLs. Since the API does not return these fields in GET responses, the configured value is preserved in state to prevent perpetual drift. PR: [#1394](https://github.com/jfrog/terraform-provider-artifactory/pull/1394)
+
+IMPROVEMENTS:
+
+* resource/artifactory_archive_policy, resource/artifactory_package_cleanup_policy: Relax search criteria validation so **time-based** conditions (days or months) and **properties-based** conditions (`included_properties`) can be used together. **Version-based** condition (`keep_last_n_versions`) remains mutually exclusive and cannot be combined with time-based or properties-based conditions. For package cleanup policies, combined time + properties behavior follows Artifactory **7.129+** (AND semantics). JTFPR-173.
+* resource/artifactory_remote_vcs_repository: Add `GITLAB` and `GITHUBENTERPRISE` to `vcs_git_provider` validation. Artifactory supports proxying GitLab and GitHub Enterprise in addition to existing providers; the attribute description was updated to list all supported providers. PR: [#1383](https://github.com/jfrog/terraform-provider-artifactory/pull/1383) 
+
+### 12.11.3 (Feb 11, 2026). Tested on Artifactory 7.133.8 with Terraform 1.14.4 and OpenTofu 1.11.4
+
+FEATURES:
+
+**New Resource:** `artifactory_trashcan_config` for managing Artifactory trash can configuration. When enabled, deleted items are stored in the trash can for a specified retention period before being permanently deleted. Issue: [#1307](https://github.com/jfrog/terraform-provider-artifactory/issues/1307) PR: [#1373](https://github.com/jfrog/terraform-provider-artifactory/pull/1373)
+
+### 12.11.2 (Feb 10, 2026). Tested on Artifactory 7.133.6 with Terraform 1.14.4 and OpenTofu 1.11.4
+
+IMPROVEMENTS:
+
+* provider: Add mutual TLS client certificate configuration support, allowing certificates to be loaded from files or inline PEM data and documenting the new options.
+
+FEATURES:
+
+* resource/artifactory_remote_*_repository: Add `pass_through` attribute to Curation settings for all remote repositories that support Curation (Conan, Docker, Gems, Go, Gradle, Hugging Face, Maven, NPM, NuGet, PyPI). This enables Pass-through for Curation Audit. PR: [#1371](https://github.com/jfrog/terraform-provider-artifactory/pull/1371)
+
+
+BUG FIXES:
+
+* resource/artifactory_package_cleanup_policy: Fix project-level policy key validation failing with `for_each` when the key contains dynamic expressions (e.g., `"proj-${each.key}"`). The key is now validated during the plan phase via `ModifyPlan` when values are resolved, instead of failing during `ValidateConfig` when values are unknown. Issue: [#1339](https://github.com/jfrog/terraform-provider-artifactory/issues/1339). PR: [#1371](https://github.com/jfrog/terraform-provider-artifactory/pull/1371)
+* resource/artifactory_local_helm_repository.go: Fix prevent force_non_duplicate_chart and force_metadata_name_version state drift in local helm repositories. Issue: [#1243](https://github.com/jfrog/terraform-provider-artifactory/issues/1243). PR: [#1362](https://github.com/jfrog/terraform-provider-artifactory/pull/1362)
+
+
+### 12.11.1 (Dec 8, 2025). Tested on Artifactory 7.125.8 with Terraform 1.14.1 and OpenTofu 1.10.7
 
 FEATURES:
 
 **New Resource:** `artifactory_*_hex_repository` to support local, remote, virtual Hex repository. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
 
 **New Data Source** `datasource_artifactory_*_hex_repository` : Adds new data sources for all hex repository types. Issue: [#1230](https://github.com/jfrog/terraform-provider-artifactory/issues/1230) PR: [#1336](https://github.com/jfrog/terraform-provider-artifactory/pull/1336)
+
+BUG FIXES:
+
+* resource/artifactory_release_bundle_v2_webhook: Fix use nested map for selectedReleaseBundles in release_bundle_v2 webhook PR: [#1353](https://github.com/jfrog/terraform-provider-artifactory/pull/1353)
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Allow variables to be used for condition fields (last_downloaded_before_in_days, created_before_in_days, keep_last_n_versions, etc.) without validation errors during terraform validate. The validator now skips validation when values are unknown (variables) and validates normally when values are known. Issue: [#1306](https://github.com/jfrog/terraform-provider-artifactory/issues/1306) PR: [#1354](https://github.com/jfrog/terraform-provider-artifactory/pull/1354)
 
 ### 12.11.0 (Nov 14 2025). Tested on Artifactory 7.125.6 with Terraform 1.13.5 and OpenTofu 1.10.7
 

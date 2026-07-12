@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package remote
 
 import (
@@ -88,7 +102,8 @@ func (r remoteNugetResourceModel) ToAPIModel(ctx context.Context, packageType st
 	return RemoteNugetAPIModel{
 		RemoteAPIModel: remoteAPIModel,
 		CurationAPIModel: CurationAPIModel{
-			Curated: r.Curated.ValueBool(),
+			Curated:     r.Curated.ValueBool(),
+			PassThrough: r.PassThrough.ValueBool(),
 		},
 		FeedContextPath:          r.FeedContextPath.ValueString(),
 		DownloadContextPath:      r.DownloadContextPath.ValueString(),
@@ -107,11 +122,16 @@ func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel in
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
+	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
 	r.FeedContextPath = types.StringValue(model.FeedContextPath)
 	r.DownloadContextPath = types.StringValue(model.DownloadContextPath)
-	r.V3FeedURL = types.StringValue(model.V3FeedURL)
+	if model.V3FeedURL != "" {
+		r.V3FeedURL = types.StringValue(model.V3FeedURL)
+	}
 	r.ForceNugetAuthentication = types.BoolValue(model.ForceNugetAuthentication)
-	r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
+	if model.SymbolServerURL != "" {
+		r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
+	}
 	return diags
 }
 
@@ -151,8 +171,10 @@ func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 				Default:  stringdefault.StaticString("https://api.nuget.org/v3/index.json"),
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-					validatorfw_string.IsURLHttpOrHttps(),
+					stringvalidator.Any(
+						stringvalidator.LengthAtMost(0),
+						validatorfw_string.IsURLHttpOrHttps(),
+					),
 				},
 				MarkdownDescription: "The URL to the NuGet v3 feed. Default value is 'https://api.nuget.org/v3/index.json'.",
 			},
@@ -167,8 +189,10 @@ func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed: true,
 				Default:  stringdefault.StaticString("https://symbols.nuget.org/download/symbols"),
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-					validatorfw_string.IsURLHttpOrHttps(),
+					stringvalidator.Any(
+						stringvalidator.LengthAtMost(0),
+						validatorfw_string.IsURLHttpOrHttps(),
+					),
 				},
 				MarkdownDescription: "NuGet symbol server URL.",
 			},

@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package repository_test
 
 import (
@@ -451,6 +465,66 @@ func TestAccRepository_invalid_key(t *testing.T) {
 			{
 				Config:      localRepositoryBasic,
 				ExpectError: regexp.MustCompile(`.*Attribute key must be 1 - 64 alphanumeric and hyphen characters.*`),
+			},
+		},
+	})
+}
+
+func TestAccRepository_unknown_project_environments(t *testing.T) {
+	projectKey := fmt.Sprintf("t%d", testutil.RandomInt())
+	repoName := fmt.Sprintf("%s-generic-local", projectKey)
+	environment := fmt.Sprintf("prjenv%d", testutil.RandomInt())
+
+	_, fqrn, name := testutil.MkNames(repoName, "artifactory_local_generic_repository")
+
+	params := map[string]interface{}{
+		"name":        name,
+		"projectKey":  projectKey,
+		"environment": environment,
+	}
+	localRepositoryBasic := util.ExecuteTemplate("TestAccLocalGenericRepository", `
+		resource "project" "{{ .projectKey }}" {
+			key = "{{ .projectKey }}"
+			display_name = "{{ .projectKey }}"
+			description  = "My Project"
+			admin_privileges {
+				manage_members   = true
+				manage_resources = true
+				index_resources  = true
+			}
+			max_storage_in_gibibytes   = 10
+			block_deployments_on_limit = false
+			email_notification         = true
+		}
+
+		resource "project_environment" "{{ .environment }}" {
+			name        = "{{ .environment }}"
+			project_key = project.{{ .projectKey }}.id
+		}
+
+		resource "artifactory_local_generic_repository" "{{ .name }}" {
+			key                  = "{{ .name }}"
+			project_key          = project.{{ .projectKey }}.key
+			project_environments = [ project_environment.{{ .environment }}.id ]
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acctest.PreCheck(t) },
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"project": {
+				Source: "jfrog/project",
+			},
+		},
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: localRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "project_environments.#", "1"),
+					resource.TestCheckResourceAttr(fqrn, "project_environments.0", fmt.Sprintf("%s-%s", projectKey, environment)),
+				),
 			},
 		},
 	})

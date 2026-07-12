@@ -1,0 +1,50 @@
+terraform-provider-artifactory
+Copyright 2025 JFrog Ltd.
+
+This software uses the following third-party libraries:
+
+HashiCorp Terraform Plugin Framework:
+- github.com/hashicorp/terraform-plugin-framework - https://github.com/hashicorp/terraform-plugin-framework - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/terraform-plugin-framework-validators - https://github.com/hashicorp/terraform-plugin-framework-validators - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/terraform-plugin-docs - https://github.com/hashicorp/terraform-plugin-docs - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/terraform-plugin-sdk/v2 - https://github.com/hashicorp/terraform-plugin-sdk - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/terraform-plugin-mux - https://github.com/hashicorp/terraform-plugin-mux - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/terraform-plugin-testing - https://github.com/hashicorp/terraform-plugin-testing - Licensed under Mozilla Public License 2.0
+
+JFrog Shared Provider Library:
+- github.com/jfrog/terraform-provider-shared - https://github.com/jfrog/terraform-provider-shared - Licensed under Apache License 2.0
+
+HashiCorp Core Libraries:
+- github.com/hashicorp/terraform-plugin-go - https://github.com/hashicorp/terraform-plugin-go - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/terraform-plugin-log - https://github.com/hashicorp/terraform-plugin-log - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/go-version - https://github.com/hashicorp/go-version - Licensed under Mozilla Public License 2.0
+- github.com/hashicorp/go-cty - https://github.com/hashicorp/go-cty - Licensed under Mozilla Public License 2.0
+
+Go Standard Library Extensions:
+- golang.org/x/crypto - https://github.com/golang/crypto - Licensed under BSD 3-Clause License
+- golang.org/x/mod - https://github.com/golang/mod - Licensed under BSD 3-Clause License
+- golang.org/x/net - https://github.com/golang/net - Licensed under BSD 3-Clause License
+- golang.org/x/exp - https://github.com/golang/exp - Licensed under BSD 3-Clause License
+
+Protocol Buffers and gRPC:
+- google.golang.org/protobuf - https://github.com/protocolbuffers/protobuf-go - Licensed under BSD 3-Clause License
+- google.golang.org/grpc - https://github.com/grpc/grpc-go - Licensed under Apache License 2.0
+
+HTTP Client:
+- github.com/go-resty/resty/v2 - https://github.com/go-resty/resty - Licensed under MIT License
+
+Testing and Utilities:
+- github.com/stretchr/testify - https://github.com/stretchr/testify - Licensed under MIT License
+- github.com/samber/lo - https://github.com/samber/lo - Licensed under MIT License
+- github.com/sethvargo/go-password - https://github.com/sethvargo/go-password - Licensed under MIT License
+- github.com/google/uuid - https://github.com/google/uuid - Licensed under BSD 3-Clause License
+- gopkg.in/yaml.v3 - https://github.com/go-yaml/yaml - Licensed under Apache License 2.0 and MIT License
+
+LDAP:
+- gopkg.in/ldap.v2 - https://github.com/go-ldap/ldap - Licensed under MIT License
+
+Regex:
+- github.com/dlclark/regexp2 - https://github.com/dlclark/regexp2 - Licensed under MIT License
+
+Any modifications or contributions to this software should include appropriate attributions as described in the above licenses.
+

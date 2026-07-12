@@ -1,0 +1,1 @@
+terraform import artifactory_virtual_nix_repository.nix-virtual example-nix-virtual

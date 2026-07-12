@@ -39,6 +39,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `remote_repo_checksum_policy_type` - (Optional, Default: `generate-if-absent`) Checking the Checksum effectively verifies the integrity of a deployed resource. The Checksum Policy determines how the system behaves when a client checksum for a remote resource is missing or conflicts with the locally calculated checksum. Available policies are `generate-if-absent`, `fail`, `ignore-and-generate`, and `pass-thru`.
 * `max_unique_snapshots` - (Optional) The maximum number of unique snapshots of a single artifact to store. Once the number of snapshots exceeds this setting, older versions are removed. A value of 0 (default) indicates there is no limit, and unique snapshots are not cleaned up.
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `pass_through` - (Optional, Default: `false`) Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.
 
 ## Import
 

@@ -37,6 +37,9 @@ terraform {
 provider "artifactory" {
   url           = "${var.artifactory_url}/artifactory"
   access_token  = "${var.artifactory_access_token}"
+  # Optional: supply a client certificate for mutual TLS
+  # client_certificate_path     = pathexpand("~/.jfrog/client.pem")
+  # client_certificate_key_path = pathexpand("~/.jfrog/client-key.pem")
 }
 
 # Create a new repository
@@ -139,6 +142,43 @@ provider "artifactory" {
 
 **Note:** Ensure `access_token` attribute and `JFROG_ACCESS_TOKEN` env var are not set
 
+## Mutual TLS
+
+Some Artifactory deployments require mutual TLS authentication. The provider can send a client certificate by either referencing local files or inlining PEM data.
+
+To reference files:
+
+```terraform
+provider "artifactory" {
+  url                         = "https://edge.example.com/artifactory"
+  access_token                = var.artifactory_access_token
+  client_certificate_path     = pathexpand("~/.jfrog/client-cert.pem")
+  client_certificate_key_path = pathexpand("~/.jfrog/client-key.pem")
+}
+```
+
+Use the same value for both path attributes if the PEM file contains the certificate and private key together. Both attributes must be provided when using the path-based configuration.
+
+To inline PEM data (for example, when running on Terraform Cloud), supply both the certificate and matching private key:
+
+```terraform
+provider "artifactory" {
+  url                    = "https://edge.example.com/artifactory"
+  access_token           = var.artifactory_access_token
+  client_certificate_pem = var.artifactory_client_certificate_pem
+  client_private_key_pem = var.artifactory_client_private_key_pem
+}
+```
+
+The following environment variables may also be used instead of configuration attributes:
+
+- `JFROG_CLIENT_CERT_PATH` or `ARTIFACTORY_CLIENT_CERT_PATH`
+- `JFROG_CLIENT_CERT_KEY_PATH` or `ARTIFACTORY_CLIENT_CERT_KEY_PATH`
+- `JFROG_CLIENT_CERT_PEM` or `ARTIFACTORY_CLIENT_CERT_PEM`
+- `JFROG_CLIENT_PRIVATE_KEY_PEM` or `ARTIFACTORY_CLIENT_PRIVATE_KEY_PEM`
+
+All four variables participate in the same precedence rules as the provider attributes. File-based and inline options are mutually exclusive.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -148,3 +188,7 @@ The following arguments are supported:
 * `api_key` - (Optional, deprecated) API key for api auth.
 * `oidc_provider_name` - (Optional) OIDC provider name. See [Configure an OIDC Integration](https://jfrog.com/help/r/jfrog-platform-administration-documentation/configure-an-oidc-integration) for more details.
 * `tfc_credential_tag_name` - (Optional) Terraform Cloud Workload Identity Token tag name. Use for generating multiple TFC workload identity tokens. When set, the provider will attempt to use env var with this tag name as suffix. **Note:** this is case sensitive, so if set to `JFROG`, then env var `TFC_WORKLOAD_IDENTITY_TOKEN_JFROG` is used instead of `TFC_WORKLOAD_IDENTITY_TOKEN`. See [Generating Multiple Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation#generating-multiple-tokens) on HCP Terraform for more details.
+* `client_certificate_path` - (Optional) Filesystem path to a PEM-encoded client certificate or certificate chain used for mutual TLS. Must be provided together with `client_certificate_key_path`. Can also be sourced from `JFROG_CLIENT_CERT_PATH` or `ARTIFACTORY_CLIENT_CERT_PATH`.
+* `client_certificate_key_path` - (Optional) Filesystem path to the PEM-encoded private key that matches `client_certificate_path`. Can also be sourced from `JFROG_CLIENT_CERT_KEY_PATH` or `ARTIFACTORY_CLIENT_CERT_KEY_PATH`.
+* `client_certificate_pem` - (Optional, Sensitive) Inline PEM-encoded client certificate or certificate chain used for mutual TLS. Must be provided together with `client_private_key_pem`. Can also be sourced from `JFROG_CLIENT_CERT_PEM` or `ARTIFACTORY_CLIENT_CERT_PEM`.
+* `client_private_key_pem` - (Optional, Sensitive) Inline PEM-encoded private key that matches `client_certificate_pem`. Can also be sourced from `JFROG_CLIENT_PRIVATE_KEY_PEM` or `ARTIFACTORY_CLIENT_PRIVATE_KEY_PEM`.

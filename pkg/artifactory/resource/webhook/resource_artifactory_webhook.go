@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package webhook
 
 import (
@@ -33,35 +47,35 @@ const (
 	webhooksURL = "/event/api/v1/subscriptions"
 	WebhookURL  = "/event/api/v1/subscriptions/{webhookKey}"
 
-	ArtifactLifecycleDomain        = "artifact_lifecycle"
-	ArtifactPropertyDomain         = "artifact_property"
+	UserDomain                     = "user"
 	ArtifactDomain                 = "artifact"
-	ArtifactoryReleaseBundleDomain = "artifactory_release_bundle"
+	ArtifactPropertyDomain         = "artifact_property"
+	DockerDomain                   = "docker"
 	BuildDomain                    = "build"
 	DestinationDomain              = "destination"
-	DistributionDomain             = "distribution"
-	DockerDomain                   = "docker"
-	ReleaseBundleDomain            = "release_bundle"
+	ArtifactLifecycleDomain        = "artifact_lifecycle"
 	ReleaseBundleV2Domain          = "release_bundle_v2"
 	ReleaseBundleV2PromotionDomain = "release_bundle_v2_promotion"
-	UserDomain                     = "user"
+	ReleaseBundleDomain            = "release_bundle"
+	DistributionDomain             = "distribution"
+	ArtifactoryReleaseBundleDomain = "artifactory_release_bundle"
 )
 
 const currentSchemaVersion = 2
 
 var DomainEventTypesSupported = map[string][]string{
+	UserDomain:                     {"locked"},
 	ArtifactDomain:                 {"deployed", "deleted", "moved", "copied", "cached"},
 	ArtifactPropertyDomain:         {"added", "deleted"},
 	DockerDomain:                   {"pushed", "deleted", "promoted"},
 	BuildDomain:                    {"uploaded", "deleted", "promoted"},
-	ReleaseBundleDomain:            {"created", "signed", "deleted"},
+	DestinationDomain:              {"received", "delete_started", "delete_completed", "delete_failed"},
+	ArtifactLifecycleDomain:        {"archive", "restore"},
+	ReleaseBundleV2Domain:          {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
+	ReleaseBundleV2PromotionDomain: {"release_bundle_v2_promotion_started", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_completed"},
+	ReleaseBundleDomain:            {"signed", "deleted", "created"},
 	DistributionDomain:             {"distribute_started", "distribute_completed", "distribute_aborted", "distribute_failed", "delete_started", "delete_completed", "delete_failed"},
 	ArtifactoryReleaseBundleDomain: {"received", "delete_started", "delete_completed", "delete_failed"},
-	DestinationDomain:              {"received", "delete_started", "delete_completed", "delete_failed"},
-	UserDomain:                     {"locked"},
-	ReleaseBundleV2Domain:          {"release_bundle_v2_started", "release_bundle_v2_failed", "release_bundle_v2_completed"},
-	ReleaseBundleV2PromotionDomain: {"release_bundle_v2_promotion_completed", "release_bundle_v2_promotion_failed", "release_bundle_v2_promotion_started"},
-	ArtifactLifecycleDomain:        {"archive", "restore"},
 }
 
 type WebhookResource struct {
@@ -562,17 +576,17 @@ type EventFilterAPIModel struct {
 }
 
 type BaseCriteriaAPIModel struct {
-	IncludePatterns []string `json:"includePatterns"`
-	ExcludePatterns []string `json:"excludePatterns"`
+	IncludePatterns []string `json:"includePatterns,omitempty"`
+	ExcludePatterns []string `json:"excludePatterns,omitempty"`
 }
 
 type HandlerAPIModel struct {
 	HandlerType         string                 `json:"handler_type"`
 	Url                 string                 `json:"url"`
-	Secret              *string                `json:"secret"`
+	Secret              *string                `json:"secret,omitempty"`
 	UseSecretForSigning *bool                  `json:"use_secret_for_signing,omitempty"`
-	Proxy               *string                `json:"proxy"`
-	CustomHttpHeaders   []KeyValuePairAPIModel `json:"custom_http_headers"`
+	Proxy               *string                `json:"proxy,omitempty"`
+	CustomHttpHeaders   []KeyValuePairAPIModel `json:"custom_http_headers,omitempty"`
 }
 
 type KeyValuePairAPIModel struct {

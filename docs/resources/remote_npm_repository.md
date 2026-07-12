@@ -29,6 +29,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `pass_through` - (Optional, Default: `false`) Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.
 
 ## Import
 

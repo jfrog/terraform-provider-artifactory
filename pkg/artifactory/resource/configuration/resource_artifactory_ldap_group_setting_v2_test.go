@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configuration_test
 
 import (
@@ -29,6 +43,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		filter = "(objectClass=groupOfNames)"
 		description_attribute = "description"
 		strategy = "{{ .strategy }}"
+		refresh_operation = "{{ .refresh_operation }}"
 	}
 	`
 	params := map[string]interface{}{
@@ -37,6 +52,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=com",
 		"group_member_attribute": "uniqueMember",
 		"strategy":               "STATIC",
+		"refresh_operation":      "UPDATE_AND_IMPORT",
 	}
 	LdapSettingTemplateFull := util.ExecuteTemplate("TestLdap", ldapGroupSetting, params)
 
@@ -46,6 +62,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 		"group_base_dn":          "CN=Users,DC=MyDomain,DC=org",
 		"group_member_attribute": "uniqueMember1",
 		"strategy":               "DYNAMIC",
+		"refresh_operation":      "UPDATE",
 	}
 	LdapSettingTemplateFullUpdate := util.ExecuteTemplate("TestLdap", ldapGroupSetting, paramsUpdate)
 
@@ -68,6 +85,7 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "filter", "(objectClass=groupOfNames)"),
 					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 					resource.TestCheckResourceAttr(fqrn, "strategy", "STATIC"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_operation", "UPDATE_AND_IMPORT"),
 				),
 			},
 			{
@@ -83,13 +101,15 @@ func TestAccLdapGroupSettingV2_full(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "filter", "(objectClass=groupOfNames)"),
 					resource.TestCheckResourceAttr(fqrn, "description_attribute", "description"),
 					resource.TestCheckResourceAttr(fqrn, "strategy", "DYNAMIC"),
+					resource.TestCheckResourceAttr(fqrn, "refresh_operation", "UPDATE"),
 				),
 			},
 			{
-				ResourceName:      fqrn,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck:  validator.CheckImportState(name, "name"),
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"refresh_operation"},
+				ImportStateCheck:        validator.CheckImportState(name, "name"),
 			},
 		},
 	})

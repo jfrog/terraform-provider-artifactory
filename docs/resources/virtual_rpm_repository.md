@@ -61,6 +61,7 @@ The following arguments are supported, along with the [common list of arguments 
   contain spaces or special characters.
 * `primary_keypair_ref` - (Optional) The primary GPG key to be used to sign packages.
 * `secondary_keypair_ref` - (Optional) The secondary GPG key to be used to sign packages.
+* `retrieval_cache_period_seconds` - (Optional, Default: `7200`) This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching.
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.
 

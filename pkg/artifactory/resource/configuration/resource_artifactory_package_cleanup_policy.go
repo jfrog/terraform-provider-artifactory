@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configuration
 
 import (
@@ -30,11 +44,11 @@ import (
 type cleanupSearchCriteriaValidator struct{}
 
 func (v cleanupSearchCriteriaValidator) Description(ctx context.Context) string {
-	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (keep_last_n_versions) is mutually exclusive with all other condition types"
 }
 
 func (v cleanupSearchCriteriaValidator) MarkdownDescription(ctx context.Context) string {
-	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (`keep_last_n_versions`) is mutually exclusive with all other condition types"
 }
 
 func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
@@ -48,6 +62,14 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 
 	// Get the attributes
 	attrs := obj.Attributes()
+
+	// Helper function to check if a value is unknown
+	isUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
 
 	// Helper function to get int64 value
 	getInt64 := func(key string) types.Int64 {
@@ -69,6 +91,25 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 
 	// Version-based condition (available in both versions)
 	keepLastNVersions := getInt64("keep_last_n_versions")
+
+	// Helper function to check if properties are unknown
+	checkPropertiesUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
+
+	// If any condition-related attribute is unknown (e.g., when using variables),
+	// skip validation to avoid false positives during terraform validate
+	if isUnknown("created_before_in_days") ||
+		isUnknown("last_downloaded_before_in_days") ||
+		isUnknown("created_before_in_months") ||
+		isUnknown("last_downloaded_before_in_months") ||
+		isUnknown("keep_last_n_versions") ||
+		checkPropertiesUnknown("included_properties") {
+		return
+	}
 
 	// Helper function to check if properties are set
 	checkPropertiesSet := func(key string) bool {
@@ -133,34 +174,22 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 	// Check for time-based conditions (either days or months)
 	timeBasedSet := timeBasedDaysSet || timeBasedMonthsSet
 
-	// Count how many different condition types are set
-	conditionTypes := 0
-	if timeBasedSet {
-		conditionTypes++
-	}
-	if keepVersionBasedSet {
-		conditionTypes++
-	}
-	if propertiesBasedSet {
-		conditionTypes++
-	}
-
 	// Must specify at least one condition
-	if conditionTypes == 0 {
+	if !timeBasedSet && !keepVersionBasedSet && !propertiesBasedSet {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy must use exactly one of the following condition types: time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+			"A policy must specify at least one condition: time-based conditions (days-based or months-based), version-based condition (`keep_last_n_versions`), or properties-based condition (`included_properties`). Time-based and properties-based conditions can be combined (AND semantics) starting from Artifactory 7.129.",
 		)
 		return
 	}
 
-	// Cannot use multiple condition types together
-	if conditionTypes > 1 {
+	// Version-based condition is mutually exclusive with time-based and properties-based conditions
+	if keepVersionBasedSet && (timeBasedSet || propertiesBasedSet) {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy can only use one type of condition: either time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+			"Version-based condition (`keep_last_n_versions`) cannot be combined with time-based conditions or properties-based condition (`included_properties`). Use `keep_last_n_versions` alone, or use time-based and/or properties-based conditions without `keep_last_n_versions`.",
 		)
 		return
 	}
@@ -256,6 +285,7 @@ func NewPackageCleanupPolicyResource() resource.Resource {
 }
 
 var _ resource.Resource = (*PackageCleanupPolicyResource)(nil)
+var _ resource.ResourceWithModifyPlan = (*PackageCleanupPolicyResource)(nil)
 
 type PackageCleanupPolicyResource struct {
 	util.JFrogResource
@@ -360,7 +390,7 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 
 	r.Key = types.StringValue(apiModel.Key)
 	r.Description = types.StringValue(apiModel.Description)
-	r.CronExpression = types.StringValue(apiModel.CronExpression)
+	r.CronExpression = normalizeEmptyAPIString(apiModel.CronExpression, r.CronExpression)
 	r.DurationInMinutes = types.Int64Value(apiModel.DurationInMinutes)
 	r.Enabled = types.BoolValue(apiModel.Enabled)
 	r.SkipTrashcan = types.BoolValue(apiModel.SkipTrashcan)
@@ -497,6 +527,14 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 	r.SearchCriteria = searchCriteria
 
 	return diags
+}
+
+func normalizeEmptyAPIString(apiValue string, priorValue types.String) types.String {
+	if apiValue == "" && priorValue.IsNull() {
+		return types.StringNull()
+	}
+
+	return types.StringValue(apiValue)
 }
 
 type PackageCleanupPolicyAPIModel struct {
@@ -873,16 +911,22 @@ func (r PackageCleanupPolicyResource) ValidateConfig(ctx context.Context, req re
 	if !data.ProjectKey.IsNull() && !data.ProjectKey.IsUnknown() && data.ProjectKey.ValueString() != "" {
 		// When project_key is specified, this is a project-level policy
 		projectKey := data.ProjectKey.ValueString()
-		policyKey := data.Key.ValueString()
 
-		// Check that policy key starts with project key prefix
-		expectedPrefix := projectKey + "-"
-		if !strings.HasPrefix(policyKey, expectedPrefix) {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("key"),
-				"Invalid Project-Level Policy Key",
-				fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
-			)
+		// Only validate key prefix if the key value is known.
+		// When using expressions like `for_each`, the key may be unknown
+		// during validation and its value can't be checked yet.
+		if !data.Key.IsUnknown() {
+			policyKey := data.Key.ValueString()
+
+			// Check that policy key starts with project key prefix
+			expectedPrefix := projectKey + "-"
+			if !strings.HasPrefix(policyKey, expectedPrefix) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("key"),
+					"Invalid Project-Level Policy Key",
+					fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
+				)
+			}
 		}
 
 		attrs := data.SearchCriteria.Attributes()
@@ -911,6 +955,37 @@ func (r PackageCleanupPolicyResource) ValidateConfig(ctx context.Context, req re
 	}
 
 	// Schema-level validation handles the condition validation rules
+}
+
+func (r PackageCleanupPolicyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Skip validation on resource destruction
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan PackageCleanupPolicyResourceModelV1
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate project-level policy key prefix during plan when values are resolved.
+	// This catches dynamic keys (e.g., from for_each) that are unknown during ValidateConfig.
+	if !plan.ProjectKey.IsNull() && !plan.ProjectKey.IsUnknown() && plan.ProjectKey.ValueString() != "" &&
+		!plan.Key.IsNull() && !plan.Key.IsUnknown() {
+		projectKey := plan.ProjectKey.ValueString()
+		policyKey := plan.Key.ValueString()
+
+		expectedPrefix := projectKey + "-"
+		if !strings.HasPrefix(policyKey, expectedPrefix) {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("key"),
+				"Invalid Project-Level Policy Key",
+				fmt.Sprintf("Project-level policy key must start with the project key prefix. Expected key to start with '%s', but got '%s'. Consider using a key like '%s<policy-name>'.", expectedPrefix, policyKey, expectedPrefix),
+			)
+		}
+	}
 }
 
 func (r *PackageCleanupPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

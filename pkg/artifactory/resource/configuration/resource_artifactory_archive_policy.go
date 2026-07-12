@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configuration
 
 import (
@@ -29,11 +43,11 @@ import (
 type searchCriteriaValidator struct{}
 
 func (v searchCriteriaValidator) Description(ctx context.Context) string {
-	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (keep_last_n_versions) is mutually exclusive with all other condition types"
 }
 
 func (v searchCriteriaValidator) MarkdownDescription(ctx context.Context) string {
-	return "Validates that exactly one group of conditions is specified (time-based or version-based)"
+	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (`keep_last_n_versions`) is mutually exclusive with all other condition types"
 }
 
 func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
@@ -47,6 +61,14 @@ func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validat
 
 	// Get the attributes
 	attrs := obj.Attributes()
+
+	// Helper function to check if a value is unknown
+	isUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
 
 	// Helper function to get int64 value
 	getInt64 := func(key string) types.Int64 {
@@ -68,6 +90,25 @@ func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validat
 
 	// Version-based condition (available in both versions)
 	keepLastNVersions := getInt64("keep_last_n_versions")
+
+	// Helper function to check if properties are unknown
+	checkPropertiesUnknown := func(key string) bool {
+		if v, ok := attrs[key]; ok {
+			return v.IsUnknown()
+		}
+		return false
+	}
+
+	// If any condition-related attribute is unknown (e.g., when using variables),
+	// skip validation to avoid false positives during terraform validate
+	if isUnknown("created_before_in_days") ||
+		isUnknown("last_downloaded_before_in_days") ||
+		isUnknown("created_before_in_months") ||
+		isUnknown("last_downloaded_before_in_months") ||
+		isUnknown("keep_last_n_versions") ||
+		checkPropertiesUnknown("included_properties") {
+		return
+	}
 
 	// Helper function to check if properties are set
 	checkPropertiesSet := func(key string) bool {
@@ -132,34 +173,22 @@ func (v searchCriteriaValidator) ValidateObject(ctx context.Context, req validat
 	// Check for time-based conditions (either days or months)
 	timeBasedSet := timeBasedDaysSet || timeBasedMonthsSet
 
-	// Count how many different condition types are set
-	conditionTypes := 0
-	if timeBasedSet {
-		conditionTypes++
-	}
-	if keepSet {
-		conditionTypes++
-	}
-	if propertiesBasedSet {
-		conditionTypes++
-	}
-
 	// Must specify at least one condition
-	if conditionTypes == 0 {
+	if !timeBasedSet && !keepSet && !propertiesBasedSet {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy must use exactly one of the following condition types: time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+			"A policy must specify at least one condition: time-based conditions (days-based or months-based), version-based condition (`keep_last_n_versions`), or properties-based condition (`included_properties`). Time-based and properties-based conditions can be combined.",
 		)
 		return
 	}
 
-	// Cannot use multiple condition types together
-	if conditionTypes > 1 {
+	// Version-based condition is mutually exclusive with time-based and properties-based conditions
+	if keepSet && (timeBasedSet || propertiesBasedSet) {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy can only use one type of condition: either time-based conditions (days-based or months-based), version-based condition (keep_last_n_versions), or properties-based condition (included_properties). Cannot use multiple condition types together.",
+			"Version-based condition (`keep_last_n_versions`) cannot be combined with time-based conditions or properties-based condition (`included_properties`). Use `keep_last_n_versions` alone, or use time-based and/or properties-based conditions without `keep_last_n_versions`.",
 		)
 		return
 	}

@@ -8,7 +8,7 @@ Provides an Artifactory custom webhook resource. This can be used to register an
 ~>This resource is being deprecated. Use `artifactory_destination_custom_webhook` instead.
 
 ## Example Usage
-.
+
 ```hcl
 resource "artifactory_artifactory_release_bundle_custom_webhook" "artifactory-release-bundle-custom-webhook" {
   key         = "artifactory-release-bundle-custom-webhook"
@@ -48,9 +48,9 @@ The following arguments are supported:
 * `event_types` - (Required) List of Events in Artifactory, Distribution, Release Bundle that function as the event trigger for the Webhook. Allow values: `received`, `delete_started`, `delete_completed`, `delete_failed`
 * `criteria` - (Required) Specifies where the webhook will be applied on which repositories.
   * `any_release_bundle` - (Required) Trigger on any release bundle
-  * `registered_release_bundle_names` - (Required) Trigger on this list of release bundle names
-  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`
-  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`
+  * `registered_release_bundle_names` - (Optional) Trigger on this list of release bundle names
+  * `include_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`. **Cannot be set if `any_release_bundle` is set to `true`.** Either this or `registered_release_bundle_names` must be set when `any_release_bundle` is `false`.
+  * `exclude_patterns` - (Optional) Simple comma separated wildcard patterns for repository artifact paths (with no leading slash). Ant-style path expressions are supported (*, *\*, ?). For example: `org/apache/**`. **Cannot be set if `any_release_bundle` is set to `true`.**
 * `handler` - (Required) At least one is required.
   * `url` - (Required) Specifies the URL that the Webhook invokes. This will be the URL that Artifactory will send an HTTP POST request to.
   * `method` - (Optional) Specifies the HTTP method for the URL that the Webhook invokes. Allowed values are: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.

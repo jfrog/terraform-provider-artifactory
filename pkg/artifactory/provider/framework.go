@@ -1,8 +1,21 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package provider
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"os"
 	"strings"
@@ -43,11 +56,15 @@ type ArtifactoryProvider struct{}
 
 // ArtifactoryProviderModel describes the provider data model.
 type ArtifactoryProviderModel struct {
-	Url                  types.String `tfsdk:"url"`
-	AccessToken          types.String `tfsdk:"access_token"`
-	ApiKey               types.String `tfsdk:"api_key"`
-	OIDCProviderName     types.String `tfsdk:"oidc_provider_name"`
-	TFCCredentialTagName types.String `tfsdk:"tfc_credential_tag_name"`
+	Url                      types.String `tfsdk:"url"`
+	AccessToken              types.String `tfsdk:"access_token"`
+	ApiKey                   types.String `tfsdk:"api_key"`
+	OIDCProviderName         types.String `tfsdk:"oidc_provider_name"`
+	TFCCredentialTagName     types.String `tfsdk:"tfc_credential_tag_name"`
+	ClientCertificatePath    types.String `tfsdk:"client_certificate_path"`
+	ClientCertificateKeyPath types.String `tfsdk:"client_certificate_key_path"`
+	ClientCertificatePEM     types.String `tfsdk:"client_certificate_pem"`
+	ClientPrivateKeyPEM      types.String `tfsdk:"client_private_key_pem"`
 }
 
 // Metadata satisfies the provider.Provider interface for ArtifactoryProvider
@@ -95,6 +112,36 @@ func (p *ArtifactoryProvider) Schema(ctx context.Context, req provider.SchemaReq
 				},
 				Description: "Terraform Cloud Workload Identity Token tag name. Use for generating multiple TFC workload identity tokens. When set, the provider will attempt to use env var with this tag name as suffix. **Note:** this is case sensitive, so if set to `JFROG`, then env var `TFC_WORKLOAD_IDENTITY_TOKEN_JFROG` is used instead of `TFC_WORKLOAD_IDENTITY_TOKEN`. See [Generating Multiple Tokens](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/manual-generation#generating-multiple-tokens) on HCP Terraform for more details.",
 			},
+			"client_certificate_path": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "Filesystem path to a PEM-encoded client certificate or certificate chain to use for mutual TLS authentication. Must be specified together with `client_certificate_key_path`.",
+			},
+			"client_certificate_key_path": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "Filesystem path to the PEM-encoded private key that matches `client_certificate_path`.",
+			},
+			"client_certificate_pem": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "Inline PEM-encoded client certificate or certificate chain used for mutual TLS authentication. Must be specified together with `client_private_key_pem`.",
+			},
+			"client_private_key_pem": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				Description: "Inline PEM-encoded private key that matches `client_certificate_pem`.",
+			},
 		},
 	}
 }
@@ -103,6 +150,10 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	// Check environment variables, first available OS variable will be assigned to the var
 	url := util.CheckEnvVars([]string{"JFROG_URL", "ARTIFACTORY_URL"}, "")
 	accessToken := util.CheckEnvVars([]string{"JFROG_ACCESS_TOKEN", "ARTIFACTORY_ACCESS_TOKEN"}, "")
+	clientCertificatePath := util.CheckEnvVars([]string{"JFROG_CLIENT_CERT_PATH", "ARTIFACTORY_CLIENT_CERT_PATH"}, "")
+	clientCertificateKeyPath := util.CheckEnvVars([]string{"JFROG_CLIENT_CERT_KEY_PATH", "ARTIFACTORY_CLIENT_CERT_KEY_PATH"}, "")
+	clientCertificatePEM := util.CheckEnvVars([]string{"JFROG_CLIENT_CERT_PEM", "ARTIFACTORY_CLIENT_CERT_PEM"}, "")
+	clientPrivateKeyPEM := util.CheckEnvVars([]string{"JFROG_CLIENT_PRIVATE_KEY_PEM", "ARTIFACTORY_CLIENT_PRIVATE_KEY_PEM"}, "")
 
 	var config ArtifactoryProviderModel
 
@@ -159,6 +210,19 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 		accessToken = config.AccessToken.ValueString()
 	}
 
+	if !config.ClientCertificatePath.IsNull() && !config.ClientCertificatePath.IsUnknown() && config.ClientCertificatePath.ValueString() != "" {
+		clientCertificatePath = config.ClientCertificatePath.ValueString()
+	}
+	if !config.ClientCertificateKeyPath.IsNull() && !config.ClientCertificateKeyPath.IsUnknown() && config.ClientCertificateKeyPath.ValueString() != "" {
+		clientCertificateKeyPath = config.ClientCertificateKeyPath.ValueString()
+	}
+	if !config.ClientCertificatePEM.IsNull() && !config.ClientCertificatePEM.IsUnknown() && config.ClientCertificatePEM.ValueString() != "" {
+		clientCertificatePEM = config.ClientCertificatePEM.ValueString()
+	}
+	if !config.ClientPrivateKeyPEM.IsNull() && !config.ClientPrivateKeyPEM.IsUnknown() && config.ClientPrivateKeyPEM.ValueString() != "" {
+		clientPrivateKeyPEM = config.ClientPrivateKeyPEM.ValueString()
+	}
+
 	apiKey := config.ApiKey.ValueString()
 
 	if apiKey == "" && accessToken == "" {
@@ -180,10 +244,21 @@ func (p *ArtifactoryProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	bypassJFrogTLSVerification := os.Getenv("JFROG_BYPASS_TLS_VERIFICATION")
-	if strings.ToLower(bypassJFrogTLSVerification) == "true" {
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true,
-		}
+	tlsConfig, err := buildTLSConfig(tlsConfigOptions{
+		ClientCertificatePath:    clientCertificatePath,
+		ClientCertificateKeyPath: clientCertificateKeyPath,
+		ClientCertificatePEM:     clientCertificatePEM,
+		ClientPrivateKeyPEM:      clientPrivateKeyPEM,
+		InsecureSkipVerify:       strings.ToLower(bypassJFrogTLSVerification) == "true",
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error configuring TLS",
+			err.Error(),
+		)
+		return
+	}
+	if tlsConfig != nil {
 		restyClient.SetTLSClientConfig(tlsConfig)
 	}
 
@@ -267,6 +342,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			configuration.NewPropertySetResource,
 			configuration.NewProxyResource,
 			configuration.NewRepositoryLayoutResource,
+			configuration.NewTrashCanConfigResource,
 			lifecycle.NewReleaseBundleV2Resource,
 			lifecycle.NewReleaseBundleV2PromotionResource,
 			replication.NewLocalRepositorySingleReplicationResource,
@@ -282,6 +358,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewHelmLocalRepositoryResource,
 			local.NewHelmOCILocalRepositoryResource,
 			local.NewHexLocalRepositoryResource,
+			local.NewNixLocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
 			local.NewNugetLocalRepositoryResource,
 			local.NewOCILocalRepositoryResource,
@@ -301,7 +378,9 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			remote.NewGradleRemoteRepositoryResource,
 			remote.NewHelmRemoteRepositoryResource,
 			remote.NewHelmOCIRemoteRepositoryResource,
+			remote.NewBazelRemoteRepositoryResource,
 			remote.NewHexRemoteRepositoryResource,
+			remote.NewNixRemoteRepositoryResource,
 			remote.NewHuggingFaceMLRemoteRepositoryResource,
 			remote.NewJavaRemoteRepositoryResource(repository.IvyPackageType, true),
 			remote.NewMavenRemoteRepositoryResource,
@@ -337,6 +416,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			webhook.NewUserWebhookResource,
 			webhook.NewUserCustomWebhookResource,
 			virtual.NewHexVirtualRepositoryResource,
+			virtual.NewNixVirtualRepositoryResource,
 		}...,
 	)
 }
@@ -347,8 +427,12 @@ func (p *ArtifactoryProvider) DataSources(_ context.Context) []func() datasource
 		datasource_repository.NewRepositoriesDataSource,
 		datasource_artifact.NewFileListDataSource,
 		datasource_local.NewLocalHexRepositoryDataSource,
+		datasource_local.NewLocalNixRepositoryDataSource,
+		datasource_remote.NewRemoteBazelRepositoryDataSource,
 		datasource_remote.NewRemoteHexRepositoryDataSource,
+		datasource_remote.NewRemoteNixRepositoryDataSource,
 		datasource_virtual.NewVirtualHexRepositoryDataSource,
+		datasource_virtual.NewVirtualNixRepositoryDataSource,
 	}
 }
 

@@ -1,3 +1,17 @@
+// Copyright (c) JFrog Ltd. (2025)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package virtual
 
 import (
@@ -11,6 +25,7 @@ import (
 var rpmSchema = lo.Assign(
 	repository.PrimaryKeyPairRefSDKv2,
 	repository.SecondaryKeyPairRefSDKv2,
+	RetrievalCachePeriodSecondsSchema,
 	repository.RepoLayoutRefSDKv2Schema(Rclass, repository.RPMPackageType),
 )
 
@@ -23,7 +38,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 	}
 
 	type RpmVirtualRepositoryParams struct {
-		RepositoryBaseParams
+		RepositoryBaseParamsWithRetrievalCachePeriodSecs
 		CommonRpmDebianVirtualRepositoryParams
 	}
 
@@ -31,7 +46,7 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 		d := &utilsdk.ResourceData{ResourceData: s}
 
 		repo := RpmVirtualRepositoryParams{
-			RepositoryBaseParams: UnpackBaseVirtRepo(s, "rpm"),
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: UnpackBaseVirtRepoWithRetrievalCachePeriodSecs(s, "rpm"),
 			CommonRpmDebianVirtualRepositoryParams: CommonRpmDebianVirtualRepositoryParams{
 				PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
 					PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
@@ -48,9 +63,11 @@ func ResourceArtifactoryVirtualRpmRepository() *schema.Resource {
 
 	constructor := func() (interface{}, error) {
 		return &RpmVirtualRepositoryParams{
-			RepositoryBaseParams: RepositoryBaseParams{
-				Rclass:      Rclass,
-				PackageType: repository.RPMPackageType,
+			RepositoryBaseParamsWithRetrievalCachePeriodSecs: RepositoryBaseParamsWithRetrievalCachePeriodSecs{
+				RepositoryBaseParams: RepositoryBaseParams{
+					Rclass:      Rclass,
+					PackageType: repository.RPMPackageType,
+				},
 			},
 		}, nil
 	}
