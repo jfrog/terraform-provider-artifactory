@@ -79,6 +79,7 @@ var DomainEventTypesSupported = map[string][]string{
 }
 
 type WebhookResource struct {
+	artifactory.MoveStateMixin
 	ProviderData util.ProviderMetadata
 	TypeName     string
 	Domain       string

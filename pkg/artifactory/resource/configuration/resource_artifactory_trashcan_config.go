@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	"gopkg.in/yaml.v3"
@@ -68,6 +69,7 @@ func NewTrashCanConfigResource() resource.Resource {
 }
 
 type TrashCanConfigResource struct {
+	artifactory.MoveStateMixin
 	ProviderData util.ProviderMetadata
 	TypeName     string
 }

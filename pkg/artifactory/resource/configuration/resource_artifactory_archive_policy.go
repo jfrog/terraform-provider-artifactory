@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
@@ -286,6 +287,7 @@ func NewArchivePolicyResource() resource.Resource {
 var _ resource.Resource = (*ArchivePolicyResource)(nil)
 
 type ArchivePolicyResource struct {
+	artifactory.MoveStateMixin
 	util.JFrogResource
 	EnablementEndpoint string
 	ProviderData       util.ProviderMetadata

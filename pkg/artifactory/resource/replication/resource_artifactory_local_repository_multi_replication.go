@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/util"
 	utilfw "github.com/jfrog/terraform-provider-shared/util/fw"
 	validatorfw_string "github.com/jfrog/terraform-provider-shared/validator/fw/string"
@@ -51,6 +52,7 @@ func NewLocalRepositoryMultiReplicationResource() resource.Resource {
 }
 
 type LocalRepositoryMultiReplicationResource struct {
+	artifactory.MoveStateMixin
 	ProviderData util.ProviderMetadata
 	TypeName     string
 }

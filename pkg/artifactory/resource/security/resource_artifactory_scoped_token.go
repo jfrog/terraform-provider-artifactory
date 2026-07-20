@@ -52,6 +52,7 @@ func NewScopedTokenResource() resource.Resource {
 }
 
 type ScopedTokenResource struct {
+	artifactory.MoveStateMixin
 	ProviderData util.ProviderMetadata
 	TypeName     string
 }

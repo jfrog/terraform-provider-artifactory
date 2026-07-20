@@ -35,6 +35,7 @@ func NewAnonymousUserResource() resource.Resource {
 }
 
 type ArtifactoryAnonymousUserResource struct {
+	artifactory.MoveStateMixin
 	ProviderData util.ProviderMetadata
 	TypeName     string
 }

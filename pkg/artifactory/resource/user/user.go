@@ -66,6 +66,7 @@ const (
 )
 
 type ArtifactoryBaseUserResource struct {
+	artifactory.MoveStateMixin
 	ProviderData util.ProviderMetadata
 	TypeName     string
 }

@@ -42,6 +42,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkv2_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory"
 	"github.com/jfrog/terraform-provider-shared/client"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -148,6 +149,7 @@ func NewRepositoryResource(packageType, packageName, rclass string, resourceMode
 
 type BaseResource struct {
 	util.JFrogResource
+	artifactory.MoveStateMixin
 	Description       string
 	PackageType       string
 	Rclass            string
