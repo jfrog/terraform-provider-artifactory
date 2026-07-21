@@ -1,4 +1,4 @@
-### 12.11.9 (Jul 21, 2026).
+### 12.11.9 (Jul 21, 2026). Tested on Artifactory 7.146.28 with Terraform 1.15.8 and OpenTofu 1.12.3
 
 BUG FIXES:
 
