@@ -1,17 +1,24 @@
+### 12.11.9 (Jul 21, 2026).
+
+BUG FIXES:
+
+* resource/artifactory_remote_conda_repository: Add `curated` and `pass_through` attributes to enable Curation support for Conda remote repositories. Previously, Conda remote repos used a generic resource that did not expose these attributes, even though the Artifactory API supported them. This aligns Conda with other package types (Maven, npm, PyPI, etc.) that already support Curation. Issue: [1430](https://github.com/jfrog/terraform-provider-artifactory/issues/1430) PR: [1435](https://github.com/jfrog/terraform-provider-artifactory/pull/1435)
+* resource/artifactory_remote_debian_repository: Add `curated` and `pass_through` attributes to enable Curation support for Debian remote repositories. Previously, Debian remote repos used a generic resource that did not expose these attributes, even though the Artifactory API supported them. This aligns Debian with other package types (Maven, npm, PyPI, etc.) that already support Curation. Issue: [1419](https://github.com/jfrog/terraform-provider-artifactory/issues/1419) PR: [1435](https://github.com/jfrog/terraform-provider-artifactory/pull/1435)
+
 ### 12.11.8 (Jul 9, 2026). Tested on Artifactory 7.146.25 with Terraform 1.15.8 and OpenTofu 1.12.3
 
 FEATURES:
 
-* **New Resource:** `artifactory_remote_bazel_repository` to support [Bazel Modules Repositories](https://docs.jfrog.com/artifactory/docs/bazel-modules-repositories) for proxying a Bazel registry such as the Bazel Central Registry (`https://bcr.bazel.build/`).
+* **New Resource:** `artifactory_remote_bazel_repository` to support [Bazel Modules Repositories](https://docs.jfrog.com/artifactory/docs/bazel-modules-repositories) for proxying a Bazel registry such as the Bazel Central Registry (`https://bcr.bazel.build/`). Issue: [1337](https://github.com/jfrog/terraform-provider-artifactory/issues/1337) PR: [1433](https://github.com/jfrog/terraform-provider-artifactory/pull/1433)
 * **New Data Source:** `artifactory_remote_bazel_repository`. Bazel Modules repositories are supported as remote repositories only; local and virtual are not supported by Artifactory.
 
 FEATURES:
 
-* resource/artifactory_remote_*_repository: Add write-only `password_wo` attribute (and companion `password_wo_version`) for the remote repository password. When set, the credential is sent to Artifactory but is never stored in Terraform state or plan. Requires Terraform 1.11 or later and conflicts with `password`. Change `password_wo_version` to re-send a rotated secret. Issue: [#1346](https://github.com/jfrog/terraform-provider-artifactory/issues/1346)
+* resource/artifactory_remote_*_repository: Add write-only `password_wo` attribute (and companion `password_wo_version`) for the remote repository password. When set, the credential is sent to Artifactory but is never stored in Terraform state or plan. Requires Terraform 1.11 or later and conflicts with `password`. Change `password_wo_version` to re-send a rotated secret. Issue: [#1346](https://github.com/jfrog/terraform-provider-artifactory/issues/1346) PR: [1434](https://github.com/jfrog/terraform-provider-artifactory/pull/1434)
 
 IMPROVEMENTS:
 
-* resource/artifactory_package_cleanup_policy: Document that package cleanup policies can now be created and managed with an Enterprise X (EntX) license, in addition to Enterprise+, following the server-side enablement in Artifactory 7.139 (Cloud) and 7.146 (Self-Hosted). This applies to cleanup policies only, not archive policies. No provider code change is required as license enforcement is handled by the Artifactory API.
+* resource/artifactory_package_cleanup_policy: Document that package cleanup policies can now be created and managed with an Enterprise X (EntX) license, in addition to Enterprise+, following the server-side enablement in Artifactory 7.139 (Cloud) and 7.146 (Self-Hosted). This applies to cleanup policies only, not archive policies. No provider code change is required as license enforcement is handled by the Artifactory API. 
 
 ### 12.11.7 (Jun 16, 2026). Tested on Artifactory 7.146.17 with Terraform 1.15.6 and OpenTofu 1.12.2
 
