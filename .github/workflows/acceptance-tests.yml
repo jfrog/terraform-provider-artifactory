@@ -51,6 +51,7 @@ jobs:
         if: ${{ matrix.cli == 'tofu' }}
         with:
           tofu_wrapper: false
+          tofu_version: 1.12.3
       - name: Get OpenTofu CLI version
         id: get_opentofu_cli_version
         if: ${{ matrix.cli == 'tofu' }}

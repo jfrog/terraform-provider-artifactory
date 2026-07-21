@@ -848,9 +848,7 @@ func (bp RepositoryRemoteBaseParams) Id() string {
 var PackageTypesLikeBasic = []string{
 	repository.AlpinePackageType,
 	repository.ChefPackageType,
-	repository.CondaPackageType,
 	repository.CranPackageType,
-	repository.DebianPackageType,
 	repository.GitLFSPackageType,
 	repository.OpkgPackageType,
 	repository.P2PackageType,

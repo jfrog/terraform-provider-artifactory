@@ -26,7 +26,9 @@ import (
 )
 
 var curationPackageTypes = []string{
+	repository.CondaPackageType,
 	repository.ConanPackageType,
+	repository.DebianPackageType,
 	repository.DockerPackageType,
 	repository.GemsPackageType,
 	repository.GoPackageType,
