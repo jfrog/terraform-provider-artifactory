@@ -11,8 +11,10 @@ Official documentation can be found [here](https://www.jfrog.com/confluence/disp
 
 ```hcl
 resource "artifactory_remote_conda_repository" "my-remote-conda" {
-  key                         = "my-remote-conda"
-  url                         = "https://repo.anaconda.com/pkgs/main"
+  key          = "my-remote-conda"
+  url          = "https://repo.anaconda.com/pkgs/main"
+  curated      = true
+  pass_through = false
 }
 ```
 
@@ -26,6 +28,8 @@ The following arguments are supported, along with the [common list of arguments 
 * `description` - (Optional)
 * `notes` - (Optional)
 * `url` - (Required) The remote repo URL.
+* `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.
+* `pass_through` - (Optional, Default: `false`) Enable Pass-through for Curation Audit. When enabled, allows artifacts to pass through the Curation audit process.
 
 
 

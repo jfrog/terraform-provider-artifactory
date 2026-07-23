@@ -18,6 +18,24 @@ lifecycle {
 }
 ```
 
+#### Write-only password (Terraform 1.11+)
+
+To keep the credential out of Terraform state entirely, use the write-only `password_wo` attribute (instead of `password`) together with an [ephemeral value](https://developer.hashicorp.com/terraform/language/resources/ephemeral). The value is sent to Artifactory but never persisted to state or plan. Since write-only values are not tracked in state, bump `password_wo_version` whenever the secret changes so the new value is re-sent:
+
+```hcl
+ephemeral "aws_secretsmanager_secret_version" "remote_pat" {
+  secret_id = var.remote_pat_secret_id
+}
+
+resource "artifactory_remote_generic_repository" "my-remote-generic" {
+  key                 = "my-remote-generic"
+  url                 = "http://testartifactory.io/artifactory/example-generic/"
+  username            = "my-user"
+  password_wo         = ephemeral.aws_secretsmanager_secret_version.remote_pat.secret_string
+  password_wo_version = "1"
+}
+```
+
 ## Example Usage (generic repository type)
 
 ```hcl
@@ -42,7 +60,9 @@ All generic repo arguments are supported, in addition to:
   The attribute should only be used if the repository is already assigned to the existing project. If not, the attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state drift during the update.
 * `url` - (Required) This is a URL to the remote registry. Consider using HTTPS to ensure a secure connection.
 * `username` - (Optional)
-* `password` - (Optional)
+* `password` - (Optional) The remote registry password. This value is stored in the Terraform state. For a state-free alternative, use `password_wo`.
+* `password_wo` - (Optional, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral/write-only)) Write-only equivalent of `password`. The value is used to authenticate against the remote registry but is **never stored in Terraform state or plan**. Requires Terraform 1.11 or later. Conflicts with `password`. Because write-only values are not tracked in state, use `password_wo_version` to signal when the secret changes so it is re-sent to Artifactory.
+* `password_wo_version` - (Optional) A version identifier for `password_wo`. Change this value (for example, after rotating the secret) to trigger an update that re-sends the current `password_wo` value to Artifactory. Only meaningful together with `password_wo`.
 * `proxy` - (Optional) Proxy key from Artifactory Proxies settings. Default is empty field. Can't be set if `disable_proxy = true`.
 * `disable_proxy` - (Optional, Default: `false`) When set to `true`, the proxy is disabled, and not returned in the API response body. If there is a default proxy set for the Artifactory instance, it will be ignored, too. Introduced since Artifactory 7.41.7.
 * `includes_pattern` - (Optional, Default: `**/*`) List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included.

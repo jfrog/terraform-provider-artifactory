@@ -34,6 +34,12 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	BazelModulesPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"remote": true,
+		},
+	},
 	BowerPackageType: {
 		RepoLayoutRef: "bower-default",
 		SupportedRepoTypes: map[string]bool{
