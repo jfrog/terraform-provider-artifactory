@@ -1,3 +1,11 @@
+
+### 12.11.10 (Jul 24, 2026). Tested on Artifactory 7.146.29 with Terraform 1.15.8 and OpenTofu 1.12.3
+
+DOCUMENTATION:
+
+* resource/artifactory_local_debian_repository: Update documentation for `index_compression_formats` to clarify that all three formats (`bz2`, `lzma`, `xz`) are supported and can be used in any combination, and that the default value is empty. Also update the example usage to reflect an empty default. PR: [1440](https://github.com/jfrog/terraform-provider-artifactory/pull/1440)
+
+
 ### 12.11.9 (Jul 21, 2026). Tested on Artifactory 7.146.28 with Terraform 1.15.8 and OpenTofu 1.12.3
 
 BUG FIXES:

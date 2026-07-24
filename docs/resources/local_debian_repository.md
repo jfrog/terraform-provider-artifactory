@@ -38,7 +38,7 @@ resource "artifactory_local_debian_repository" "my-debian-repo" {
   key                       = "my-debian-repo"
   primary_keypair_ref       = artifactory_keypair.some-keypairGPG1.pair_name
   secondary_keypair_ref     = artifactory_keypair.some-keypairGPG2.pair_name
-  index_compression_formats = ["bz2", "lzma", "xz"]
+  index_compression_formats = []
   trivial_layout            = true
   depends_on                = [artifactory_keypair.some-keypairGPG1, artifactory_keypair.some-keypairGPG2]
 }
@@ -52,8 +52,8 @@ The following arguments are supported, along with the [common list of arguments 
 * `key` - (Required) the identity key of the repo.
 * `primary_keypair_ref` - (Optional) The primary RSA key to be used to sign packages.
 * `secondary_keypair_ref` - (Optional) The secondary RSA key to be used to sign packages.
-* `index_compression_formats` - (Optional) The options are Bzip2 (.bz2 extension) (default), LZMA (.lzma extension)
-and XZ (.xz extension).
+* `index_compression_formats` - (Optional) The options are Bzip2 (.bz2 extension), LZMA (.lzma extension)
+and XZ (.xz extension). All three formats are supported, so you can use any combination of them, e.g. `index_compression_formats = ["bz2", "lzma", "xz"]`. Default is empty.
 * `trivial_layout` - (Optional) When set, the repository will use the deprecated trivial layout.
 
 Artifactory REST API call Get Key Pair doesn't return keys `private_key` and `passphrase`, but consumes these keys in the POST call.

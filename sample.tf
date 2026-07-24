@@ -274,7 +274,7 @@ resource "artifactory_local_debian_repository" "my-debian-repo" {
   key                       = "my-debian-repo"
   primary_keypair_ref       = artifactory_keypair.some-keypairGPG1.pair_name
   secondary_keypair_ref     = artifactory_keypair.some-keypairGPG2.pair_name
-  index_compression_formats = ["bz2", "lzma", "xz"]
+  index_compression_formats = []
   depends_on                = [artifactory_keypair.some-keypairGPG1, artifactory_keypair.some-keypairGPG2]
 }
 
@@ -600,7 +600,7 @@ resource "artifactory_virtual_debian_repository" "foo-debian" {
   notes                              = "Internal description"
   includes_pattern                   = "com/jfrog/**,cloud/jfrog/**"
   excludes_pattern                   = "com/google/**"
-  optional_index_compression_formats = ["bz2", "xz"]
+  optional_index_compression_formats = []
   debian_default_architectures       = "amd64,i386"
 }
 
