@@ -582,6 +582,10 @@ var cleanupPolicySchemaV0 = map[string]schema.Attribute{
 	},
 	"description": schema.StringAttribute{
 		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtMost(256),
+		},
+		Description: "A description of the policy. The maximum length is 256 characters.",
 	},
 	"cron_expression": schema.StringAttribute{
 		Optional: true,
