@@ -69,7 +69,8 @@ type CustomHttpHeaderModel struct {
 
 type RemoteGenericResourceModelV5 struct {
 	RemoteGenericResourceModelV4
-	CustomHttpHeaders []CustomHttpHeaderModel `tfsdk:"custom_http_headers"`
+	CustomHttpHeaders         []CustomHttpHeaderModel `tfsdk:"custom_http_headers"`
+	EnableTokenAuthentication types.Bool              `tfsdk:"enable_token_authentication"`
 }
 
 func (r RemoteGenericResourceModelV4) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
@@ -145,6 +146,7 @@ func (r *RemoteGenericResourceModelV5) ToAPIModel(ctx context.Context, packageTy
 	}
 
 	m := base.(RemoteGenericAPIModel)
+	m.EnableTokenAuthentication = r.EnableTokenAuthentication.ValueBool()
 	if len(r.CustomHttpHeaders) > 0 {
 		headers := make([]httpHeaderAPIModel, 0, len(r.CustomHttpHeaders))
 		for _, h := range r.CustomHttpHeaders {
@@ -166,7 +168,9 @@ func (r *RemoteGenericResourceModelV5) ToAPIModel(ctx context.Context, packageTy
 // r already holds the plan/state value before this method is called, so it is preserved as-is.
 func (r *RemoteGenericResourceModelV5) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
 	model := apiModel.(*RemoteGenericAPIModel)
-	return r.RemoteGenericResourceModelV4.FromAPIModel(ctx, model)
+	diags := r.RemoteGenericResourceModelV4.FromAPIModel(ctx, model)
+	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
+	return diags
 }
 
 type httpHeaderAPIModel struct {
@@ -216,9 +220,10 @@ func (v customHttpHeadersVersionValidator) ValidateList(_ context.Context, req v
 
 type RemoteGenericAPIModel struct {
 	RemoteAPIModel
-	PropagateQueryParams     bool                  `json:"propagateQueryParams"`
-	RetrieveSha256FromServer bool                  `json:"retrieveSha256FromServer"`
-	CustomHttpHeaders        *[]httpHeaderAPIModel `json:"customHttpHeaders,omitempty"`
+	PropagateQueryParams      bool                  `json:"propagateQueryParams"`
+	RetrieveSha256FromServer  bool                  `json:"retrieveSha256FromServer"`
+	EnableTokenAuthentication bool                  `json:"enableTokenAuthentication"`
+	CustomHttpHeaders         *[]httpHeaderAPIModel `json:"customHttpHeaders,omitempty"`
 }
 
 var remoteGenericAttributesV2 = lo.Assign(
@@ -254,6 +259,12 @@ func (r *remoteGenericResource) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = schema.Schema{
 		Version: currentGenericSchemaVersion,
 		Attributes: lo.Assign(remoteGenericAttributesV4, map[string]schema.Attribute{
+			"enable_token_authentication": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				MarkdownDescription: "Enable token (Bearer) based authentication. When set, use an access token as `password` (username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth.",
+			},
 			"custom_http_headers": schema.ListNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: fmt.Sprintf("Up to 5 custom HTTP headers sent on every outbound request to the remote URL. Header values are write-only and masked in plan output. To remove all headers, remove this attribute. When `sensitive` is `true`, Artifactory encrypts the value server-side. Requires Artifactory %s or later.", customHttpHeadersSupportedVersion),
@@ -310,6 +321,7 @@ func (r *remoteGenericResource) UpgradeState(ctx context.Context) map[int64]reso
 						},
 						RetrieveSha256FromServer: types.BoolValue(false),
 					},
+					EnableTokenAuthentication: types.BoolValue(false),
 				}
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
@@ -333,6 +345,7 @@ func (r *remoteGenericResource) UpgradeState(ctx context.Context) map[int64]reso
 						RemoteGenericResourceModelV3: priorStateData,
 						RetrieveSha256FromServer:     types.BoolValue(false),
 					},
+					EnableTokenAuthentication: types.BoolValue(false),
 				}
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
@@ -353,6 +366,7 @@ func (r *remoteGenericResource) UpgradeState(ctx context.Context) map[int64]reso
 
 				upgradedStateData := RemoteGenericResourceModelV5{
 					RemoteGenericResourceModelV4: priorStateData,
+					EnableTokenAuthentication:   types.BoolValue(false),
 				}
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
@@ -364,9 +378,10 @@ func (r *remoteGenericResource) UpgradeState(ctx context.Context) map[int64]reso
 // SDKv2
 type GenericRemoteRepo struct {
 	RepositoryRemoteBaseParams
-	PropagateQueryParams     bool                 `json:"propagateQueryParams"`
-	RetrieveSha256FromServer bool                 `hcl:"retrieve_sha256_from_server" json:"retrieveSha256FromServer"`
-	CustomHttpHeaders        []httpHeaderAPIModel `json:"customHttpHeaders,omitempty"`
+	PropagateQueryParams      bool                 `json:"propagateQueryParams"`
+	RetrieveSha256FromServer  bool                 `hcl:"retrieve_sha256_from_server" json:"retrieveSha256FromServer"`
+	EnableTokenAuthentication bool                 `json:"enableTokenAuthentication"`
+	CustomHttpHeaders         []httpHeaderAPIModel `json:"customHttpHeaders,omitempty"`
 }
 
 var genericSchemaV3 = lo.Assign(
@@ -396,6 +411,12 @@ var GenericSchemaV4 = lo.Assign(
 var GenericSchemaV5 = lo.Assign(
 	GenericSchemaV4,
 	map[string]*sdkv2_schema.Schema{
+		"enable_token_authentication": {
+			Type:        sdkv2_schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable token (Bearer) based authentication. When set, use an access token as password (username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth.",
+		},
 		"custom_http_headers": {
 			Type:      sdkv2_schema.TypeList,
 			Optional:  true,

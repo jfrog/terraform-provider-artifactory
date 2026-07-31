@@ -14,6 +14,19 @@ resource "artifactory_remote_generic_repository" "my-remote-generic" {
 }
 ```
 
+### Access token (Bearer) authentication
+
+When the remote requires an Artifactory / identity access token, set `enable_token_authentication = true` and put the token in `password` (username may be empty). This matches the UI “Enable Token Authentication” checkbox and avoids putting credentials in `custom_http_headers`.
+
+```hcl
+resource "artifactory_remote_generic_repository" "token-auth" {
+  key                           = "token-auth-generic"
+  url                           = "https://remote.example.com/artifactory/generic-local/"
+  password                      = var.remote_access_token
+  enable_token_authentication   = true
+}
+```
+
 ### Custom HTTP headers
 
 Use `custom_http_headers` to send up to 5 static headers on every outbound request to the remote URL. A common use case is authenticating to Azure Blob Storage or packagecloud.io.
@@ -44,6 +57,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `url` - (Required) The remote repo URL.
 * `propagate_query_params` - (Optional, Default: `false`) When set, if query params are included in the request to Artifactory, they will be passed on to the remote repository.
 * `retrieve_sha256_from_server` - (Optional, Default: `false`) When set to `true`, Artifactory retrieves the SHA256 from the remote server if it is not cached in the remote repo.
+* `enable_token_authentication` - (Optional, Default: `false`) Enable token (Bearer) based authentication. When set, use an access token as `password` (username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth.
 * `custom_http_headers` - (Optional) List of up to 5 custom HTTP headers sent on every outbound request to the remote URL. Each entry supports:
   * `name` - (Required) Header name.
   * `value` - (Required) Header value. Masked in Terraform plan output. Stored in state as configured; never read back from Artifactory.
