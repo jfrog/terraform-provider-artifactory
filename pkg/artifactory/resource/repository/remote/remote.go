@@ -85,6 +85,7 @@ type RemoteResourceModel struct {
 	BlockMismatchingMimeTypes         types.Bool   `tfsdk:"block_mismatching_mime_types"`
 	AllowAnyHostAuth                  types.Bool   `tfsdk:"allow_any_host_auth"`
 	EnableCookieManagement            types.Bool   `tfsdk:"enable_cookie_management"`
+	EnableTokenAuthentication         types.Bool   `tfsdk:"enable_token_authentication"`
 	BypassHeadRequests                types.Bool   `tfsdk:"bypass_head_requests"`
 	ClientTLSCertificate              types.String `tfsdk:"client_tls_certificate"`
 	ContentSynchronisation            types.List   `tfsdk:"content_synchronisation"`
@@ -206,6 +207,7 @@ func (r RemoteResourceModel) ToAPIModel(ctx context.Context, packageType string)
 		BlockMismatchingMimeTypes:         r.BlockMismatchingMimeTypes.ValueBoolPointer(),
 		AllowAnyHostAuth:                  r.AllowAnyHostAuth.ValueBoolPointer(),
 		EnableCookieManagement:            r.EnableCookieManagement.ValueBoolPointer(),
+		EnableTokenAuthentication:         r.EnableTokenAuthentication.ValueBool(),
 		BypassHeadRequests:                r.BypassHeadRequests.ValueBoolPointer(),
 		ClientTLSCertificate:              r.ClientTLSCertificate.ValueString(),
 		MismatchingMimeTypeOverrideList:   r.MismatchingMimeTypeOverrideList.ValueString(),
@@ -275,6 +277,7 @@ func (r *RemoteResourceModel) FromAPIModel(ctx context.Context, apiModel RemoteA
 	r.BlockMismatchingMimeTypes = types.BoolPointerValue(apiModel.BlockMismatchingMimeTypes)
 	r.AllowAnyHostAuth = types.BoolPointerValue(apiModel.AllowAnyHostAuth)
 	r.EnableCookieManagement = types.BoolPointerValue(apiModel.EnableCookieManagement)
+	r.EnableTokenAuthentication = types.BoolValue(apiModel.EnableTokenAuthentication)
 	r.BypassHeadRequests = types.BoolPointerValue(apiModel.BypassHeadRequests)
 	r.ClientTLSCertificate = types.StringValue(apiModel.ClientTLSCertificate)
 
@@ -338,6 +341,7 @@ type RemoteAPIModel struct {
 	BlockMismatchingMimeTypes         *bool                   `json:"blockMismatchingMimeTypes"`
 	AllowAnyHostAuth                  *bool                   `json:"allowAnyHostAuth,omitempty"`
 	EnableCookieManagement            *bool                   `json:"enableCookieManagement,omitempty"`
+	EnableTokenAuthentication         bool                    `json:"enableTokenAuthentication"`
 	BypassHeadRequests                *bool                   `json:"bypassHeadRequests,omitempty"`
 	ClientTLSCertificate              string                  `json:"clientTlsCertificate"`
 	ContentSynchronisation            *ContentSynchronisation `json:"contentSynchronisation,omitempty"`
@@ -562,6 +566,14 @@ var RemoteAttributes = lo.Assign(
 			Computed:            true,
 			Default:             booldefault.StaticBool(false),
 			MarkdownDescription: "Enables cookie management if the remote repository uses cookies to manage client state.",
+		},
+		"enable_token_authentication": schema.BoolAttribute{
+			Optional: true,
+			Computed: true,
+			Default:  booldefault.StaticBool(false),
+			MarkdownDescription: "Enable token (Bearer) based authentication. When set, use an access token as `password` " +
+				"(username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth. " +
+				"Default is `false` for most package types; OCI and Helm OCI remotes default to `true`.",
 		},
 		"bypass_head_requests": schema.BoolAttribute{
 			Optional: true,
@@ -809,6 +821,7 @@ type RepositoryRemoteBaseParams struct {
 	PropertySets                      []string                `hcl:"property_sets" json:"propertySets,omitempty"`
 	AllowAnyHostAuth                  *bool                   `hcl:"allow_any_host_auth" json:"allowAnyHostAuth,omitempty"`
 	EnableCookieManagement            *bool                   `hcl:"enable_cookie_management" json:"enableCookieManagement,omitempty"`
+	EnableTokenAuthentication         bool                    `hcl:"enable_token_authentication" json:"enableTokenAuthentication"`
 	BypassHeadRequests                *bool                   `hcl:"bypass_head_requests" json:"bypassHeadRequests,omitempty"`
 	ClientTLSCertificate              string                  `hcl:"client_tls_certificate" json:"clientTlsCertificate,omitempty"`
 	ContentSynchronisation            *ContentSynchronisation `hcl:"content_synchronisation" json:"contentSynchronisation,omitempty"`
@@ -1021,6 +1034,12 @@ var BaseSchema = lo.Assign(
 			Optional:    true,
 			Default:     false,
 			Description: "Enables cookie management if the remote repository uses cookies to manage client state.",
+		},
+		"enable_token_authentication": {
+			Type:        sdkv2_schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable token (Bearer) based authentication. When set, use an access token as password (username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth.",
 		},
 		"bypass_head_requests": {
 			Type:     sdkv2_schema.TypeBool,
