@@ -1,5 +1,10 @@
 
-### 12.11.10 (Jul 24, 2026). Tested on Artifactory 7.146.29 with Terraform 1.15.8 and OpenTofu 1.12.3
+### 12.11.10 (Aug 12, 2026).
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_aieditorextensions_repository`
+* **New Data Source:** `artifactory_remote_aieditorextensions_repository`. Supported as a remote repository only.
 
 DOCUMENTATION:
 

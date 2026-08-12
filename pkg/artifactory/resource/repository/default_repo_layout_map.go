@@ -16,6 +16,12 @@ package repository
 
 // Consolidated list of Default Repo Layout for all Package Types with active Repo Types
 var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
+	AIEditorExtensionsPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"remote": true,
+		},
+	},
 	AlpinePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

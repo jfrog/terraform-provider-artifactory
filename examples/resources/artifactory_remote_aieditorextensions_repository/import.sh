@@ -1,0 +1,1 @@
+terraform import artifactory_remote_aieditorextensions_repository.my-aieditorextensions-remote my-aieditorextensions-remote
