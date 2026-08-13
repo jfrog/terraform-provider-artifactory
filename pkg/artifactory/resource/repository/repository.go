@@ -56,79 +56,81 @@ import (
 )
 
 const (
-	AlpinePackageType            = "alpine"
-	AnsiblePackageType           = "ansible"
-	BazelModulesPackageType      = "bazelmodules"
-	BowerPackageType             = "bower"
-	CargoPackageType             = "cargo"
-	ChefPackageType              = "chef"
-	CocoapodsPackageType         = "cocoapods"
-	ComposerPackageType          = "composer"
-	CondaPackageType             = "conda"
-	ConanPackageType             = "conan"
-	CranPackageType              = "cran"
-	DebianPackageType            = "debian"
-	DockerPackageType            = "docker"
-	GemsPackageType              = "gems"
-	GenericPackageType           = "generic"
-	GitLFSPackageType            = "gitlfs"
-	GoPackageType                = "go"
-	GradlePackageType            = "gradle"
-	HelmPackageType              = "helm"
-	HelmOCIPackageType           = "helmoci"
-	HexPackageType               = "hex"
-	HuggingFacePackageType       = "huggingfaceml"
-	IvyPackageType               = "ivy"
-	MachineLearningType          = "machinelearning"
-	MavenPackageType             = "maven"
-	NPMPackageType               = "npm"
-	NixPackageType               = "nix"
-	NugetPackageType             = "nuget"
-	OCIPackageType               = "oci"
-	OpkgPackageType              = "opkg"
-	P2PackageType                = "p2"
-	PubPackageType               = "pub"
-	PuppetPackageType            = "puppet"
-	PyPiPackageType              = "pypi"
-	ReleasebundlesPackageType    = "releasebundles"
-	RPMPackageType               = "rpm"
-	SBTPackageType               = "sbt"
-	SwiftPackageType             = "swift"
-	TerraformBackendPackageType  = "terraformbackend"
-	TerraformModulePackageType   = "terraform_module"
-	TerraformProviderPackageType = "terraform_provider"
-	TerraformPackageType         = "terraform"
-	VagrantPackageType           = "vagrant"
-	VCSPackageType               = "vcs"
+	AIEditorExtensionsPackageType = "aieditorextensions"
+	AlpinePackageType             = "alpine"
+	AnsiblePackageType            = "ansible"
+	BazelModulesPackageType       = "bazelmodules"
+	BowerPackageType              = "bower"
+	CargoPackageType              = "cargo"
+	ChefPackageType               = "chef"
+	CocoapodsPackageType          = "cocoapods"
+	ComposerPackageType           = "composer"
+	CondaPackageType              = "conda"
+	ConanPackageType              = "conan"
+	CranPackageType               = "cran"
+	DebianPackageType             = "debian"
+	DockerPackageType             = "docker"
+	GemsPackageType               = "gems"
+	GenericPackageType            = "generic"
+	GitLFSPackageType             = "gitlfs"
+	GoPackageType                 = "go"
+	GradlePackageType             = "gradle"
+	HelmPackageType               = "helm"
+	HelmOCIPackageType            = "helmoci"
+	HexPackageType                = "hex"
+	HuggingFacePackageType        = "huggingfaceml"
+	IvyPackageType                = "ivy"
+	MachineLearningType           = "machinelearning"
+	MavenPackageType              = "maven"
+	NPMPackageType                = "npm"
+	NixPackageType                = "nix"
+	NugetPackageType              = "nuget"
+	OCIPackageType                = "oci"
+	OpkgPackageType               = "opkg"
+	P2PackageType                 = "p2"
+	PubPackageType                = "pub"
+	PuppetPackageType             = "puppet"
+	PyPiPackageType               = "pypi"
+	ReleasebundlesPackageType     = "releasebundles"
+	RPMPackageType                = "rpm"
+	SBTPackageType                = "sbt"
+	SwiftPackageType              = "swift"
+	TerraformBackendPackageType   = "terraformbackend"
+	TerraformModulePackageType    = "terraform_module"
+	TerraformProviderPackageType  = "terraform_provider"
+	TerraformPackageType          = "terraform"
+	VagrantPackageType            = "vagrant"
+	VCSPackageType                = "vcs"
 )
 
 var PackageNameLookup = map[string]string{
-	BazelModulesPackageType:     "Bazel Modules",
-	BowerPackageType:            "Bower",
-	ChefPackageType:             "Chef",
-	CocoapodsPackageType:        "CocoaPods",
-	ComposerPackageType:         "Composer",
-	CondaPackageType:            "Conda",
-	CranPackageType:             "CRAN",
-	GemsPackageType:             "Gems",
-	GenericPackageType:          "Generic",
-	GitLFSPackageType:           "GitLfs",
-	GoPackageType:               "Go",
-	GradlePackageType:           "Gradle",
-	HelmPackageType:             "Helm",
-	HexPackageType:              "Hex",
-	HuggingFacePackageType:      "HuggingFace ML",
-	IvyPackageType:              "Ivy",
-	NPMPackageType:              "Npm",
-	NixPackageType:              "Nix",
-	OpkgPackageType:             "Opkg",
-	PubPackageType:              "Pub",
-	PuppetPackageType:           "Puppet",
-	PyPiPackageType:             "PyPi",
-	SBTPackageType:              "SBT",
-	SwiftPackageType:            "Swift",
-	TerraformBackendPackageType: "Terraform Backend",
-	VagrantPackageType:          "Vagrant",
+	AIEditorExtensionsPackageType: "AI-Editor Extensions",
+	BazelModulesPackageType:       "Bazel Modules",
+	BowerPackageType:              "Bower",
+	ChefPackageType:               "Chef",
+	CocoapodsPackageType:          "CocoaPods",
+	ComposerPackageType:           "Composer",
+	CondaPackageType:              "Conda",
+	CranPackageType:               "CRAN",
+	GemsPackageType:               "Gems",
+	GenericPackageType:            "Generic",
+	GitLFSPackageType:             "GitLfs",
+	GoPackageType:                 "Go",
+	GradlePackageType:             "Gradle",
+	HelmPackageType:               "Helm",
+	HexPackageType:                "Hex",
+	HuggingFacePackageType:        "HuggingFace ML",
+	IvyPackageType:                "Ivy",
+	NPMPackageType:                "Npm",
+	NixPackageType:                "Nix",
+	OpkgPackageType:               "Opkg",
+	PubPackageType:                "Pub",
+	PuppetPackageType:             "Puppet",
+	PyPiPackageType:               "PyPi",
+	SBTPackageType:                "SBT",
+	SwiftPackageType:              "Swift",
+	TerraformBackendPackageType:   "Terraform Backend",
+	VagrantPackageType:            "Vagrant",
 }
 
 func NewRepositoryResource(packageType, packageName, rclass string, resourceModelType, apiModelType reflect.Type) BaseResource {
