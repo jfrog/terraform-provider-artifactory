@@ -589,14 +589,16 @@ var BaseAttributes = map[string]schema.Attribute{
 		Validators: []validator.String{
 			stringvalidator.LengthAtLeast(1),
 		},
-		MarkdownDescription: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+		MarkdownDescription: "Comma-separated list of artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).",
 	},
 	"excludes_pattern": schema.StringAttribute{
 		Optional: true,
 		Computed: true,
 		Default:  stringdefault.StaticString(""),
-		MarkdownDescription: "List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`." +
+		MarkdownDescription: "Comma-separated list of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"By default no artifacts are excluded.",
 	},
 }
@@ -691,13 +693,15 @@ var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 		Type:     sdkv2_schema.TypeString,
 		Optional: true,
 		Default:  "**/*",
-		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+		Description: "Comma-separated list of artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).",
 	},
 	"excludes_pattern": {
 		Type:     sdkv2_schema.TypeString,
 		Optional: true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`." +
+		Description: "Comma-separated list of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
