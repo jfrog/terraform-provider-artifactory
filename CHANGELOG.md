@@ -1,5 +1,5 @@
 
-### 12.11.11 (Aug 17, 2026).
+### 12.11.11 (Aug 17, 2026). Tested on Artifactory 7.161.16 with Terraform 1.15.8 and OpenTofu 1.12.3
 
 DOCUMENTATION:
 
