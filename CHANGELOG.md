@@ -1,4 +1,19 @@
 
+### 12.11.11 (August 20, 2026)
+
+SECURITY:
+
+* provider: Address CVE-2026-39821 by upgrading Go to 1.27.0. CVSS 9.6 Critical.
+* provider: Address CVE-2026-56865 by upgrading Go to 1.27.0. CVSS 8.4 High.
+* provider: Address CVE-2026-56864 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-33818 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-46600 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56862 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56859 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56860 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56858 by upgrading Go to 1.27.0. CVSS 6.1 Medium.
+* provider: Address CVE-2026-56853 by upgrading Go to 1.27.0. CVSS 5.3 Medium.
+
 ### 12.11.10 (Aug 12, 2026).
 
 FEATURES:
