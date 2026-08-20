@@ -1,0 +1,32 @@
+packageType: composer
+display: "Composer"
+jsonDiscriminator: Composer
+family: generic                  # generic-slice; moved from PackageTypesLikeGeneric to the retrieval-cache variant this run
+classes: [virtual]
+extends: ../_base.yaml
+layoutRef: composer-default
+curation: { supported: unverified }   # resolved dynamically from Xray at runtime; not statically determined
+gating: { featureFlag: null, entitlement: null }
+
+# Package-specific attributes + base overrides only. Base virtual attributes are inherited.
+attributes:
+  - name: retrieval_cache_period_seconds
+    jsonField: virtualRetrievalCachePeriodSecs
+    type: int
+    scope: package-specific
+    optional: true
+    computed: true
+    default: 7200
+    source: source                 # shared schema default, not a composer-specific REST-verified value; see assumptions
+    validators: ["IntAtLeast0"]
+    description: "This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching."
+
+tests:
+  crud: true
+  edgeCases: []
+  upgrade: true                    # composer virtual shipped before (as plain generic-slice) — one-time diff on this field is expected & accepted
+  dataSource: true
+
+assumptions:
+  - field: retrieval_cache_period_seconds
+    note: "The backend's @IncludeTypeSpecific annotation on VirtualRepositoryConfigurationImpl for this field does NOT list Composer (only Chef/Conda/CRAN/Conan/Debian/Helm/Npm/YUM). Despite that, a live REST create+GET+PUT round-trip on this test instance confirmed the field is real, present, and independently settable for composer virtual repos (empirical proof overriding the static-code read, per source-mining.md). The default of 7200 recorded here is the shared schema literal used by every type on virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs, not a composer-specific REST-verified value -- this instance's own server-side default was observed as 600 before Terraform ever manages the field. This causes a confirmed one-time `update` diff for existing composer virtual repos on the first apply after upgrading (verified via TestAccVirtualComposerRepository_UpgradeFromSDKv2), identical in nature to what every other type on this shared list would have experienced when each was first added. Explicitly checkpointed with and accepted by the contributor; called out in CHANGELOG.md."

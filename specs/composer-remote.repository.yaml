@@ -1,0 +1,53 @@
+packageType: composer
+display: "Composer"
+jsonDiscriminator: Composer
+family: dedicated                # pre-existing dedicated resource; unchanged this run
+classes: [remote]
+extends: ../_base.yaml
+layoutRef: composer-default
+curation: { supported: unverified }   # resolved dynamically from Xray at runtime; not statically determined
+gating: { featureFlag: null, entitlement: null }
+
+# Package-specific attributes + base overrides only. Base remote attributes (incl. `url`, required) are inherited.
+attributes:
+  - name: composer_registry_url
+    jsonField: composerRegistryUrl
+    type: string
+    scope: package-specific
+    optional: true
+    computed: true
+    default: "https://packagist.org"
+    source: rest
+    description: "Proxy remote Composer repository."
+
+  - name: vcs_git_provider
+    jsonField: vcsGitProvider
+    type: string
+    scope: package-specific        # shared "VCS group" mixin (bower/cocoapods/go/vcs/composer), not part of plain RemoteAttributes
+    optional: true
+    computed: true
+    default: "GITHUB"
+    source: rest
+    validators: ["oneOf:GITHUB,GITHUBENTERPRISE,BITBUCKET,OLDSTASH,STASH,ARTIFACTORY,GITLAB,CUSTOM"]
+    description: "Artifactory supports proxying the following Git providers out-of-the-box."
+
+  - name: vcs_git_download_url
+    jsonField: vcsGitDownloadUrl
+    type: string
+    scope: package-specific
+    optional: true
+    source: rest
+    validators: ["LengthAtLeast1"]
+    description: "Used when vcs_git_provider is set to 'CUSTOM'."
+
+tests:
+  crud: true
+  edgeCases: [custom_composer_registry_url]
+  upgrade: true                    # already covered by TestAccRemoteComposerRepository_migrate_from_SDKv2
+  dataSource: true
+
+assumptions:
+  - field: composer_registry_url
+    note: "artifactory-service declares two different constants for this default depending on code path: ComposerConfiguration.java's @XmlElement default is \"https://packagist.org\" while RepoConfigDefaultValues.DEFAULT_COMPOSER_REGISTRY is \"https://repo.packagist.org\". Live REST create+GET confirmed the actual server default is \"https://packagist.org\", matching the already-shipped provider default — no code change was needed."
+  - field: vcs_type (backend field vcsType)
+    note: "Intentionally not exposed as an attribute. The backend VcsType enum has exactly one value (GIT), so the field carries no configurable information — consistent with how the provider already treats the other VCS-group types (bower, cocoapods, go, vcs)."

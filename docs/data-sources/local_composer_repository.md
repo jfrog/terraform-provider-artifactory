@@ -21,3 +21,4 @@ The following attributes are supported along with the [common list of attributes
 * `key` - the identity key of the repo.
 * `description`
 * `notes`
+* `enable_composer_v1_indexing` - Enable Composer metadata version 1 indexing.

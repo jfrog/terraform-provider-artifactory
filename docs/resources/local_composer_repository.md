@@ -9,7 +9,8 @@ Creates a local Composer repository.
 
 ```hcl
 resource "artifactory_local_composer_repository" "terraform-local-test-composer-repo" {
-  key = "terraform-local-test-composer-repo"
+  key                          = "terraform-local-test-composer-repo"
+  enable_composer_v1_indexing  = false
 }
 ```
 
@@ -21,6 +22,7 @@ The following arguments are supported, along with the [common list of arguments 
 * `key` - (Required) the identity key of the repo.
 * `description` - (Optional)
 * `notes` - (Optional)
+* `enable_composer_v1_indexing` - (Optional, Default: `false`) Enable Composer metadata version 1 indexing.
 
 
 

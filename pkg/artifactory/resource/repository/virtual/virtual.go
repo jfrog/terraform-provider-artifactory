@@ -214,7 +214,6 @@ func (bp RepositoryBaseParams) Id() string {
 
 var PackageTypesLikeGeneric = []string{
 	repository.CocoapodsPackageType,
-	repository.ComposerPackageType,
 	repository.GemsPackageType,
 	repository.GenericPackageType,
 	repository.GitLFSPackageType,
@@ -229,6 +228,7 @@ var PackageTypesLikeGeneric = []string{
 var PackageTypesLikeGenericWithRetrievalCachePeriodSecs = []string{
 	repository.AnsiblePackageType,
 	repository.ChefPackageType,
+	repository.ComposerPackageType,
 	repository.CondaPackageType,
 	repository.CranPackageType,
 }

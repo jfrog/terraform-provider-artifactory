@@ -1,0 +1,31 @@
+packageType: composer
+display: "Composer"
+jsonDiscriminator: Composer
+family: dedicated                # promoted from generic-slice this run to carry enable_composer_v1_indexing
+classes: [federated]
+extends: ../_base.yaml
+layoutRef: composer-default
+curation: { supported: unverified }   # resolved dynamically from Xray at runtime; not statically determined
+gating: { featureFlag: null, entitlement: null }
+
+# Package-specific attributes + base overrides only. Base federated attributes (incl. `member`) are inherited.
+attributes:
+  - name: enable_composer_v1_indexing
+    jsonField: enableComposerV1Indexing
+    type: bool
+    scope: package-specific
+    optional: true
+    computed: true
+    default: false
+    source: rest
+    description: "Enable Composer metadata version 1 indexing."
+
+tests:
+  crud: true
+  edgeCases: [toggle_enable_composer_v1_indexing]
+  upgrade: true                  # composer federated shipped before (as generic-slice) — existing customers must not see a diff
+  dataSource: true
+
+assumptions:
+  - field: family
+    note: "Promoted from generic-slice (federated.PackageTypesLikeGeneric) to a dedicated SDKv2 resource this run, mirroring the existing `debian` federated pattern (reuses the local resource's legacy SDKv2 schema/params). Done solely to carry `enable_composer_v1_indexing`; no other attribute changed. Verified with a provider-upgrade test (v12.11.11 -> local build, ExpectEmptyPlan) which passed."

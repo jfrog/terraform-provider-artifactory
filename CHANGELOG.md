@@ -1,6 +1,15 @@
 
 ### 12.11.11 (August 20, 2026)
 
+IMPROVEMENTS:
+
+* resource/artifactory_local_composer_repository: Add `enable_composer_v1_indexing` attribute (Default: `false`), verified against the live REST API. This attribute was previously unavailable.
+* resource/artifactory_federated_composer_repository: Add `enable_composer_v1_indexing` attribute (Default: `false`), verified against the live REST API. This attribute was previously unavailable.
+* resource/artifactory_virtual_composer_repository: Add `retrieval_cache_period_seconds` attribute (Default: `7200`). This value refers to the number of seconds to cache metadata files before checking for newer versions on aggregated repositories. A value of 0 indicates no caching. **Note**: since this attribute was not previously managed by Terraform, existing `artifactory_virtual_composer_repository` resources may show a one-time diff on the first `terraform apply` after upgrading, settling `retrieval_cache_period_seconds` to `7200` (consistent with npm/chef/conda/cran/debian/helm/alpine/ansible).
+* data-source/artifactory_local_composer_repository: Add `enable_composer_v1_indexing` attribute.
+* data-source/artifactory_federated_composer_repository: Add `enable_composer_v1_indexing` attribute.
+* data-source/artifactory_virtual_composer_repository: Add `retrieval_cache_period_seconds` attribute.
+
 SECURITY:
 
 * provider: Address CVE-2026-39821 by upgrading Go to 1.27.0. CVSS 9.6 Critical.

@@ -24,6 +24,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/federated"
@@ -618,6 +619,110 @@ func TestAccFederatedCargoRepository(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateCheck:        validator.CheckImportState(name, "key"),
 				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccFederatedComposerRepository(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("composer-federated", "artifactory_federated_composer_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+		resource "artifactory_federated_composer_repository" "{{ .name }}" {
+			key                          = "{{ .name }}"
+			enable_composer_v1_indexing = {{ .enableComposerV1Indexing }}
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccFederatedComposerRepository", template, map[string]interface{}{
+		"enableComposerV1Indexing": true,
+		"name":                     name,
+		"memberUrl":                federatedMemberUrl,
+	})
+	federatedRepositoryUpdated := util.ExecuteTemplate("TestAccFederatedComposerRepository", template, map[string]interface{}{
+		"enableComposerV1Indexing": false,
+		"name":                     name,
+		"memberUrl":                federatedMemberUrl,
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "composer"),
+					resource.TestCheckResourceAttr(fqrn, "enable_composer_v1_indexing", "true"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "composer"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				Config: federatedRepositoryUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "enable_composer_v1_indexing", "false"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "composer"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccFederatedComposerRepository_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("composer-federated", "artifactory_federated_composer_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	config := util.ExecuteTemplate("TestAccFederatedComposerRepository_UpgradeFromSDKv2", `
+		resource "artifactory_federated_composer_repository" "{{ .name }}" {
+			key = "{{ .name }}"
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+	`, map[string]interface{}{
+		"name":      name,
+		"memberUrl": federatedMemberUrl,
+	})
+
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "12.11.11",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "composer"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

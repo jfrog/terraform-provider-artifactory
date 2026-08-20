@@ -316,6 +316,49 @@ func TestAccDataSourceFederatedCargoRepository(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceFederatedComposerRepository(t *testing.T) {
+	_, tempFqrn, name := testutil.MkNames("composer-federated", "artifactory_federated_composer_repository")
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	template := `
+		resource "artifactory_federated_composer_repository" "{{ .name }}" {
+			key                          = "{{ .name }}"
+			enable_composer_v1_indexing = {{ .enableComposerV1Indexing }}
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+		}
+		data "artifactory_federated_composer_repository" "{{ .name }}" {
+			key = artifactory_federated_composer_repository.{{ .name }}.id
+		}
+	`
+	fqrn := "data." + tempFqrn
+
+	federatedRepositoryBasic := util.ExecuteTemplate("TestAccDataSourceFederatedComposerRepository", template, map[string]interface{}{
+		"enableComposerV1Indexing": true,
+		"name":                     name,
+		"memberUrl":                federatedMemberUrl,
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "composer"),
+					resource.TestCheckResourceAttr(fqrn, "enable_composer_v1_indexing", "true"),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string { r, _ := repository.GetDefaultRepoLayoutRef("federated", "composer"); return r }()), //Check to ensure repository layout is set as per default even when it is not passed.
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceFederatedConanRepository(t *testing.T) {
 	_, tempFqrn, name := testutil.MkNames("conan-federated", "artifactory_federated_conan_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)

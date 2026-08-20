@@ -1,0 +1,31 @@
+packageType: composer
+display: "Composer"
+jsonDiscriminator: Composer
+family: dedicated                # promoted from generic-slice this run to carry enable_composer_v1_indexing
+classes: [local]
+extends: ../_base.yaml
+layoutRef: composer-default
+curation: { supported: unverified }   # resolved dynamically from Xray at runtime; not statically determined
+gating: { featureFlag: null, entitlement: null }   # no feature flag / entitlement gate found in artifactory-service
+
+# Package-specific attributes + base overrides only. Base local attributes are inherited.
+attributes:
+  - name: enable_composer_v1_indexing
+    jsonField: enableComposerV1Indexing
+    type: bool
+    scope: package-specific
+    optional: true
+    computed: true
+    default: false
+    source: rest
+    description: "Enable Composer metadata version 1 indexing."
+
+tests:
+  crud: true
+  edgeCases: [toggle_enable_composer_v1_indexing]
+  upgrade: true                  # composer local shipped before (as generic-slice) — existing customers must not see a diff
+  dataSource: true
+
+assumptions:
+  - field: family
+    note: "Promoted from generic-slice (local.PackageTypesLikeGeneric) to a dedicated Plugin Framework resource this run, mirroring the existing `debian` local/federated pattern (PF local resource + legacy SDKv2 schema reused by the federated resource). Done solely to carry `enable_composer_v1_indexing`; no other attribute changed. Verified with a provider-upgrade test (v12.11.11 -> local build, ExpectEmptyPlan) which passed."
