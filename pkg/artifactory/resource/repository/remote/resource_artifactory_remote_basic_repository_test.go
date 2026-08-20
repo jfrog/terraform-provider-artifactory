@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
+	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/remote"
 	"github.com/jfrog/terraform-provider-shared/testutil"
 	"github.com/jfrog/terraform-provider-shared/util"
@@ -65,9 +66,19 @@ func TestAccRemoteLikeBasicRepository_with_propagate_fails(t *testing.T) {
 	}
 }
 
+// basicRepositoryMigrationFromVersion is the previously published provider
+// version the SDKv2 → Plugin Framework migration test applies its first step
+// with. Package types added AFTER this version can't run the first step, so
+// the migration sub-test skips them.
+const basicRepositoryMigrationFromVersion = "12.8.3"
+
 func TestAccRemoteLikeBasicRepository_migrate_from_SDKv2(t *testing.T) {
 	for _, packageType := range remote.PackageTypesLikeBasic {
 		t.Run(packageType, func(t *testing.T) {
+			if packageType == repository.JetBrainsPluginsPackageType {
+				t.Skipf("package type %s was introduced after provider version %s, so the pinned version cannot apply the config", packageType, basicRepositoryMigrationFromVersion)
+			}
+
 			_, fqrn, name := testutil.MkNames(fmt.Sprintf("test-%s-remote", packageType), fmt.Sprintf("artifactory_remote_%s_repository", packageType))
 
 			const temp = `
@@ -93,7 +104,7 @@ func TestAccRemoteLikeBasicRepository_migrate_from_SDKv2(t *testing.T) {
 						ExternalProviders: map[string]resource.ExternalProvider{
 							"artifactory": {
 								Source:            "jfrog/artifactory",
-								VersionConstraint: "12.8.3",
+								VersionConstraint: basicRepositoryMigrationFromVersion,
 							},
 						},
 						Check: resource.ComposeTestCheckFunc(

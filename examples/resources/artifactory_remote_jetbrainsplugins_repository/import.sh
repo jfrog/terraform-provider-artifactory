@@ -1,0 +1,1 @@
+terraform import artifactory_remote_jetbrainsplugins_repository.my-jetbrainsplugins-remote my-jetbrainsplugins-remote

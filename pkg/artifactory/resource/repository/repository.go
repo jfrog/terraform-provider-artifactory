@@ -80,6 +80,7 @@ const (
 	HexPackageType                = "hex"
 	HuggingFacePackageType        = "huggingfaceml"
 	IvyPackageType                = "ivy"
+	JetBrainsPluginsPackageType   = "jetbrainsplugins"
 	MachineLearningType           = "machinelearning"
 	MavenPackageType              = "maven"
 	NPMPackageType                = "npm"
@@ -121,6 +122,7 @@ var PackageNameLookup = map[string]string{
 	HexPackageType:                "Hex",
 	HuggingFacePackageType:        "HuggingFace ML",
 	IvyPackageType:                "Ivy",
+	JetBrainsPluginsPackageType:   "JetBrains Plugins",
 	NPMPackageType:                "Npm",
 	NixPackageType:                "Nix",
 	OpkgPackageType:               "Opkg",
