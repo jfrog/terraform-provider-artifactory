@@ -232,6 +232,12 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"federated": true,
 		},
 	},
+	JetBrainsPluginsPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"remote": true,
+		},
+	},
 	MachineLearningType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

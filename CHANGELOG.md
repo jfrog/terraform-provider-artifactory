@@ -1,4 +1,11 @@
 
+### 12.12.0 (Aug 20, 2026)
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_jetbrainsplugins_repository`
+* **New Data Source:** `artifactory_remote_jetbrainsplugins_repository`. Supported as a remote repository only. Requires a Pro license and the Packages IDE Extension entitlement.
+
 ### 12.11.11 (August 20, 2026)
 
 SECURITY:

@@ -178,6 +178,7 @@ var validPackageTypes = []string{
 	repository.HuggingFacePackageType,
 	repository.NixPackageType,
 	repository.IvyPackageType,
+	repository.JetBrainsPluginsPackageType,
 	repository.MavenPackageType,
 	repository.NPMPackageType,
 	repository.NugetPackageType,
