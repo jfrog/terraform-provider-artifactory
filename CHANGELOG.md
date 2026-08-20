@@ -1,3 +1,8 @@
+### 12.11.11 (Aug 20, 2026)
+
+IMPROVEMENTS:
+
+* provider: Upgrade Golang version to 1.27.0 and bump up dependencies to their latest versions.
 
 ### 12.11.10 (Aug 12, 2026).
 
