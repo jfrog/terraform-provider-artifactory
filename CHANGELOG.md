@@ -13,6 +13,8 @@ SECURITY:
 * provider: Address CVE-2026-56860 by upgrading Go to 1.27.0. CVSS 7.5 High.
 * provider: Address CVE-2026-56858 by upgrading Go to 1.27.0. CVSS 6.1 Medium.
 * provider: Address CVE-2026-56853 by upgrading Go to 1.27.0. CVSS 5.3 Medium.
+* provider: Address CVE-2026-27143 by upgrading Go to 1.27.0. CVSS 6.1 Critical.
+* provider: Address CVE-2026-27140 by upgrading Go to 1.27.0. CVSS 5.3 High.
 
 ### 12.11.10 (Aug 12, 2026).
 
