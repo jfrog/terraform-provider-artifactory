@@ -1,4 +1,11 @@
 
+### 12.12.0 (unreleased)
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_nimmodel_repository`
+* **New Data Source:** `artifactory_remote_nimmodel_repository`. Supported as a remote repository only.
+
 ### 12.11.11 (August 20, 2026)
 
 SECURITY:
