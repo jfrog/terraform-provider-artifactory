@@ -82,11 +82,11 @@ var BaseDataSourceAttributes = map[string]schema.Attribute{
 	},
 	"includes_pattern": schema.StringAttribute{
 		Computed:            true,
-		MarkdownDescription: "List of comma-separated artifact patterns to include when evaluating artifact requests.",
+		MarkdownDescription: "Comma-separated list of artifact patterns to include when evaluating artifact requests. This is a single string of comma-separated values, not a list of strings.",
 	},
 	"excludes_pattern": schema.StringAttribute{
 		Computed:            true,
-		MarkdownDescription: "List of artifact patterns to exclude when evaluating artifact requests.",
+		MarkdownDescription: "Comma-separated list of artifact patterns to exclude when evaluating artifact requests. This is a single string of comma-separated values, not a list of strings.",
 	},
 	"repo_layout_ref": schema.StringAttribute{
 		Computed:            true,
