@@ -1,12 +1,27 @@
-
-### 12.11.11 (Aug 17, 2026). Tested on Artifactory 7.161.16 with Terraform 1.15.8 and OpenTofu 1.12.3
+### 12.11.12 (Aug 21, 2026). 
 
 DOCUMENTATION:
 
 * resource/artifactory_local_*_repository, resource/artifactory_remote_*_repository, resource/artifactory_virtual_*_repository (and their data sources): Clarify the `includes_pattern` and `excludes_pattern` attribute descriptions. These attributes are a single comma-separated string, not a list of strings. Multiple patterns should be provided as one string of comma-separated values (for example, `"a/b/**,c/d/**"`). The Artifactory REST API stores these fields as a single string; supplying a list has no additional effect. Issue: [1368](https://github.com/jfrog/terraform-provider-artifactory/issues/1368)
 
+### 12.11.11 (August 20, 2026)
 
-### 12.11.10 (Aug 12, 2026). Tested on Artifactory 7.146.28 with Terraform 1.15.8 and OpenTofu 1.12.3
+SECURITY:
+
+* provider: Address CVE-2026-39821 by upgrading Go to 1.27.0. CVSS 9.6 Critical.
+* provider: Address CVE-2026-56865 by upgrading Go to 1.27.0. CVSS 8.4 High.
+* provider: Address CVE-2026-56864 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-33818 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-46600 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56862 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56859 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56860 by upgrading Go to 1.27.0. CVSS 7.5 High.
+* provider: Address CVE-2026-56858 by upgrading Go to 1.27.0. CVSS 6.1 Medium.
+* provider: Address CVE-2026-56853 by upgrading Go to 1.27.0. CVSS 5.3 Medium.
+* provider: Address CVE-2026-27143 by upgrading Go to 1.27.0. CVSS 6.1 Critical.
+* provider: Address CVE-2026-27140 by upgrading Go to 1.27.0. CVSS 5.3 High.
+
+### 12.11.10 (Aug 12, 2026).
 
 FEATURES:
 
