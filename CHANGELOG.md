@@ -1,3 +1,10 @@
+### 12.11.13 (Aug 24, 2026).
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_jetbrainsplugins_repository`
+* **New Data Source:** `artifactory_remote_jetbrainsplugins_repository`. Supported as a remote repository only. Requires a Pro license.
+
 ### 12.11.12 (Aug 21, 2026). Tested on Artifactory 7.161.17 with Terraform 1.15.9 and OpenTofu 1.12.3
 
 IMPROVEMENTS:
@@ -8,12 +15,6 @@ DOCUMENTATION:
 
 * resource/artifactory_local_*_repository, resource/artifactory_remote_*_repository, resource/artifactory_virtual_*_repository (and their data sources): Clarify the `includes_pattern` and `excludes_pattern` attribute descriptions. These attributes are a single comma-separated string, not a list of strings. Multiple patterns should be provided as one string of comma-separated values (for example, `"a/b/**,c/d/**"`). The Artifactory REST API stores these fields as a single string; supplying a list has no additional effect. Issue: [1368](https://github.com/jfrog/terraform-provider-artifactory/issues/1368)
 
-### 12.12.0 (Aug 20, 2026)
-
-FEATURES:
-
-* **New Resource:** `artifactory_remote_jetbrainsplugins_repository`
-* **New Data Source:** `artifactory_remote_jetbrainsplugins_repository`. Supported as a remote repository only. Requires a Pro license and the Packages IDE Extension entitlement.
 
 ### 12.11.11 (August 20, 2026)
 
