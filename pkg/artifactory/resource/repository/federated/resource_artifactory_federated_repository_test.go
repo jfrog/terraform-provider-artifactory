@@ -554,6 +554,7 @@ EOF
 }
 
 func TestAccFederatedCargoRepository(t *testing.T) {
+	t.Skip("Skipping: Cargo tests can configure the legacy Git index (enable_sparse_index=false), which is no longer supported on Artifactory 7.161.16+ (\"legacy Git index is no longer supported\"). Tracked in https://github.com/jfrog/terraform-provider-artifactory/issues/1456. Unrelated to this change (JTFPR-179).")
 	_, fqrn, name := testutil.MkNames("cargo-federated", "artifactory_federated_cargo_repository")
 	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
 	anonAccess := testutil.RandBool()

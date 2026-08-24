@@ -36,11 +36,11 @@ In addition to all arguments above, the following attributes are exported for al
 * `project_environments` - Project environment for assigning this repository to. Allow values: `DEV` or `PROD`. The attribute should only be used if the repository is already assigned to the existing project. If not, the
   attribute will be ignored by Artifactory, but will remain in the Terraform state, which will create state drift during
   the update.
-* `includes_pattern` - List of artifact patterns to include when evaluating artifact requests in the form of
-  x/y/**/z/\*. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are
+* `includes_pattern` - Comma-separated list of artifact patterns to include when evaluating artifact requests in the form of
+  x/y/**/z/\*. This is a single string of comma-separated values, not a list of strings. When used, only artifacts matching one of the include patterns are served. By default, all artifacts are
   included (\*\*/*).
-* `excludes_pattern` - List of artifact patterns to exclude when evaluating artifact requests, in the form of
-  x/y/**/z/*. By default no artifacts are excluded.
+* `excludes_pattern` - Comma-separated list of artifact patterns to exclude when evaluating artifact requests, in the form of
+  x/y/**/z/*. This is a single string of comma-separated values, not a list of strings. By default no artifacts are excluded.
 * `repo_layout_ref` - Sets the layout that the repository should use for storing and identifying modules. A
   recommended layout that corresponds to the package type defined is suggested, and index packages uploaded and
   calculate metadata accordingly.
