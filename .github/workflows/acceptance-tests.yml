@@ -1,19 +1,22 @@
+# Reusable: invoked by build-gate.yml behind the `build-gate` approval.
+# Do not add pull_request, pull_request_target, or workflow_dispatch here —
+# that would either withhold secrets (fork PRs) or run untrusted code with
+# secrets and no gate.
 on:
-  pull_request:
-    branches:
-      - master
-    types: [opened,synchronize]
-    paths:
-      - '**.go'
-  workflow_dispatch:
+  workflow_call:
 
 name: Terraform & OpenTofu Acceptance Tests
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   acceptance-tests-matrix:
     name: ${{ matrix.cli }}
     runs-on: ubuntu-latest
     continue-on-error: false
+    # Secret/var source only. Required reviewers belong on `build-gate`, not here.
     environment: development
     strategy:
       fail-fast: true
@@ -26,14 +29,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Unshallow
-        run: git fetch --prune --unshallow
+        with:
+          # pull_request_target defaults to the base branch; test the PR SHA.
+          # Safe: this job only runs after human approval via build-gate.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+          # checkout refuses fork PR code under pull_request_target by default.
+          # Building and running the customer's code is the whole point of this
+          # suite, so the untrusted-code risk is carried by the build-gate
+          # approval instead: no fork code is fetched before a maintainer approves.
+          allow-unsafe-pr-checkout: true
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           # Match go.mod; Go 1.22 + auto toolchain breaks `go test -cover` on
           # packages with no tests (golang/go#75031: covdata not found).
-          go-version: '1.25.8'
+          go-version: '1.27.0'
       - name: Install Helm
         uses: azure/setup-helm@v4.2.0
       - name: Install Terraform CLI
@@ -155,22 +168,39 @@ jobs:
 
   update-changelog:
     runs-on: ubuntu-latest
-    needs: acceptance-tests-matrix
+    needs: [acceptance-tests-matrix]
     if: |
       always() &&
-      (github.event_name == 'pull_request' && needs.acceptance-tests-matrix.result == 'success')
+      (github.event_name == 'pull_request' || github.event_name == 'pull_request_target') &&
+      needs.acceptance-tests-matrix.result == 'success'
     permissions:
       contents: write
+      pull-requests: write
     steps:
+      - name: Skip changelog push on fork PRs
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fork PR — GITHUB_TOKEN cannot push CHANGELOG.md to ${{ github.event.pull_request.head.repo.full_name }}."
+          echo "Apply the tested-on Artifactory line after merge, or on a same-repo branch."
+          gh pr comment "${{ github.event.pull_request.number }}" --body "Acceptance tests passed. CHANGELOG.md was **not** updated on this fork branch (no write access to the customer repo). After merge, add the tested Artifactory / Terraform / OpenTofu versions to the latest CHANGELOG heading, or cherry-pick onto a same-repo branch if you need the line before merge."
       - uses: actions/checkout@v4
+        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref }}
+          # Same SHA the suite tested. Do not checkout the branch name — it may
+          # have moved, and a later push would land the changelog on untested code.
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Update CHANGELOG and push commit
+        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           ARTIFACTORY_VERSION: ${{ needs.acceptance-tests-matrix.outputs.artifactory_version }}
           TERRAFORM_VERSION: ${{ needs.acceptance-tests-matrix.outputs.tf_version }}
           OPENTOFU_VERSION: ${{ needs.acceptance-tests-matrix.outputs.tofu_version }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           echo "Adding Artifactory version to CHANGELOG.md"
           sed -i -E "0,/(##\s.+\..+\..+\s\(.+\)).*/ s/(##\s.+\..+\..+\s\(.+\)).*/\1. Tested on Artifactory $ARTIFACTORY_VERSION with Terraform $TERRAFORM_VERSION and OpenTofu $OPENTOFU_VERSION/" CHANGELOG.md
@@ -185,7 +215,7 @@ jobs:
             git config --get user.name
             git config --get user.email
             git commit --author="JFrog CI <jfrog-solutions-ci+1@jfrog.com>" -m "JFrog Pipelines - Add Artifactory version to CHANGELOG.md"
-            git push
+            git push --force-with-lease="refs/heads/${PR_HEAD_REF}:${PR_HEAD_SHA}" origin "HEAD:refs/heads/${PR_HEAD_REF}"
           else
             echo "There is nothing to commit: Artifactory version hadn't changed."
           fi

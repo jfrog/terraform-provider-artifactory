@@ -487,6 +487,16 @@ data "artifactory_remote_hex_repository" "my-remote-hex" {
   key = artifactory_remote_hex_repository.my-remote-hex.key
 }
 
+resource "artifactory_remote_aieditorextensions_repository" "my-remote-aieditorextensions" {
+  key         = "my-remote-aieditorextensions"
+  url         = "https://marketplace.visualstudio.com/_apis/public/gallery"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+data "artifactory_remote_aieditorextensions_repository" "my-remote-aieditorextensions" {
+  key = artifactory_remote_aieditorextensions_repository.my-remote-aieditorextensions.key
+}
+
 resource "artifactory_remote_bazel_repository" "my-remote-bazelmodules" {
   key         = "my-remote-bazelmodules"
   url         = "https://bcr.bazel.build/"

@@ -850,6 +850,7 @@ var PackageTypesLikeBasic = []string{
 	repository.ChefPackageType,
 	repository.CranPackageType,
 	repository.GitLFSPackageType,
+	repository.JetBrainsPluginsPackageType,
 	repository.OpkgPackageType,
 	repository.P2PackageType,
 	repository.PubPackageType,

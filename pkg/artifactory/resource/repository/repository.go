@@ -56,79 +56,83 @@ import (
 )
 
 const (
-	AlpinePackageType            = "alpine"
-	AnsiblePackageType           = "ansible"
-	BazelModulesPackageType      = "bazelmodules"
-	BowerPackageType             = "bower"
-	CargoPackageType             = "cargo"
-	ChefPackageType              = "chef"
-	CocoapodsPackageType         = "cocoapods"
-	ComposerPackageType          = "composer"
-	CondaPackageType             = "conda"
-	ConanPackageType             = "conan"
-	CranPackageType              = "cran"
-	DebianPackageType            = "debian"
-	DockerPackageType            = "docker"
-	GemsPackageType              = "gems"
-	GenericPackageType           = "generic"
-	GitLFSPackageType            = "gitlfs"
-	GoPackageType                = "go"
-	GradlePackageType            = "gradle"
-	HelmPackageType              = "helm"
-	HelmOCIPackageType           = "helmoci"
-	HexPackageType               = "hex"
-	HuggingFacePackageType       = "huggingfaceml"
-	IvyPackageType               = "ivy"
-	MachineLearningType          = "machinelearning"
-	MavenPackageType             = "maven"
-	NPMPackageType               = "npm"
-	NixPackageType               = "nix"
-	NugetPackageType             = "nuget"
-	OCIPackageType               = "oci"
-	OpkgPackageType              = "opkg"
-	P2PackageType                = "p2"
-	PubPackageType               = "pub"
-	PuppetPackageType            = "puppet"
-	PyPiPackageType              = "pypi"
-	ReleasebundlesPackageType    = "releasebundles"
-	RPMPackageType               = "rpm"
-	SBTPackageType               = "sbt"
-	SwiftPackageType             = "swift"
-	TerraformBackendPackageType  = "terraformbackend"
-	TerraformModulePackageType   = "terraform_module"
-	TerraformProviderPackageType = "terraform_provider"
-	TerraformPackageType         = "terraform"
-	VagrantPackageType           = "vagrant"
-	VCSPackageType               = "vcs"
+	AIEditorExtensionsPackageType = "aieditorextensions"
+	AlpinePackageType             = "alpine"
+	AnsiblePackageType            = "ansible"
+	BazelModulesPackageType       = "bazelmodules"
+	BowerPackageType              = "bower"
+	CargoPackageType              = "cargo"
+	ChefPackageType               = "chef"
+	CocoapodsPackageType          = "cocoapods"
+	ComposerPackageType           = "composer"
+	CondaPackageType              = "conda"
+	ConanPackageType              = "conan"
+	CranPackageType               = "cran"
+	DebianPackageType             = "debian"
+	DockerPackageType             = "docker"
+	GemsPackageType               = "gems"
+	GenericPackageType            = "generic"
+	GitLFSPackageType             = "gitlfs"
+	GoPackageType                 = "go"
+	GradlePackageType             = "gradle"
+	HelmPackageType               = "helm"
+	HelmOCIPackageType            = "helmoci"
+	HexPackageType                = "hex"
+	HuggingFacePackageType        = "huggingfaceml"
+	IvyPackageType                = "ivy"
+	JetBrainsPluginsPackageType   = "jetbrainsplugins"
+	MachineLearningType           = "machinelearning"
+	MavenPackageType              = "maven"
+	NPMPackageType                = "npm"
+	NixPackageType                = "nix"
+	NugetPackageType              = "nuget"
+	OCIPackageType                = "oci"
+	OpkgPackageType               = "opkg"
+	P2PackageType                 = "p2"
+	PubPackageType                = "pub"
+	PuppetPackageType             = "puppet"
+	PyPiPackageType               = "pypi"
+	ReleasebundlesPackageType     = "releasebundles"
+	RPMPackageType                = "rpm"
+	SBTPackageType                = "sbt"
+	SwiftPackageType              = "swift"
+	TerraformBackendPackageType   = "terraformbackend"
+	TerraformModulePackageType    = "terraform_module"
+	TerraformProviderPackageType  = "terraform_provider"
+	TerraformPackageType          = "terraform"
+	VagrantPackageType            = "vagrant"
+	VCSPackageType                = "vcs"
 )
 
 var PackageNameLookup = map[string]string{
-	BazelModulesPackageType:     "Bazel Modules",
-	BowerPackageType:            "Bower",
-	ChefPackageType:             "Chef",
-	CocoapodsPackageType:        "CocoaPods",
-	ComposerPackageType:         "Composer",
-	CondaPackageType:            "Conda",
-	CranPackageType:             "CRAN",
-	GemsPackageType:             "Gems",
-	GenericPackageType:          "Generic",
-	GitLFSPackageType:           "GitLfs",
-	GoPackageType:               "Go",
-	GradlePackageType:           "Gradle",
-	HelmPackageType:             "Helm",
-	HexPackageType:              "Hex",
-	HuggingFacePackageType:      "HuggingFace ML",
-	IvyPackageType:              "Ivy",
-	NPMPackageType:              "Npm",
-	NixPackageType:              "Nix",
-	OpkgPackageType:             "Opkg",
-	PubPackageType:              "Pub",
-	PuppetPackageType:           "Puppet",
-	PyPiPackageType:             "PyPi",
-	SBTPackageType:              "SBT",
-	SwiftPackageType:            "Swift",
-	TerraformBackendPackageType: "Terraform Backend",
-	VagrantPackageType:          "Vagrant",
+	AIEditorExtensionsPackageType: "AI-Editor Extensions",
+	BazelModulesPackageType:       "Bazel Modules",
+	BowerPackageType:              "Bower",
+	ChefPackageType:               "Chef",
+	CocoapodsPackageType:          "CocoaPods",
+	ComposerPackageType:           "Composer",
+	CondaPackageType:              "Conda",
+	CranPackageType:               "CRAN",
+	GemsPackageType:               "Gems",
+	GenericPackageType:            "Generic",
+	GitLFSPackageType:             "GitLfs",
+	GoPackageType:                 "Go",
+	GradlePackageType:             "Gradle",
+	HelmPackageType:               "Helm",
+	HexPackageType:                "Hex",
+	HuggingFacePackageType:        "HuggingFace ML",
+	IvyPackageType:                "Ivy",
+	JetBrainsPluginsPackageType:   "JetBrains Plugins",
+	NPMPackageType:                "Npm",
+	NixPackageType:                "Nix",
+	OpkgPackageType:               "Opkg",
+	PubPackageType:                "Pub",
+	PuppetPackageType:             "Puppet",
+	PyPiPackageType:               "PyPi",
+	SBTPackageType:                "SBT",
+	SwiftPackageType:              "Swift",
+	TerraformBackendPackageType:   "Terraform Backend",
+	VagrantPackageType:            "Vagrant",
 }
 
 func NewRepositoryResource(packageType, packageName, rclass string, resourceModelType, apiModelType reflect.Type) BaseResource {
@@ -587,14 +591,16 @@ var BaseAttributes = map[string]schema.Attribute{
 		Validators: []validator.String{
 			stringvalidator.LengthAtLeast(1),
 		},
-		MarkdownDescription: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+		MarkdownDescription: "Comma-separated list of artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).",
 	},
 	"excludes_pattern": schema.StringAttribute{
 		Optional: true,
 		Computed: true,
 		Default:  stringdefault.StaticString(""),
-		MarkdownDescription: "List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`." +
+		MarkdownDescription: "Comma-separated list of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"By default no artifacts are excluded.",
 	},
 }
@@ -689,13 +695,15 @@ var BaseSchemaV1 = map[string]*sdkv2_schema.Schema{
 		Type:     sdkv2_schema.TypeString,
 		Optional: true,
 		Default:  "**/*",
-		Description: "List of comma-separated artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+		Description: "Comma-separated list of artifact patterns to include when evaluating artifact requests in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"When used, only artifacts matching one of the include patterns are served. By default, all artifacts are included (`**/*`).",
 	},
 	"excludes_pattern": {
 		Type:     sdkv2_schema.TypeString,
 		Optional: true,
-		Description: "List of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`." +
+		Description: "Comma-separated list of artifact patterns to exclude when evaluating artifact requests, in the form of `x/y/**/z/*`. " +
+			"This is a single string of comma-separated values, not a list of strings. " +
 			"By default no artifacts are excluded.",
 	},
 	"repo_layout_ref": {
