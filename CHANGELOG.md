@@ -1,3 +1,9 @@
+### Unreleased
+
+FEATURES:
+
+* **New Resource:** `artifactory_federated_machinelearning_repository`
+
 ### 12.11.13 (Aug 24, 2026).
 
 FEATURES:

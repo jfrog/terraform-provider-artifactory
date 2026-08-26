@@ -50,6 +50,7 @@ var PackageTypesLikeGeneric = []string{
 	repository.GoPackageType,
 	repository.HelmPackageType,
 	repository.HuggingFacePackageType,
+	repository.MachineLearningType,
 	repository.NPMPackageType,
 	repository.OpkgPackageType,
 	repository.PuppetPackageType,
