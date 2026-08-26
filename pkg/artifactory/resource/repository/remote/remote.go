@@ -573,7 +573,7 @@ var RemoteAttributes = lo.Assign(
 			Default:  booldefault.StaticBool(false),
 			MarkdownDescription: "Enable token (Bearer) based authentication. When set, use an access token as `password` " +
 				"(username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth. " +
-				"Default is `false` for most package types; OCI and Helm OCI remotes default to `true`.",
+				"Default is `false` for most package types; OCI, Helm OCI, and Hugging Face remotes default to `true`.",
 		},
 		"bypass_head_requests": schema.BoolAttribute{
 			Optional: true,
@@ -1039,7 +1039,7 @@ var BaseSchema = lo.Assign(
 			Type:        sdkv2_schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Enable token (Bearer) based authentication. When set, use an access token as password (username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth.",
+			Description: "Enable token (Bearer) based authentication. When set, use an access token as password (username may be empty) so Artifactory authenticates to the remote with a Bearer token instead of Basic auth. Default is false for most package types; OCI, Helm OCI, and Hugging Face remotes default to true.",
 		},
 		"bypass_head_requests": {
 			Type:     sdkv2_schema.TypeBool,

@@ -65,9 +65,7 @@ func TestAccRemoteAIEditorExtensionsRepository_basic(t *testing.T) {
 					// provider defaults it to true instead of the usual false.
 					resource.TestCheckResourceAttr(fqrn, "bypass_head_requests", "true"),
 					resource.TestCheckResourceAttr(fqrn, "list_remote_folder_items", "false"),
-					// All six type-supported attributes default to false server-side.
-					// enable_token_authentication in particular differs from the
-					// docker and OCI resources, which default it to true.
+					// All remaining type-supported attributes default to false server-side.
 					resource.TestCheckResourceAttr(fqrn, "enable_token_authentication", "false"),
 					resource.TestCheckResourceAttr(fqrn, "propagate_query_params", "false"),
 					resource.TestCheckResourceAttr(fqrn, "retrieve_sha256_from_server", "false"),
