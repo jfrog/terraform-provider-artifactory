@@ -1,3 +1,9 @@
+### 12.11.14 (Aug 27, 2026).
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_terraform_module_repository, resource/artifactory_local_terraform_provider_repository: Add `primary_keypair_ref` and `secondary_keypair_ref` attributes.
+
 ### 12.11.13 (Aug 24, 2026).
 
 FEATURES:
