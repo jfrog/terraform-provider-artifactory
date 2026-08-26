@@ -1,3 +1,9 @@
+### 12.11.14 (Aug 26, 2026)
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Add plan-time validation for `description` attribute so a description longer than 256 characters is caught during `terraform plan` instead of failing at apply time. Issue: [1443](https://github.com/jfrog/terraform-provider-artifactory/issues/1443)
+
 ### 12.11.13 (Aug 24, 2026).
 
 FEATURES:
