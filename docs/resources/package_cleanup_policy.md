@@ -281,7 +281,7 @@ The following package types are supported for cleanup policies with their respec
 ### Optional
 
 - `cron_expression` (String) The cron expression that determines when the policy is run, However if left empty the policy will not run automatically and can only be triggered manually.
-- `description` (String)
+- `description` (String) A description of the policy. The maximum length is 256 characters.
 - `duration_in_minutes` (Number) The maximum duration (in minutes) for policy execution, after which the policy will stop running even if not completed. While setting a maximum run duration for a policy is useful for adhering to a strict cleanup schedule, it can cause the policy to stop before completion.
 - `enabled` (Boolean) A cleanup policy must be created inactive. But if used it must be set to `false`. If set to `true` when calling this API, the API call will fail and an error message is received. Defaults to `true`
 - `project_key` (String) This attribute is used only for project-level cleanup policies, it is not used for global-level policies. When specified, the policy will be scoped to the specified project. Note: The policy `key` must start with this project key value as a prefix (e.g., if `project_key` is `"myproj"`, the `key` should be `"myproj-policy-name"`).
