@@ -50,7 +50,6 @@ type remoteHelmOCIResourceModel struct {
 	RemoteResourceModel
 	ExternalDependenciesEnabled  types.Bool   `tfsdk:"external_dependencies_enabled"`
 	ExternalDependenciesPatterns types.List   `tfsdk:"external_dependencies_patterns"`
-	EnableTokenAuthentication    types.Bool   `tfsdk:"enable_token_authentication"`
 	ProjectID                    types.String `tfsdk:"project_id"`
 }
 
@@ -105,7 +104,6 @@ func (r remoteHelmOCIResourceModel) ToAPIModel(ctx context.Context, packageType 
 	var apiModel = RemoteHelmOCIAPIModel{
 		RemoteAPIModel:              remoteAPIModel,
 		ExternalDependenciesEnabled: r.ExternalDependenciesEnabled.ValueBool(),
-		EnableTokenAuthentication:   r.EnableTokenAuthentication.ValueBool(),
 		ProjectID:                   r.ProjectID.ValueString(),
 	}
 	if r.ExternalDependenciesEnabled.ValueBool() == true {
@@ -123,7 +121,6 @@ func (r *remoteHelmOCIResourceModel) FromAPIModel(ctx context.Context, apiModel 
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
-	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
 
 	if r.ExternalDependenciesEnabled.ValueBool() == true {
 		externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
@@ -142,7 +139,6 @@ type RemoteHelmOCIAPIModel struct {
 	RemoteAPIModel
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	ProjectID                    string   `json:"dockerProjectId"`
 }
 
@@ -157,11 +153,12 @@ func (r *remoteHelmOCIResource) Schema(ctx context.Context, req resource.SchemaR
 				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "When set, external dependencies are rewritten. External Dependency Rewrite in the UI.",
 			},
+			// Override common remote default (false): Helm OCI remotes historically default to true.
 			"enable_token_authentication": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
-				MarkdownDescription: "Enable token (Bearer) based authentication.",
+				MarkdownDescription: "Enable token (Bearer) based authentication. Defaults to `true` for Helm OCI remotes.",
 			},
 			"external_dependencies_patterns": schema.ListAttribute{
 				ElementType: types.StringType,

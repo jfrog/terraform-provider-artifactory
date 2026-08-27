@@ -77,7 +77,6 @@ type DockerRemoteRepo struct {
 	remote.RepositoryCurationParams
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	BlockPushingSchema1          bool     `hcl:"block_pushing_schema1" json:"blockPushingSchema1"`
 	ProjectId                    string   `json:"dockerProjectId"`
 }

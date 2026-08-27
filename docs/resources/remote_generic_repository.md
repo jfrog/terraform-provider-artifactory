@@ -14,6 +14,19 @@ resource "artifactory_remote_generic_repository" "my-remote-generic" {
 }
 ```
 
+### Access token (Bearer) authentication
+
+When the remote requires an access token, set `enable_token_authentication = true` and put the token in `password` (see [common remote arguments](remote.md)):
+
+```hcl
+resource "artifactory_remote_generic_repository" "token-auth" {
+  key                         = "token-auth-generic"
+  url                         = "https://remote.example.com/artifactory/generic-local/"
+  password                    = var.remote_access_token
+  enable_token_authentication = true
+}
+```
+
 ### Custom HTTP headers
 
 Use `custom_http_headers` to send up to 5 static headers on every outbound request to the remote URL. A common use case is authenticating to Azure Blob Storage or packagecloud.io.
