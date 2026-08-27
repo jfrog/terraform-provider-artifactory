@@ -51,7 +51,6 @@ type remoteDockerResourceModel struct {
 	CurationResourceModel
 	ExternalDependenciesEnabled  types.Bool   `tfsdk:"external_dependencies_enabled"`
 	ExternalDependenciesPatterns types.List   `tfsdk:"external_dependencies_patterns"`
-	EnableTokenAuthentication    types.Bool   `tfsdk:"enable_token_authentication"`
 	BlockPushingSchema1          types.Bool   `tfsdk:"block_pushing_schema1"`
 	ProjectId                    types.String `tfsdk:"project_id"`
 }
@@ -112,7 +111,6 @@ func (r remoteDockerResourceModel) ToAPIModel(ctx context.Context, packageType s
 			PassThrough: r.PassThrough.ValueBool(),
 		},
 		ExternalDependenciesEnabled: r.ExternalDependenciesEnabled.ValueBool(),
-		EnableTokenAuthentication:   r.EnableTokenAuthentication.ValueBool(),
 		BlockPushingSchema1:         r.BlockPushingSchema1.ValueBool(),
 		ProjectId:                   r.ProjectId.ValueString(),
 	}
@@ -144,7 +142,6 @@ func (r *remoteDockerResourceModel) FromAPIModel(ctx context.Context, apiModel i
 		r.ExternalDependenciesPatterns = externalDependenciesPatterns
 	}
 
-	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
 	r.BlockPushingSchema1 = types.BoolValue(model.BlockPushingSchema1)
 	r.ProjectId = types.StringValue(model.ProjectId)
 
@@ -156,7 +153,6 @@ type RemoteDockerAPIModel struct {
 	CurationAPIModel
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	BlockPushingSchema1          bool     `json:"blockPushingSchema1"`
 	ProjectId                    string   `json:"dockerProjectId"`
 }
@@ -172,12 +168,6 @@ func (r *remoteDockerResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Also known as 'Foreign Layers Caching' on the UI, default is `false`.",
-			},
-			"enable_token_authentication": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(false),
-				MarkdownDescription: "Enable token (Bearer) based authentication.",
 			},
 			"block_pushing_schema1": schema.BoolAttribute{
 				Optional:            true,

@@ -1,3 +1,9 @@
+### 12.11.14 (Aug 25, 2026).
+
+FEATURES:
+
+* resource/artifactory_remote_*_repository: Add `enable_token_authentication` to the common remote repository schema so every package type can authenticate to the remote with a Bearer token via `password` (username may be empty). Previously this attribute was only available on Docker, OCI, Helm OCI, and AI Editor Extensions remotes. Default is `false` for most package types; OCI, Helm OCI, and Hugging Face remotes default to `true`.
+
 ### 12.11.13 (Aug 24, 2026).
 
 FEATURES:

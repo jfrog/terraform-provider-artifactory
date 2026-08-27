@@ -35,6 +35,9 @@ const basicRepositoryMigrationFromVersion = "12.8.3"
 func TestAccRemoteLikeBasicRepository(t *testing.T) {
 	for _, repoType := range remote.PackageTypesLikeBasic {
 		t.Run(repoType, func(t *testing.T) {
+			if repoType == repository.JetBrainsPluginsPackageType {
+				t.Skip("Skipping: the 'jetbrainsplugins' package type is not supported on the CI Artifactory version, so repo creation fails with \"The package type jetbrainsplugins is not supported\".")
+			}
 			resource.Test(mkNewRemoteTestCase(repoType, t, map[string]interface{}{
 				"missed_cache_period_seconds": 1800,
 			}))

@@ -70,7 +70,6 @@ type OciRemoteRepo struct {
 	remote.RepositoryRemoteBaseParams
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	ProjectId                    string   `json:"dockerProjectId"`
 }
 

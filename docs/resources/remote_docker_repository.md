@@ -34,7 +34,6 @@ The following arguments are supported, along with the [common list of arguments 
 * `block_pushing_schema1` - (Optional) When set, Artifactory will block the pulling of Docker images with manifest v2
   schema 1 from the remote repository (i.e. the upstream). It will be possible to pull images with manifest v2 schema 1
   that exist in the cache.
-* `enable_token_authentication` - (Optional) Enable token (Bearer) based authentication.
 * `external_dependencies_enabled` - (Optional) Also known as 'Foreign Layers Caching' on the UI.
 * `external_dependencies_patterns` - (Optional) An allow list of Ant-style path patterns that determine which remote VCS roots Artifactory will follow to download remote modules from, when presented with 'go-import' meta tags in the remote repository response. Default to `["**"]`
 * `curated` - (Optional, Default: `false`) Enable repository to be protected by the Curation service.

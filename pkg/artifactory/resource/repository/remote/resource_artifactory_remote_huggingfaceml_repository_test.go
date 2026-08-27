@@ -45,6 +45,7 @@ func TestAccRemoteHuggingFaceRepository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(fqrn, "key", name),
 					resource.TestCheckResourceAttr(fqrn, "url", "https://huggingface.co"),
+					resource.TestCheckResourceAttr(fqrn, "enable_token_authentication", "true"),
 					resource.TestCheckResourceAttr(fqrn, "curated", "false"),
 					resource.TestCheckResourceAttr(fqrn, "pass_through", "false"),
 				),
