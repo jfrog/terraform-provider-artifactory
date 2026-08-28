@@ -118,6 +118,44 @@ func TestAccRemoteGenericRepository_migrate_to_schema_v4(t *testing.T) {
 	})
 }
 
+func TestAccRemoteGenericRepository_with_enable_token_authentication(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-generic-remote", "artifactory_remote_generic_repository")
+
+	const tmpl = `
+		resource "artifactory_remote_generic_repository" "{{ .name }}" {
+			key                         = "{{ .name }}"
+			url                         = "https://registry.npmjs.org/"
+			password                    = "test-access-token"
+			enable_token_authentication = true
+		}
+	`
+
+	params := map[string]interface{}{"name": name}
+	config := util.ExecuteTemplate("TestAccRemoteGenericRepository_with_enable_token_authentication", tmpl, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "enable_token_authentication", "true"),
+				),
+			},
+			{
+				ResourceName:                         fqrn,
+				ImportState:                          true,
+				ImportStateId:                        name,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
+				ImportStateVerifyIgnore:              []string{"password"},
+			},
+		},
+	})
+}
+
 func TestAccRemoteGenericRepository_with_custom_http_headers(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-generic-remote", "artifactory_remote_generic_repository")
 
