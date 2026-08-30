@@ -1,0 +1,1 @@
+terraform import artifactory_local_agentplugins_repository.my-agentplugins-local my-agentplugins-local
