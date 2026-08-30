@@ -3,12 +3,12 @@
 page_title: "artifactory_local_agentplugins_repository Resource - terraform-provider-artifactory"
 subcategory: "Local Repositories"
 description: |-
-  Provides a resource to creates a local Agent Plugins repository.
+  Provides a resource to create a local Agent Plugins repository.
 ---
 
 # artifactory_local_agentplugins_repository (Resource)
 
-Provides a resource to creates a local Agent Plugins repository.
+Provides a resource to create a local Agent Plugins repository.
 
 ## Example Usage
 

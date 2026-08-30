@@ -50,7 +50,7 @@ func TestAccLocalAgentPluginsRepository(t *testing.T) {
 
 	updatedParams := map[string]interface{}{
 		"name":                     name,
-		"blacked_out":              testutil.RandBool(),
+		"blacked_out":              !params["blacked_out"].(bool),
 		"xray_index":               testutil.RandBool(),
 		"property_set":             "artifactory",
 		"archive_browsing_enabled": testutil.RandBool(),
