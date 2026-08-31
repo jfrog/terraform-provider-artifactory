@@ -3,12 +3,12 @@
 page_title: "artifactory_local_skills_repository Resource - terraform-provider-artifactory"
 subcategory: ""
 description: |-
-  Provides a resource to creates a Skills repository.
+  Provides a resource to create a Skills repository.
 ---
 
 # artifactory_local_skills_repository (Resource)
 
-Provides a resource to creates a Skills repository.
+Provides a resource to create a Skills repository.
 
 
 
