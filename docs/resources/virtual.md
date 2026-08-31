@@ -38,6 +38,7 @@ The following arguments are supported:
 * `repo_layout_ref` - (Optional) Repository layout key for the virtual repository.
 * `artifactory_requests_can_retrieve_remote_artifacts` - (Optional, Default: `false`) Whether the virtual repository should search through remote repositories when trying to resolve an artifact requested by another Artifactory instance.
 * `default_deployment_repo` - (Optional) Default repository to deploy artifacts.
+* `hide_unauthorized_resources` - (Optional, Default: `false`) When `true`, returns **404 Not Found** instead of revealing that an unauthorized resource exists. When `false` (default), Artifactory keeps its normal behavior: anonymous requests get **401**, and unauthorized authenticated users get **403**. See [Hide Existence of Unauthorized Resources](https://jfrog.com/help/r/jfrog-platform-administration-documentation/hide-existence-of-unauthorized-resources).
 * `allow_delete` - (Optional) When unset or set to `true`, provider will delete the repository even if it contains artifacts. Must be set to `false` for the provider to return error when destroying the resource.
 
 ~>To maintain backward compatibility with provider version 12.0.0 and earlier, the state value for `allow_delete` is automatically set to `true` for existing resources.

@@ -56,6 +56,7 @@ type VirtualResourceModel struct {
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts types.Bool   `tfsdk:"artifactory_requests_can_retrieve_remote_artifacts"`
 	DefaultDeploymentRepo                         types.String `tfsdk:"default_deployment_repo"`
 	RepoLayoutRef                                 types.String `tfsdk:"repo_layout_ref"`
+	HideUnauthorizedResources                     types.Bool   `tfsdk:"hide_unauthorized_resources"`
 }
 
 func (r *VirtualResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -128,6 +129,7 @@ func (r VirtualResourceModel) ToAPIModel(ctx context.Context, packageType string
 		ArtifactoryRequestsCanRetrieveRemoteArtifacts: r.ArtifactoryRequestsCanRetrieveRemoteArtifacts.ValueBool(),
 		DefaultDeploymentRepo:                         r.DefaultDeploymentRepo.ValueString(),
 		RepoLayoutRef:                                 repoLayoutRef,
+		HideUnauthorizedResources:                     r.HideUnauthorizedResources.ValueBool(),
 	}, diags
 }
 
@@ -143,6 +145,7 @@ func (r *VirtualResourceModel) FromAPIModel(ctx context.Context, apiModel interf
 	r.ArtifactoryRequestsCanRetrieveRemoteArtifacts = types.BoolValue(model.ArtifactoryRequestsCanRetrieveRemoteArtifacts)
 	r.DefaultDeploymentRepo = types.StringValue(model.DefaultDeploymentRepo)
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
+	r.HideUnauthorizedResources = types.BoolValue(model.HideUnauthorizedResources)
 
 	repositories, ds := types.ListValueFrom(ctx, types.StringType, model.Repositories)
 	if ds.HasError() {
@@ -160,6 +163,7 @@ type VirtualAPIModel struct {
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts bool     `json:"artifactoryRequestsCanRetrieveRemoteArtifacts"`
 	DefaultDeploymentRepo                         string   `json:"defaultDeploymentRepo,omitempty"`
 	RepoLayoutRef                                 string   `json:"repoLayoutRef,omitempty"`
+	HideUnauthorizedResources                     bool     `json:"hideUnauthorizedResources"`
 }
 
 var VirtualAttributes = lo.Assign(
@@ -184,6 +188,12 @@ var VirtualAttributes = lo.Assign(
 			Default:             stringdefault.StaticString(""),
 			MarkdownDescription: "Default repository to deploy artifacts.",
 		},
+		"hide_unauthorized_resources": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "When set to `true`, returns a 404 Not Found response instead of revealing that an unauthorized resource exists. When `false` (default), Artifactory keeps its normal behavior: anonymous requests get 401 and unauthorized authenticated users get 403.",
+		},
 	},
 )
 
@@ -201,6 +211,7 @@ type RepositoryBaseParams struct {
 	Repositories                                  []string `hcl:"repositories" json:"repositories,omitempty"`
 	ArtifactoryRequestsCanRetrieveRemoteArtifacts bool     `hcl:"artifactory_requests_can_retrieve_remote_artifacts" json:"artifactoryRequestsCanRetrieveRemoteArtifacts"`
 	DefaultDeploymentRepo                         string   `hcl:"default_deployment_repo" json:"defaultDeploymentRepo,omitempty"`
+	HideUnauthorizedResources                     bool     `hcl:"hide_unauthorized_resources" json:"hideUnauthorizedResources"`
 }
 
 type RepositoryBaseParamsWithRetrievalCachePeriodSecs struct {
@@ -251,6 +262,12 @@ var baseSchema = map[string]*sdkv2_schema.Schema{
 		Optional:    true,
 		Description: "Default repository to deploy artifacts.",
 	},
+	"hide_unauthorized_resources": {
+		Type:        sdkv2_schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "When set to true, returns a 404 Not Found response instead of revealing that an unauthorized resource exists. When false (default), Artifactory keeps its normal behavior: anonymous requests get 401 and unauthorized authenticated users get 403.",
+	},
 }
 
 var BaseSchemaV1 = lo.Assign(
@@ -284,10 +301,11 @@ func UnpackBaseVirtRepo(s *sdkv2_schema.ResourceData, packageType string) Reposi
 		ExcludesPattern:     d.GetString("excludes_pattern", false),
 		RepoLayoutRef:       d.GetString("repo_layout_ref", false),
 		ArtifactoryRequestsCanRetrieveRemoteArtifacts: d.GetBool("artifactory_requests_can_retrieve_remote_artifacts", false),
-		Repositories:          d.GetList("repositories"),
-		Description:           d.GetString("description", false),
-		Notes:                 d.GetString("notes", false),
-		DefaultDeploymentRepo: repository.HandleResetWithNonExistentValue(d, "default_deployment_repo"),
+		Repositories:              d.GetList("repositories"),
+		Description:               d.GetString("description", false),
+		Notes:                     d.GetString("notes", false),
+		DefaultDeploymentRepo:     repository.HandleResetWithNonExistentValue(d, "default_deployment_repo"),
+		HideUnauthorizedResources: d.GetBool("hide_unauthorized_resources", false),
 	}
 }
 
