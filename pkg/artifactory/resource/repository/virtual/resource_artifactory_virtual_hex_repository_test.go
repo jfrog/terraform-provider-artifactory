@@ -32,7 +32,7 @@ import (
 func TestAccVirtualHexRepository_full(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("hex-virtual-test-repo", "artifactory_virtual_hex_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
-	localRepoName := testutil.RandSelect("local-repo-1", "local-repo-2", "local-repo-3").(string)
+	_, _, localRepoName := testutil.MkNames("hex-local-repo", "artifactory_local_hex_repository")
 
 	temp := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
@@ -355,8 +355,8 @@ EOF
 func TestAccVirtualHexRepository_withRepositories(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("hex-virtual", "artifactory_virtual_hex_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
-	localRepoName1 := testutil.RandSelect("local-repo-1", "local-repo-2", "local-repo-3").(string)
-	localRepoName2 := testutil.RandSelect("local-repo-4", "local-repo-5", "local-repo-6").(string)
+	_, _, localRepoName1 := testutil.MkNames("hex-local-repo1", "artifactory_local_hex_repository")
+	_, _, localRepoName2 := testutil.MkNames("hex-local-repo2", "artifactory_local_hex_repository")
 
 	temp := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
@@ -563,7 +563,7 @@ EOF
 func TestAccVirtualHexRepository_allFields(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("hex-virtual", "artifactory_virtual_hex_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
-	localRepoName := testutil.RandSelect("local-repo-1", "local-repo-2", "local-repo-3").(string)
+	_, _, localRepoName := testutil.MkNames("hex-local-repo", "artifactory_local_hex_repository")
 
 	temp := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
@@ -692,8 +692,8 @@ EOF
 func TestAccVirtualHexRepository_updateRepositories(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("hex-virtual", "artifactory_virtual_hex_repository")
 	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
-	localRepoName1 := testutil.RandSelect("local-repo-1", "local-repo-2", "local-repo-3").(string)
-	localRepoName2 := testutil.RandSelect("local-repo-4", "local-repo-5", "local-repo-6").(string)
+	_, _, localRepoName1 := testutil.MkNames("hex-local-repo1", "artifactory_local_hex_repository")
+	_, _, localRepoName2 := testutil.MkNames("hex-local-repo2", "artifactory_local_hex_repository")
 
 	temp := `
 		resource "artifactory_keypair" "{{ .kp_name }}" {
