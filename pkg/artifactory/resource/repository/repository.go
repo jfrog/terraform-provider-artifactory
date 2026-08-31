@@ -95,6 +95,7 @@ const (
 	ReleasebundlesPackageType     = "releasebundles"
 	RPMPackageType                = "rpm"
 	SBTPackageType                = "sbt"
+	SkillsPackageType             = "skills"
 	SwiftPackageType              = "swift"
 	TerraformBackendPackageType   = "terraformbackend"
 	TerraformModulePackageType    = "terraform_module"
@@ -130,6 +131,7 @@ var PackageNameLookup = map[string]string{
 	PuppetPackageType:             "Puppet",
 	PyPiPackageType:               "PyPi",
 	SBTPackageType:                "SBT",
+	SkillsPackageType:             "Skills",
 	SwiftPackageType:              "Swift",
 	TerraformBackendPackageType:   "Terraform Backend",
 	VagrantPackageType:            "Vagrant",
