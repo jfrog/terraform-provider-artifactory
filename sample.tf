@@ -704,6 +704,7 @@ resource "artifactory_virtual_maven_repository" "foo" {
   excludes_pattern                         = "com/google/**"
   force_maven_authentication               = true
   pom_repository_references_cleanup_policy = "discard_active_reference"
+  hide_unauthorized_resources              = false
 }
 
 resource "artifactory_virtual_npm_repository" "foo-npm" {

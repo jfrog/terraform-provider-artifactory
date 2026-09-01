@@ -1,8 +1,16 @@
-### 12.11.14 (Aug 27, 2026)
+### 12.11.16 (Sep 1, 2026)
 
 IMPROVEMENTS:
 
 * resource/artifactory_package_cleanup_policy: Add plan-time validation for `description` attribute so a description longer than 256 characters is caught during `terraform plan` instead of failing at apply time. Issue: [1443](https://github.com/jfrog/terraform-provider-artifactory/issues/1443)
+
+### 12.11.15 (Aug 31, 2026). Tested on Artifactory 7.161.20 with Terraform 1.16.0 and OpenTofu 1.12.3
+
+FEATURES:
+
+* resource/artifactory_virtual_*_repository: Add `hide_unauthorized_resources` attribute mapping to Artifactory's `hideUnauthorizedResources` setting, so virtual repositories can return 404 instead of 403 for unauthorized resource access. Issue: [#1279](https://github.com/jfrog/terraform-provider-artifactory/issues/1279)
+
+### 12.11.14 (Aug 25, 2026).
 
 FEATURES:
 
@@ -43,6 +51,12 @@ SECURITY:
 * provider: Address CVE-2026-56853 by upgrading Go to 1.27.0. CVSS 5.3 Medium.
 * provider: Address CVE-2026-27143 by upgrading Go to 1.27.0. CVSS 6.1 Critical.
 * provider: Address CVE-2026-27140 by upgrading Go to 1.27.0. CVSS 5.3 High.
+
+### 12.11.11 (Aug 18, 2026). Tested on Artifactory 7.161.16 with Terraform 1.15.8 and OpenTofu 1.12.3
+
+FEATURES:
+
+* resource/artifactory_virtual_*_repository: Add `hide_unauthorized_resources` attribute mapping to Artifactory's `hideUnauthorizedResources` setting, so virtual repositories can return 404 instead of 403 for unauthorized resource access. Issue: [#1279](https://github.com/jfrog/terraform-provider-artifactory/issues/1279)
 
 ### 12.11.10 (Aug 12, 2026).
 
