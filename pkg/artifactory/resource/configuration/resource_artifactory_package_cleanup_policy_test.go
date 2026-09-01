@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -209,6 +210,101 @@ func TestAccPackageCleanupPolicy_invalid_key(t *testing.T) {
 						Config:      config,
 						ExpectError: regexp.MustCompile(testCase.errorRegex),
 					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccPackageCleanupPolicy_invalid_description_length(t *testing.T) {
+	testCases := []struct {
+		name        string
+		description string
+		errorRegex  string
+	}{
+		{
+			name:        "valid description",
+			description: "This is a valid description",
+			errorRegex:  "",
+		},
+		{
+			name:        "description at max length (256 chars)",
+			description: "A" + strings.Repeat("b", 254) + "C", // 256 characters
+			errorRegex:  "",
+		},
+		{
+			name:        "description exceeds max length (257 chars)",
+			description: strings.Repeat("a", 257), // 257 characters
+			errorRegex:  ".*string length must be at most 256",
+		},
+		{
+			name:        "long description (300 chars)",
+			description: strings.Repeat("x", 300),
+			errorRegex:  ".*string length must be at most 256",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			client := acctest.GetTestResty(t)
+			version, err := util.GetArtifactoryVersion(client)
+			if err != nil {
+				t.Fatal(err)
+			}
+			valid, err := util.CheckVersion(version, "7.90.1")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !valid {
+				t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+			}
+
+			_, _, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+			temp := `
+			resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+				key = "{{ .policyName }}"
+				description = "{{ .description }}"
+				cron_expression = "0 0 2 ? * MON-SAT *"
+				duration_in_minutes = 60
+				enabled = true
+				skip_trashcan = false
+				
+				search_criteria = {
+					repos = ["**"]
+					package_types = ["docker"]
+					include_all_projects = true
+					included_projects = []
+					included_packages = ["**"]
+					excluded_packages = ["com/jfrog/latest"]
+					created_before_in_months = 1
+					last_downloaded_before_in_months = 6
+				}
+			}`
+
+			config := util.ExecuteTemplate(
+				policyName,
+				temp,
+				map[string]string{
+					"policyName":  policyName,
+					"description": testCase.description,
+				},
+			)
+
+			testStep := resource.TestStep{
+				Config: config,
+			}
+
+			// Only add ExpectError if we expect an error
+			if testCase.errorRegex != "" {
+				testStep.ExpectError = regexp.MustCompile(testCase.errorRegex)
+			}
+
+			resource.Test(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Steps: []resource.TestStep{
+					testStep,
 				},
 			})
 		})

@@ -1,3 +1,9 @@
+### 12.11.16 (Sep 1, 2026)
+
+IMPROVEMENTS:
+
+* resource/artifactory_package_cleanup_policy: Add plan-time validation for `description` attribute so a description longer than 256 characters is caught during `terraform plan` instead of failing at apply time. Issue: [1443](https://github.com/jfrog/terraform-provider-artifactory/issues/1443)
+
 ### 12.11.15 (Aug 31, 2026). Tested on Artifactory 7.161.20 with Terraform 1.16.0 and OpenTofu 1.12.3
 
 FEATURES:
@@ -9,6 +15,7 @@ FEATURES:
 FEATURES:
 
 * resource/artifactory_remote_*_repository: Add `enable_token_authentication` to the common remote repository schema so every package type can authenticate to the remote with a Bearer token via `password` (username may be empty). Previously this attribute was only available on Docker, OCI, Helm OCI, and AI Editor Extensions remotes. Default is `false` for most package types; OCI, Helm OCI, and Hugging Face remotes default to `true`.
+
 
 ### 12.11.13 (Aug 24, 2026).
 
