@@ -1,3 +1,9 @@
+### 12.11.16 (Sep 01, 2026).
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_terraform_module_repository, resource/artifactory_local_terraform_provider_repository: Add `primary_keypair_ref` and `secondary_keypair_ref` attributes.
+
 ### 12.11.15 (Aug 31, 2026). Tested on Artifactory 7.161.20 with Terraform 1.16.0 and OpenTofu 1.12.3
 
 FEATURES:
