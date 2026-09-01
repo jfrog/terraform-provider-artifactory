@@ -176,6 +176,7 @@ var validPackageTypes = []string{
 	repository.HelmPackageType,
 	repository.HexPackageType,
 	repository.HuggingFacePackageType,
+	repository.NimModelPackageType,
 	repository.NixPackageType,
 	repository.IvyPackageType,
 	repository.JetBrainsPluginsPackageType,

@@ -84,6 +84,7 @@ const (
 	MachineLearningType           = "machinelearning"
 	MavenPackageType              = "maven"
 	NPMPackageType                = "npm"
+	NimModelPackageType           = "nimmodel"
 	NixPackageType                = "nix"
 	NugetPackageType              = "nuget"
 	OCIPackageType                = "oci"
@@ -124,6 +125,7 @@ var PackageNameLookup = map[string]string{
 	IvyPackageType:                "Ivy",
 	JetBrainsPluginsPackageType:   "JetBrains Plugins",
 	NPMPackageType:                "Npm",
+	NimModelPackageType:           "NimModel",
 	NixPackageType:                "Nix",
 	OpkgPackageType:               "Opkg",
 	PubPackageType:                "Pub",

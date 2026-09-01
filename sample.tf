@@ -497,6 +497,16 @@ data "artifactory_remote_aieditorextensions_repository" "my-remote-aieditorexten
   key = artifactory_remote_aieditorextensions_repository.my-remote-aieditorextensions.key
 }
 
+resource "artifactory_remote_nimmodel_repository" "my-remote-nimmodel" {
+  key         = "my-remote-nimmodel"
+  url         = "https://api.ngc.nvidia.com"
+  description = "Repo created by Terraform Provider Artifactory"
+}
+
+data "artifactory_remote_nimmodel_repository" "my-remote-nimmodel" {
+  key = artifactory_remote_nimmodel_repository.my-remote-nimmodel.key
+}
+
 resource "artifactory_remote_bazel_repository" "my-remote-bazelmodules" {
   key         = "my-remote-bazelmodules"
   url         = "https://bcr.bazel.build/"
