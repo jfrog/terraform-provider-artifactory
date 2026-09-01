@@ -1216,6 +1216,79 @@ func TestAccDataSourceFederatedTerraformRepositories(t *testing.T) {
 	}
 }
 
+func TestAccDataSourceFederatedTerraformProviderRepository_primaryKeyPairRef(t *testing.T) {
+	_, tempFqrn, name := testutil.MkNames("terraform-provider-federated", "artifactory_federated_terraform_provider_repository")
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair", "artifactory_keypair")
+
+	federatedMemberUrl := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+
+	federatedRepositoryBasic := util.ExecuteTemplate("keypair", `
+		resource "artifactory_keypair" "{{ .kp_name }}" {
+			pair_name  = "{{ .kp_name }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id }}"
+			private_key = <<EOF
+{{ .private_key }}
+EOF
+			public_key = <<EOF
+{{ .public_key }}
+EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+		resource "artifactory_federated_terraform_provider_repository" "{{ .repo_name }}" {
+			key                 = "{{ .repo_name }}"
+			primary_keypair_ref = artifactory_keypair.{{ .kp_name }}.pair_name
+
+			member {
+				url     = "{{ .memberUrl }}"
+				enabled = true
+			}
+
+			depends_on = [artifactory_keypair.{{ .kp_name }}]
+		}
+		data "artifactory_federated_terraform_provider_repository" "{{ .repo_name }}" {
+			key = artifactory_federated_terraform_provider_repository.{{ .repo_name }}.id
+		}
+	`, map[string]interface{}{
+		"kp_id":       kpId,
+		"kp_name":     kpName,
+		"repo_name":   name,
+		"memberUrl":   federatedMemberUrl,
+		"private_key": os.Getenv("JFROG_TEST_PGP_PRIVATE_KEY"),
+		"public_key":  os.Getenv("JFROG_TEST_PGP_PUBLIC_KEY"),
+	})
+
+	fqrn := "data." + tempFqrn
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy: acctest.CompositeCheckDestroy(
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: federatedRepositoryBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", func() string {
+						r, _ := repository.GetDefaultRepoLayoutRef("federated", "terraform_provider")
+						return r
+					}()),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceFederatedMissingRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("terraform-local", "data.artifactory_federated_terraform_provider_repository")
 	params := map[string]interface{}{

@@ -846,6 +846,23 @@ resource "artifactory_federated_generic_repository" "generic-federated-1" {
   }
 }
 
+resource "artifactory_federated_terraform_provider_repository" "terraform-provider-federated" {
+  key                 = "terraform-provider-federated"
+  primary_keypair_ref = artifactory_keypair.some-keypairGPG1.pair_name
+  description         = "Repo created by Terraform Provider Artifactory"
+
+  member {
+    url     = "http://artifactory-2:8081/artifactory/terraform-provider-federated"
+    enabled = true
+  }
+
+  depends_on = [artifactory_keypair.some-keypairGPG1]
+}
+
+data "artifactory_federated_terraform_provider_repository" "terraform-provider-federated" {
+  key = artifactory_federated_terraform_provider_repository.terraform-provider-federated.key
+}
+
 resource "artifactory_remote_vcs_repository" "gitlab_vcs" {
   key         = "my-gitlab-vcs-remote"
   url         = "https://gitlab.com/your-group/your-repo"

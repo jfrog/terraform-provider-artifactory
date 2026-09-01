@@ -1,3 +1,9 @@
+### 12.11.16 (Sep 02, 2026).
+
+FEATURES:
+
+* resource/artifactory_federated_terraform_provider_repository, data-source/artifactory_federated_terraform_provider_repository: Add `primary_keypair_ref` so a GPG signing key can be attached to federated Terraform Provider repositories. Issue: [#1391](https://github.com/jfrog/terraform-provider-artifactory/issues/1391)
+
 ### 12.11.15 (Aug 31, 2026). Tested on Artifactory 7.161.20 with Terraform 1.16.0 and OpenTofu 1.12.3
 
 FEATURES:
