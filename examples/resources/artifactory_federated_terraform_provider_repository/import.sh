@@ -1,0 +1,1 @@
+terraform import artifactory_federated_terraform_provider_repository.terraform-federated-test-terraform-provider-repo terraform-federated-test-terraform-provider-repo

@@ -20,6 +20,7 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
@@ -27,6 +28,7 @@ type TerraformFederatedRepositoryParams struct {
 	local.RepositoryBaseParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
+	repository.PrimaryKeyPairRefParam
 }
 
 func unpackLocalTerraformRepository(data *schema.ResourceData, Rclass string, registryType string) local.RepositoryBaseParams {
@@ -38,18 +40,31 @@ func unpackLocalTerraformRepository(data *schema.ResourceData, Rclass string, re
 
 func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
 	packageType := "terraform_" + registryType
+	isProvider := registryType == "provider"
 
 	terraformFederatedSchema := lo.Assign(
 		local.GetTerraformSchemas(registryType)[local.CurrentSchemaVersion],
 		federatedSchemaV4,
 		repository.RepoLayoutRefSDKv2Schema(Rclass, packageType),
 	)
+	if isProvider {
+		terraformFederatedSchema = lo.Assign(
+			terraformFederatedSchema,
+			repository.PrimaryKeyPairRefSDKv2,
+		)
+	}
 
 	var unpackFederatedTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {
+		d := &utilsdk.ResourceData{ResourceData: data}
 		repo := TerraformFederatedRepositoryParams{
 			RepositoryBaseParams: unpackLocalTerraformRepository(data, Rclass, registryType),
 			Members:              unpackMembers(data),
 			RepoParams:           unpackRepoParams(data),
+		}
+		if isProvider {
+			repo.PrimaryKeyPairRefParam = repository.PrimaryKeyPairRefParam{
+				PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
+			}
 		}
 		return repo, repo.Id(), nil
 	}
@@ -59,11 +74,16 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 		return PackMembers(members, d)
 	}
 
+	ignoreFields := []string{"member", "terraform_type"}
+	if !isProvider {
+		ignoreFields = append(ignoreFields, "primary_keypair_ref")
+	}
+
 	pkr := packer.Compose(
 		packer.Universal(
 			predicate.All(
 				predicate.NoClass,
-				predicate.Ignore("member", "terraform_type"),
+				predicate.Ignore(ignoreFields...),
 			),
 		),
 		packTerraformMembers,

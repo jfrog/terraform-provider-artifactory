@@ -35,17 +35,28 @@ func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *sch
 		federatedSchemaV4,
 		resource_repository.RepoLayoutRefSDKv2Schema(federated.Rclass, packageType),
 	)
+	if registryType == "provider" {
+		terraformFederatedSchema = lo.Assign(
+			terraformFederatedSchema,
+			resource_repository.PrimaryKeyPairRefSDKv2,
+		)
+	}
 
 	var packTerraformMembers = func(repo interface{}, d *schema.ResourceData) error {
 		members := repo.(*federated.TerraformFederatedRepositoryParams).Members
 		return federated.PackMembers(members, d)
 	}
 
+	ignoreFields := []string{"member", "terraform_type"}
+	if registryType != "provider" {
+		ignoreFields = append(ignoreFields, "primary_keypair_ref")
+	}
+
 	pkr := packer.Compose(
 		packer.Universal(
 			predicate.All(
 				predicate.NoClass,
-				predicate.Ignore("member", "terraform_type"),
+				predicate.Ignore(ignoreFields...),
 			),
 		),
 		packTerraformMembers,
