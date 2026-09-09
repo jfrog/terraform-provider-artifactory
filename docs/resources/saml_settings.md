@@ -52,8 +52,4 @@ The following arguments are supported:
 
 ## Import
 
-Current SAML SSO settings can be imported using `saml_settings` as the `ID`, e.g.
-
-```
-$ terraform import artifactory_saml_settings.saml saml_settings
-```
+This resource **does not** support import.

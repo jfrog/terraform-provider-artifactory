@@ -1,3 +1,9 @@
+### 12.11.16 (Sep 9, 2026).
+
+DOCUMENTATION:
+
+* resource/artifactory_saml_settings: Correct the documentation, which incorrectly stated that the resource can be imported using `saml_settings` as the ID. The importer was removed in PR [#1073](https://github.com/jfrog/terraform-provider-artifactory/pull/1073) and the resource has had no import implementation since. PR: [#1410](https://github.com/jfrog/terraform-provider-artifactory/pull/1410)
+
 ### 12.11.15 (Aug 31, 2026). Tested on Artifactory 7.161.20 with Terraform 1.16.0 and OpenTofu 1.12.3
 
 FEATURES:
