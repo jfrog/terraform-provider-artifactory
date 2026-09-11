@@ -44,6 +44,7 @@ var PackageTypesLikeGeneric = []string{
 	repository.PubPackageType,
 	repository.PuppetPackageType,
 	repository.PyPiPackageType,
+	repository.SkillsPackageType,
 	repository.SwiftPackageType,
 	repository.TerraformBackendPackageType,
 	repository.VagrantPackageType,
