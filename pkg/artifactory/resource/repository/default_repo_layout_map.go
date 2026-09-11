@@ -22,6 +22,15 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"remote": true,
 		},
 	},
+	AgentPluginsPackageType: {
+		RepoLayoutRef: "simple-default",
+		SupportedRepoTypes: map[string]bool{
+			"local":     true,
+			"remote":    false,
+			"virtual":   false,
+			"federated": false,
+		},
+	},
 	AlpinePackageType: {
 		RepoLayoutRef: "simple-default",
 		SupportedRepoTypes: map[string]bool{

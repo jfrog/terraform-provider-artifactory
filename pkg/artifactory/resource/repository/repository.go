@@ -57,6 +57,7 @@ import (
 
 const (
 	AIEditorExtensionsPackageType = "aieditorextensions"
+	AgentPluginsPackageType       = "agentplugins"
 	AlpinePackageType             = "alpine"
 	AnsiblePackageType            = "ansible"
 	BazelModulesPackageType       = "bazelmodules"
