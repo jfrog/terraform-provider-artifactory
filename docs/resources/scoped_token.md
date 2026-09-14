@@ -87,6 +87,7 @@ resource "artifactory_scoped_token" "audience" {
   - `applied-permissions/groups` - this scope assigns permissions to groups using the following format: `applied-permissions/groups:<group-name>[,<group-name>...]`
   - `system:metrics:r` - for getting the service metrics
   - `system:livelogs:r` - for getting the service livelogs
+  - `system:info/storage:r` - for getting storage summary information
   - Resource Permissions: From Artifactory 7.38.x, resource permissions scoped tokens are also supported in the REST API. A permission can be represented as a scope token string in the following format: `<resource-type>:<target>[/<sub-resource>]:<actions>`
     - Where:
       - `<resource-type>` - one of the permission resource types, from a predefined closed list. Currently, the only resource type that is supported is the artifact resource type.

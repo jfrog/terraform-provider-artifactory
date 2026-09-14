@@ -208,6 +208,7 @@ var schemaAttributesV0 = map[string]schema.Attribute{
 			"      - `metrics|livelogs|identities|permissions` - one of these options can be chosen" +
 			"      - `<actions>` - comma-separated list of action acronyms. " +
 			"The actions allowed are `r`, `w`, `d`, `a`, `m`, `x`, `s`, or any combination of these actions. To allow all actions - use `*`\n" +
+			"      - `system:info/storage:r` - grants read access to storage summary information.\n" +
 			"    - Examples:\n" +
 			"      - `[\"system:livelogs:r\", \"system:metrics:r,w,d\"]`\n" +
 			"->The scope to assign to the token should be provided as a list of scope tokens, limited to 500 characters in total.\n" +
@@ -229,7 +230,7 @@ var schemaAttributesV0 = map[string]schema.Attribute{
 					stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/groups:.+$`), "must be 'applied-permissions/groups:<group-name>[,<group-name>...]'"),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^applied-permissions\/roles:.+:.+$`), "must be 'applied-permissions/roles:<project-key>:<role-name>[,<role-name>...]'"),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^artifact:(?:.+):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be '<resource-type>:<target>[/<sub-resource>]:<actions>'"),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^system:(?:metrics|livelogs|identities|permissions):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)$`), "must be 'system:(metrics|livelogs|identities|permissions):<actions>'"),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^(?:system:(?:metrics|livelogs|identities|permissions):(?:(?:[rwdamxs*]+)|(?:[rwdamxs]+)(?:,[rwdamxs]+)+)|system:info\/storage:r)$`), "must be 'system:(metrics|livelogs|identities|permissions):<actions>' or 'system:info/storage:r'"),
 				),
 			),
 		},
