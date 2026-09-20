@@ -338,6 +338,8 @@ func (r PackageCleanupPolicyResourceModelV1) toAPIModel(ctx context.Context, api
 	diags.Append(attrs["included_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackages, false)...)
 	diags.Append(attrs["excluded_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackages, false)...)
 	diags.Append(attrs["included_projects"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedProjects, false)...)
+	diags.Append(attrs["included_folder_paths"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedFolderPaths, false)...)
+	diags.Append(attrs["excluded_folder_paths"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedFolderPaths, false)...)
 
 	if v, ok := attrs["included_properties"]; ok && !v.IsNull() && !v.IsUnknown() {
 		if m, ok := v.(types.Map); ok {
@@ -433,6 +435,24 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 		diags.Append(ds...)
 	}
 
+	includedFolderPaths := types.SetNull(types.StringType)
+	if apiModel.SearchCriteria.IncludedFolderPaths != nil {
+		set, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedFolderPaths)
+		if ds.HasError() {
+			diags.Append(ds...)
+		}
+		includedFolderPaths = set
+	}
+
+	excludedFolderPaths := types.SetNull(types.StringType)
+	if apiModel.SearchCriteria.ExcludedFolderPaths != nil {
+		set, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedFolderPaths)
+		if ds.HasError() {
+			diags.Append(ds...)
+		}
+		excludedFolderPaths = set
+	}
+
 	includedProperties := types.MapNull(types.ListType{ElemType: types.StringType})
 	if apiModel.SearchCriteria.IncludedProperties != nil {
 		m := map[string]attr.Value{}
@@ -502,6 +522,8 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 			"keep_last_n_versions":             types.Int64Type,
 			"excluded_properties":              types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
 			"included_properties":              types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+			"included_folder_paths":            types.SetType{ElemType: types.StringType},
+			"excluded_folder_paths":            types.SetType{ElemType: types.StringType},
 		},
 		map[string]attr.Value{
 			"package_types":                    packageTypes,
@@ -518,6 +540,8 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 			"keep_last_n_versions":             keepLastNVersions,
 			"excluded_properties":              excludedProperties,
 			"included_properties":              includedProperties,
+			"included_folder_paths":            includedFolderPaths,
+			"excluded_folder_paths":            excludedFolderPaths,
 		},
 	)
 	if ds.HasError() {
@@ -563,6 +587,8 @@ type PackageCleanupPolicySearchCriteriaAPIModel struct {
 	KeepLastNVersions            *int64              `json:"keepLastNVersions,omitempty"`
 	ExcludedProperties           map[string][]string `json:"excludedProperties,omitempty"`
 	IncludedProperties           map[string][]string `json:"includedProperties,omitempty"`
+	IncludedFolderPaths          *[]string           `json:"includedFolderPaths,omitempty"`
+	ExcludedFolderPaths          *[]string           `json:"excludedFolderPaths,omitempty"`
 }
 
 type PackageCleanupPolicyEnablementAPIModel struct {
@@ -845,6 +871,22 @@ var cleanupPolicySchemaV1 = lo.Assign(
 						cleanupSingleKeySingleValueMapValidator{},
 					},
 					MarkdownDescription: "A key-value pair applied to the lead artifact of a package. Packages with this property will be deleted.",
+				},
+				"included_folder_paths": schema.SetAttribute{
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.Set{
+						setvalidator.SizeAtLeast(1),
+					},
+					MarkdownDescription: "Specify patterns for folder paths within the matched repositories on which you want the cleanup policy to run. Example: `included_folder_paths = [\"*/my-app/*\"]`",
+				},
+				"excluded_folder_paths": schema.SetAttribute{
+					ElementType: types.StringType,
+					Optional:    true,
+					Validators: []validator.Set{
+						setvalidator.SizeAtLeast(1),
+					},
+					MarkdownDescription: "Specify patterns for folder paths within the matched repositories that you want excluded from the cleanup policy.",
 				},
 			},
 			Required: true,

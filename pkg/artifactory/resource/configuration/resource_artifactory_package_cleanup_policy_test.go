@@ -971,6 +971,70 @@ func TestAccPackageCleanupPolicy_excluded_properties(t *testing.T) {
 	})
 }
 
+func TestAccPackageCleanupPolicy_folder_paths(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.90.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.90.1", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+	temp := `
+	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy with folder path patterns"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = true
+		skip_trashcan = false
+		
+		search_criteria = {
+			package_types = ["generic"]
+			repos = ["**"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			included_folder_paths = ["*/staging/*"]
+			excluded_folder_paths = ["*/release/*"]
+			created_before_in_days = 30
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_folder_paths.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.included_folder_paths.*", "*/staging/*"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.excluded_folder_paths.#", "1"),
+					resource.TestCheckTypeSetElemAttr(fqrn, "search_criteria.excluded_folder_paths.*", "*/release/*"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPackageCleanupPolicy_invalid_conditions(t *testing.T) {
 	client := acctest.GetTestResty(t)
 	version, err := util.GetArtifactoryVersion(client)

@@ -84,6 +84,30 @@ resource "artifactory_package_cleanup_policy" "my-properties-policy" {
 }
 ```
 
+### Folder Path Cleanup Policy
+
+```terraform
+resource "artifactory_package_cleanup_policy" "my-folder-path-policy" {
+  key = "my-folder-path-policy"
+  description = "Cleanup based on folder path patterns"
+  cron_expression = "0 0 2 ? * MON-SAT *"
+  duration_in_minutes = 60
+  enabled = true
+  skip_trashcan = false
+  
+  search_criteria = {
+    package_types = ["generic"]
+    repos = ["**"]
+    include_all_projects = true
+    included_projects = []
+    included_packages = ["**"]
+    included_folder_paths = ["*/staging/*"]
+    excluded_folder_paths = ["*/release/*"]
+    created_before_in_days = 30
+  }
+}
+```
+
 ### Project-level Cleanup Policy
 
 ```terraform
@@ -319,6 +343,7 @@ Optional:
 
 ~>**Deprecated:** Use `last_downloaded_before_in_days` instead of `last_downloaded_before_in_months`. Renamed to `last_downloaded_before_in_days` starting in version 7.111.2.
 
+- `excluded_folder_paths` (Set of String) Specify patterns for folder paths within the matched repositories that you want excluded from the cleanup policy.
 - `excluded_packages` (Set of String) Specify explicit package names that you want excluded from the policy. Only explicit names (and not patterns) are accepted.
 - `excluded_properties` (Map of List of String) A key-value pair applied to the lead artifact of a package. Packages with this property will be excluded from deletion. Must have exactly one key with exactly one string value.
 - `excluded_repos` (Set of String) Specify patterns for repository names or explicit repository names that you want excluded from the cleanup policy.
@@ -326,6 +351,7 @@ Optional:
 
 ~>This parameter is relevant only on the global level, for Platform Admins.
 
+- `included_folder_paths` (Set of String) Specify patterns for folder paths within the matched repositories on which you want the cleanup policy to run. Example: `included_folder_paths = ["*/my-app/*"]`
 - `included_properties` (Map of List of String) A key-value pair applied to the lead artifact of a package. Packages with this property will be deleted. Must have exactly one key with exactly one string value.
 - `keep_last_n_versions` (Number) Set a value for the number of latest versions to keep. The cleanup policy will remove all versions prior to the number you select here. The latest version is always excluded.
 

@@ -1,3 +1,9 @@
+### 12.11.15 (Sep 20, 2026)
+
+FEATURES:
+
+* resource/artifactory_package_cleanup_policy: Add `included_folder_paths` and `excluded_folder_paths` attributes to `search_criteria` to support folder path pattern based cleanup conditions.
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:
