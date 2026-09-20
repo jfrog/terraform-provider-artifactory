@@ -32,6 +32,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"artifactory_federated_alpine_repository":             federated.ResourceArtifactoryFederatedAlpineRepository(),
 		"artifactory_federated_ansible_repository":            federated.ResourceArtifactoryFederatedAnsibleRepository(),
 		"artifactory_federated_cargo_repository":              federated.ResourceArtifactoryFederatedCargoRepository(),
+		"artifactory_federated_composer_repository":           federated.ResourceArtifactoryFederatedComposerRepository(),
 		"artifactory_federated_conan_repository":              federated.ResourceArtifactoryFederatedConanRepository(),
 		"artifactory_federated_debian_repository":             federated.ResourceArtifactoryFederatedDebianRepository(),
 		"artifactory_federated_docker_repository":             federated.ResourceArtifactoryFederatedDockerV2Repository(), // Alias for backward compatibility

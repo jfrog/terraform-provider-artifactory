@@ -19,3 +19,5 @@ coverage.txt
 scripts/artifactory*/
 *.hcl
 .env
+.claude/*
+specs/*

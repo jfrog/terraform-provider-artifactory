@@ -9,7 +9,8 @@ Creates a federated Composer repository.
 
 ```hcl
 resource "artifactory_federated_composer_repository" "terraform-federated-test-composer-repo" {
-  key       = "terraform-federated-test-composer-repo"
+  key                          = "terraform-federated-test-composer-repo"
+  enable_composer_v1_indexing  = false
 
   member {
     url     = "http://tempurl.org/artifactory/terraform-federated-test-composer-repo"
@@ -30,6 +31,7 @@ Arguments have a one to one mapping with the [JFrog API](https://www.jfrog.com/c
 The following arguments are supported, along with the [common list of arguments from the local repositories](local.md):
 
 * `key` - (Required) the identity key of the repo.
+* `enable_composer_v1_indexing` - (Optional, Default: `false`) Enable Composer metadata version 1 indexing.
 * `member` - (Required) The list of Federated members and must contain this repository URL (configured base URL
   `/artifactory/` + repo `key`). Note that each of the federated members will need to have a base URL set.
   Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)

@@ -760,6 +760,50 @@ func TestAccVirtualRepository(t *testing.T) {
 	}
 }
 
+// TestAccVirtualComposerRepository_UpgradeFromSDKv2 documents an accepted,
+// one-time behavior change: composer moved from virtual.PackageTypesLikeGeneric
+// to virtual.PackageTypesLikeGenericWithRetrievalCachePeriodSecs, the same
+// mechanism already used by npm/chef/conda/cran/debian/helm/alpine/ansible.
+// `retrieval_cache_period_seconds` was never managed by Terraform for composer
+// before, so on the first apply after upgrading, existing repos settle to the
+// documented default of 7200 (matching every other type on this list) instead
+// of whatever value the server held previously. This is expected, not a bug.
+func TestAccVirtualComposerRepository_UpgradeFromSDKv2(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("virtual-composer-repo", "artifactory_virtual_composer_repository")
+
+	config := fmt.Sprintf(`
+		resource "artifactory_virtual_composer_repository" "%s" {
+			key = "%s"
+		}
+	`, name, name)
+
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"artifactory": {
+						VersionConstraint: "12.11.11",
+						Source:            "jfrog/artifactory",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "composer"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+				Config:                   config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "retrieval_cache_period_seconds", "7200"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAllVirtualGradleLikeRepository(t *testing.T) {
 	for _, packageType := range repository.PackageTypesLikeGradle {
 		t.Run(packageType, func(t *testing.T) {

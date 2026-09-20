@@ -41,7 +41,6 @@ var PackageTypesLikeGeneric = []string{
 	repository.BowerPackageType,
 	repository.ChefPackageType,
 	repository.CocoapodsPackageType,
-	repository.ComposerPackageType,
 	repository.CondaPackageType,
 	repository.CranPackageType,
 	repository.GemsPackageType,

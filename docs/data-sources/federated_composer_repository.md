@@ -21,6 +21,7 @@ data "artifactory_federated_composer_repository" "federated-test-composer-repo" 
 
 The following attributes are supported, along with the [common list of arguments from the local repositories](local.md):
 
+* `enable_composer_v1_indexing` - Enable Composer metadata version 1 indexing.
 * `member` - The list of Federated members and must contain this repository URL (configured base URL
   `/artifactory/` + repo `key`). Note that each of the federated members will need to have a base URL set.
   Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)
