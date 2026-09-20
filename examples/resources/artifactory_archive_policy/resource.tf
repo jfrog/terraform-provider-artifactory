@@ -9,7 +9,7 @@ resource "artifactory_local_docker_v2_repository" "my-docker-local" {
 }
 
 resource "project" "myproj" {
-  key = "myproj"
+  key          = "myproj"
   display_name = "Test Project"
   description  = "Test Project"
   admin_privileges {
@@ -24,18 +24,18 @@ resource "project" "myproj" {
 
 resource "project_repository" "myproj-my-docker-local" {
   project_key = project.myproj.key
-  key = artifactory_local_docker_v2_repository.my-docker-local.key
+  key         = artifactory_local_docker_v2_repository.my-docker-local.key
 }
 
 resource "artifactory_archive_policy" "my-archive-policy" {
-  key = "my-archive-policy"
-  description = "My archive policy"
-  cron_expression = "0 0 2 ? * MON-SAT *"
+  key                 = "my-archive-policy"
+  description         = "My archive policy"
+  cron_expression     = "0 0 2 ? * MON-SAT *"
   duration_in_minutes = 60
-  enabled = true
-  skip_trashcan = false
-  project_key = project_repository.myproj-my-docker-local.project_key
-  
+  enabled             = true
+  skip_trashcan       = false
+  project_key         = project_repository.myproj-my-docker-local.project_key
+
   search_criteria = {
     package_types = [
       "docker",
@@ -43,13 +43,13 @@ resource "artifactory_archive_policy" "my-archive-policy" {
     repos = [
       project_repository.myproj-my-docker-local.key,
     ]
-    excluded_repos = ["gradle-global"]
-    include_all_projects = false
-    included_projects = [project.myproj.key]
-    included_packages = ["com/jfrog"]
-    excluded_packages = ["com/jfrog/latest"]
-    created_before_in_months = 1
+    excluded_repos                   = ["gradle-global"]
+    include_all_projects             = false
+    included_projects                = [project.myproj.key]
+    included_packages                = ["com/jfrog"]
+    excluded_packages                = ["com/jfrog/latest"]
+    created_before_in_months         = 1
     last_downloaded_before_in_months = 6
-    keep_last_n_versions = 0
+    keep_last_n_versions             = 0
   }
 }

@@ -29,13 +29,13 @@ resource "artifactory_remote_hex_repository" "remote-hex" {
 resource "artifactory_virtual_hex_repository" "my-hex-virtual" {
   key                     = "my-hex-virtual"
   hex_primary_keypair_ref = artifactory_keypair.hex-keypair.pair_name
-  repositories           = [
+  repositories = [
     artifactory_local_hex_repository.local-hex.key,
     artifactory_remote_hex_repository.remote-hex.key
   ]
-  description             = "Virtual Hex repository aggregating local and remote"
-  notes                   = "Internal repository"
-  depends_on              = [
+  description = "Virtual Hex repository aggregating local and remote"
+  notes       = "Internal repository"
+  depends_on = [
     artifactory_keypair.hex-keypair,
     artifactory_local_hex_repository.local-hex,
     artifactory_remote_hex_repository.remote-hex
