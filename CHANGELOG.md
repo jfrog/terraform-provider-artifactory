@@ -1,3 +1,9 @@
+### 12.11.15 (Sep 20, 2026)
+
+FEATURES:
+
+* resource/artifactory_package_cleanup_policy: Add `included_package_versions` and `excluded_package_versions` attributes to `search_criteria` to support package version pattern based cleanup conditions.
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:

@@ -88,6 +88,61 @@ func TestPackageCleanupPolicyFromAPIModelSetsNonEmptyCronExpression(t *testing.T
 	}
 }
 
+func TestPackageCleanupPolicyFromAPIModelLeavesPackageVersionsNullWhenUnset(t *testing.T) {
+	model := PackageCleanupPolicyResourceModelV1{}
+
+	diags := model.fromAPIModel(context.Background(), PackageCleanupPolicyAPIModel{
+		SearchCriteria: packageCleanupPolicyTestSearchCriteria(),
+	})
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+
+	attrs := model.SearchCriteria.Attributes()
+	for _, key := range []string{"included_package_versions", "excluded_package_versions"} {
+		if !attrs[key].IsNull() {
+			t.Fatalf("expected %q to be null when not returned by the API, got %s", key, attrs[key])
+		}
+	}
+}
+
+func TestPackageCleanupPolicyFromAPIModelSetsPackageVersions(t *testing.T) {
+	model := PackageCleanupPolicyResourceModelV1{}
+
+	searchCriteria := packageCleanupPolicyTestSearchCriteria()
+	searchCriteria.IncludedPackageVersions = &[]string{"**"}
+	searchCriteria.ExcludedPackageVersions = &[]string{"*-final"}
+
+	diags := model.fromAPIModel(context.Background(), PackageCleanupPolicyAPIModel{
+		SearchCriteria: searchCriteria,
+	})
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+
+	attrs := model.SearchCriteria.Attributes()
+	expected := map[string]string{
+		"included_package_versions": "**",
+		"excluded_package_versions": "*-final",
+	}
+	for key, want := range expected {
+		set, ok := attrs[key].(types.Set)
+		if !ok {
+			t.Fatalf("expected %q to be a Set, got %T", key, attrs[key])
+		}
+		elements := set.Elements()
+		if len(elements) != 1 {
+			t.Fatalf("expected %q to have 1 element, got %d", key, len(elements))
+		}
+		got, ok := elements[0].(types.String)
+		if !ok || got.ValueString() != want {
+			t.Fatalf("expected %q to contain %q, got %s", key, want, elements[0])
+		}
+	}
+}
+
 func packageCleanupPolicyTestSearchCriteria() PackageCleanupPolicySearchCriteriaAPIModel {
 	return PackageCleanupPolicySearchCriteriaAPIModel{
 		PackageTypes: []string{"docker"},

@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -338,6 +339,8 @@ func (r PackageCleanupPolicyResourceModelV1) toAPIModel(ctx context.Context, api
 	diags.Append(attrs["included_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackages, false)...)
 	diags.Append(attrs["excluded_packages"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackages, false)...)
 	diags.Append(attrs["included_projects"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedProjects, false)...)
+	diags.Append(attrs["included_package_versions"].(types.Set).ElementsAs(ctx, &searchCriteria.IncludedPackageVersions, false)...)
+	diags.Append(attrs["excluded_package_versions"].(types.Set).ElementsAs(ctx, &searchCriteria.ExcludedPackageVersions, false)...)
 
 	if v, ok := attrs["included_properties"]; ok && !v.IsNull() && !v.IsUnknown() {
 		if m, ok := v.(types.Map); ok {
@@ -433,6 +436,24 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 		diags.Append(ds...)
 	}
 
+	includedPackageVersions := types.SetNull(types.StringType)
+	if apiModel.SearchCriteria.IncludedPackageVersions != nil {
+		set, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.IncludedPackageVersions)
+		if ds.HasError() {
+			diags.Append(ds...)
+		}
+		includedPackageVersions = set
+	}
+
+	excludedPackageVersions := types.SetNull(types.StringType)
+	if apiModel.SearchCriteria.ExcludedPackageVersions != nil {
+		set, ds := types.SetValueFrom(ctx, types.StringType, apiModel.SearchCriteria.ExcludedPackageVersions)
+		if ds.HasError() {
+			diags.Append(ds...)
+		}
+		excludedPackageVersions = set
+	}
+
 	includedProperties := types.MapNull(types.ListType{ElemType: types.StringType})
 	if apiModel.SearchCriteria.IncludedProperties != nil {
 		m := map[string]attr.Value{}
@@ -502,6 +523,8 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 			"keep_last_n_versions":             types.Int64Type,
 			"excluded_properties":              types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
 			"included_properties":              types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+			"included_package_versions":        types.SetType{ElemType: types.StringType},
+			"excluded_package_versions":        types.SetType{ElemType: types.StringType},
 		},
 		map[string]attr.Value{
 			"package_types":                    packageTypes,
@@ -518,6 +541,8 @@ func (r *PackageCleanupPolicyResourceModelV1) fromAPIModel(ctx context.Context, 
 			"keep_last_n_versions":             keepLastNVersions,
 			"excluded_properties":              excludedProperties,
 			"included_properties":              includedProperties,
+			"included_package_versions":        includedPackageVersions,
+			"excluded_package_versions":        excludedPackageVersions,
 		},
 	)
 	if ds.HasError() {
@@ -563,6 +588,8 @@ type PackageCleanupPolicySearchCriteriaAPIModel struct {
 	KeepLastNVersions            *int64              `json:"keepLastNVersions,omitempty"`
 	ExcludedProperties           map[string][]string `json:"excludedProperties,omitempty"`
 	IncludedProperties           map[string][]string `json:"includedProperties,omitempty"`
+	IncludedPackageVersions      *[]string           `json:"includedPackageVersions,omitempty"`
+	ExcludedPackageVersions      *[]string           `json:"excludedPackageVersions,omitempty"`
 }
 
 type PackageCleanupPolicyEnablementAPIModel struct {
@@ -845,6 +872,23 @@ var cleanupPolicySchemaV1 = lo.Assign(
 						cleanupSingleKeySingleValueMapValidator{},
 					},
 					MarkdownDescription: "A key-value pair applied to the lead artifact of a package. Packages with this property will be deleted.",
+				},
+				"included_package_versions": schema.SetAttribute{
+					ElementType: types.StringType,
+					Optional:    true,
+					Computed:    true,
+					Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{types.StringValue("**")})),
+					Validators: []validator.Set{
+						setvalidator.SizeAtLeast(1),
+					},
+					MarkdownDescription: "Specify patterns for package versions on which you want the cleanup policy to run. To include all versions, use `**`. Example: `included_package_versions = [\"**\"]`",
+				},
+				"excluded_package_versions": schema.SetAttribute{
+					ElementType:         types.StringType,
+					Optional:            true,
+					Computed:            true,
+					Default:             setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
+					MarkdownDescription: "Specify patterns for package versions that you want excluded from the cleanup policy.",
 				},
 			},
 			Required: true,
