@@ -37,6 +37,50 @@ func TestAccRemoteNugetRepository(t *testing.T) {
 	}))
 }
 
+func TestAccRemoteNugetRepository_EnableNormalizedVersion(t *testing.T) {
+	_, fqrn, name := testutil.MkNames("test-nuget-remote", "artifactory_remote_nuget_repository")
+	params := map[string]interface{}{"name": name}
+
+	configFalse := util.ExecuteTemplate("TestAccRemoteNugetRepository_EnableNormalizedVersion_false", `
+		resource "artifactory_remote_nuget_repository" "{{ .name }}" {
+			key                      = "{{ .name }}"
+			url                      = "https://www.nuget.org/"
+			enable_normalized_version = false
+		}
+	`, params)
+
+	configTrue := util.ExecuteTemplate("TestAccRemoteNugetRepository_EnableNormalizedVersion_true", `
+		resource "artifactory_remote_nuget_repository" "{{ .name }}" {
+			key                      = "{{ .name }}"
+			url                      = "https://www.nuget.org/"
+			enable_normalized_version = true
+		}
+	`, params)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: configFalse,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "enable_normalized_version", "false"),
+				),
+			},
+			{
+				Config: configTrue,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(fqrn, "enable_normalized_version", "true"),
+			},
+		},
+	})
+}
+
 func TestAccRemoteNugetRepository_url_fields(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("test-nuget-remote", "artifactory_remote_nuget_repository")
 

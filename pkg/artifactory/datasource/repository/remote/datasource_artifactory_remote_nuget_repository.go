@@ -32,6 +32,7 @@ type NugetRemoteRepo struct {
 	V3FeedUrl                string `hcl:"v3_feed_url" json:"v3FeedUrl"` // Forced to specify hcl tag because predicate is not parsed by packer.Universal function.
 	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
 	SymbolServerUrl          string `json:"symbolServerUrl"`
+	EnableNormalizedVersion  bool   `json:"enableNormalizedVersion"`
 }
 
 var NugetSchema = lo.Assign(
@@ -70,6 +71,12 @@ var NugetSchema = lo.Assign(
 			Default:          "https://symbols.nuget.org/download/symbols",
 			ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IsURLWithHTTPorHTTPS, validation.StringIsEmpty)),
 			Description:      `NuGet symbol server URL.`,
+		},
+		"enable_normalized_version": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: `Enables NuGet normalized versions enforced layout. Once set, this value cannot be changed without recreating the repository. Requires Artifactory 7.146.7+.`,
 		},
 	}, resource_repository.RepoLayoutRefSDKv2Schema(remote.Rclass, resource_repository.NugetPackageType),
 )

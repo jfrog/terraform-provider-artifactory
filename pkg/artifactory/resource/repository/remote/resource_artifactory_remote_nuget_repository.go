@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -54,6 +56,7 @@ type remoteNugetResourceModel struct {
 	V3FeedURL                types.String `tfsdk:"v3_feed_url"`
 	ForceNugetAuthentication types.Bool   `tfsdk:"force_nuget_authentication"`
 	SymbolServerURL          types.String `tfsdk:"symbol_server_url"`
+	EnableNormalizedVersion  types.Bool   `tfsdk:"enable_normalized_version"`
 }
 
 func (r *remoteNugetResourceModel) GetCreateResourcePlanData(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -91,6 +94,7 @@ func (r remoteNugetResourceModel) SetUpdateResourceStateData(ctx context.Context
 	resp.Diagnostics.Append(resp.State.Set(ctx, &r)...)
 }
 
+// ToAPIModel converts the Terraform resource model into the Artifactory API model.
 func (r remoteNugetResourceModel) ToAPIModel(ctx context.Context, packageType string) (interface{}, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
 
@@ -110,9 +114,11 @@ func (r remoteNugetResourceModel) ToAPIModel(ctx context.Context, packageType st
 		V3FeedURL:                r.V3FeedURL.ValueString(),
 		ForceNugetAuthentication: r.ForceNugetAuthentication.ValueBool(),
 		SymbolServerURL:          r.SymbolServerURL.ValueString(),
+		EnableNormalizedVersion:  r.EnableNormalizedVersion.ValueBool(),
 	}, diags
 }
 
+// FromAPIModel populates the Terraform resource model from the Artifactory API model.
 func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
@@ -132,6 +138,7 @@ func (r *remoteNugetResourceModel) FromAPIModel(ctx context.Context, apiModel in
 	if model.SymbolServerURL != "" {
 		r.SymbolServerURL = types.StringValue(model.SymbolServerURL)
 	}
+	r.EnableNormalizedVersion = types.BoolValue(model.EnableNormalizedVersion)
 	return diags
 }
 
@@ -143,8 +150,10 @@ type RemoteNugetAPIModel struct {
 	V3FeedURL                string `json:"v3FeedUrl"`
 	ForceNugetAuthentication bool   `json:"forceNugetAuthentication"`
 	SymbolServerURL          string `json:"symbolServerUrl"`
+	EnableNormalizedVersion  bool   `json:"enableNormalizedVersion"`
 }
 
+// Schema defines the Terraform schema for the remote NuGet repository resource.
 func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	remoteNugetAttributes := lo.Assign(
 		RemoteAttributes,
@@ -195,6 +204,15 @@ func (r *remoteNugetResource) Schema(ctx context.Context, req resource.SchemaReq
 					),
 				},
 				MarkdownDescription: "NuGet symbol server URL.",
+			},
+			"enable_normalized_version": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				MarkdownDescription: "Enables NuGet normalized versions enforced layout. Once set, this value cannot be changed without recreating the repository. Requires Artifactory 7.146.7+.",
 			},
 		},
 	)
