@@ -1,3 +1,10 @@
+### 12.11.15 (Sep 24, 2026)
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_nimmodel_repository`
+* **New Data Source:** `artifactory_remote_nimmodel_repository`. Supported as a remote repository only.
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:
@@ -23,13 +30,6 @@ DOCUMENTATION:
 
 * resource/artifactory_local_*_repository, resource/artifactory_remote_*_repository, resource/artifactory_virtual_*_repository (and their data sources): Clarify the `includes_pattern` and `excludes_pattern` attribute descriptions. These attributes are a single comma-separated string, not a list of strings. Multiple patterns should be provided as one string of comma-separated values (for example, `"a/b/**,c/d/**"`). The Artifactory REST API stores these fields as a single string; supplying a list has no additional effect. Issue: [1368](https://github.com/jfrog/terraform-provider-artifactory/issues/1368)
 
-
-### 12.12.0 (unreleased)
-
-FEATURES:
-
-* **New Resource:** `artifactory_remote_nimmodel_repository`
-* **New Data Source:** `artifactory_remote_nimmodel_repository`. Supported as a remote repository only.
 
 ### 12.11.11 (August 20, 2026)
 
