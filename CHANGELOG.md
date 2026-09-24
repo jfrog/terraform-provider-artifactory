@@ -1,3 +1,10 @@
+### 12.11.15 (Sep 24, 2026)
+
+FEATURES:
+
+* **New Resource:** `artifactory_remote_nimmodel_repository`
+* **New Data Source:** `artifactory_remote_nimmodel_repository`. Supported as a remote repository only.
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:

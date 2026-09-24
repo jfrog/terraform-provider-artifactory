@@ -206,6 +206,12 @@ var defaultRepoLayoutMap = map[string]SupportedRepoClasses{
 			"virtual": true,
 		},
 	},
+	NimModelPackageType: {
+		RepoLayoutRef: "maven-2-default",
+		SupportedRepoTypes: map[string]bool{
+			"remote": true,
+		},
+	},
 	NixPackageType: {
 		RepoLayoutRef: "nix-default",
 		SupportedRepoTypes: map[string]bool{
