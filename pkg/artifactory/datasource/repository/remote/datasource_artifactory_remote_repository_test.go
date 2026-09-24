@@ -29,6 +29,9 @@ import (
 func TestAccDataSourceRemoteAllBasicPackageTypes(t *testing.T) {
 	for _, packageType := range remote.PackageTypesLikeBasic {
 		t.Run(packageType, func(t *testing.T) {
+			if packageType == repository.JetBrainsPluginsPackageType {
+				t.Skip("Skipping: the 'jetbrainsplugins' package type is not supported on the CI Artifactory version, so repo creation fails with \"The package type jetbrainsplugins is not supported\".")
+			}
 			resource.Test(mkTestCase(packageType, t))
 		})
 	}

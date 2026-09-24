@@ -57,7 +57,6 @@ type RemoteAIEditorExtensionsRepositoryAPIModel struct {
 	resourceremote.RemoteAPIModel
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	PropagateQueryParams         bool     `json:"propagateQueryParams"`
 	RetrieveSha256FromServer     bool     `json:"retrieveSha256FromServer"`
 	Curated                      bool     `json:"curated"`

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -133,6 +134,13 @@ func (r *remoteHuggingFaceMLResource) Schema(ctx context.Context, req resource.S
 					stringvalidator.LengthAtLeast(1),
 				},
 				MarkdownDescription: "The remote repo URL. Default to 'https://huggingface.co'",
+			},
+			// Override common remote default (false): Hugging Face remotes default to true, matching Artifactory.
+			"enable_token_authentication": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Enable token (Bearer) based authentication. Defaults to `true` for Hugging Face remotes.",
 			},
 		},
 	)

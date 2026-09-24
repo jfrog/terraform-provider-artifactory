@@ -50,7 +50,6 @@ type remoteOCIResourceModel struct {
 	RemoteResourceModel
 	ExternalDependenciesEnabled  types.Bool   `tfsdk:"external_dependencies_enabled"`
 	ExternalDependenciesPatterns types.List   `tfsdk:"external_dependencies_patterns"`
-	EnableTokenAuthentication    types.Bool   `tfsdk:"enable_token_authentication"`
 	ProjectID                    types.String `tfsdk:"project_id"`
 }
 
@@ -106,7 +105,6 @@ func (r remoteOCIResourceModel) ToAPIModel(ctx context.Context, packageType stri
 	var apiModel = RemoteOCIAPIModel{
 		RemoteAPIModel:              remoteAPIModel,
 		ExternalDependenciesEnabled: r.ExternalDependenciesEnabled.ValueBool(),
-		EnableTokenAuthentication:   r.EnableTokenAuthentication.ValueBool(),
 		ProjectID:                   r.ProjectID.ValueString(),
 	}
 	if r.ExternalDependenciesEnabled.ValueBool() == true {
@@ -125,7 +123,6 @@ func (r *remoteOCIResourceModel) FromAPIModel(ctx context.Context, apiModel inte
 
 	r.RepoLayoutRef = types.StringValue(model.RepoLayoutRef)
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
-	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
 
 	if r.ExternalDependenciesEnabled.ValueBool() == true {
 		externalDependenciesPatterns, d := types.ListValueFrom(ctx, types.StringType, model.ExternalDependenciesPatterns)
@@ -144,7 +141,6 @@ type RemoteOCIAPIModel struct {
 	RemoteAPIModel
 	ExternalDependenciesEnabled  bool     `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool     `json:"enableTokenAuthentication"`
 	ProjectID                    string   `json:"dockerProjectId"`
 }
 
@@ -159,11 +155,12 @@ func (r *remoteOCIResource) Schema(ctx context.Context, req resource.SchemaReque
 				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Also known as 'Foreign Layers Caching' on the UI, default is `false`.",
 			},
+			// Override common remote default (false): OCI remotes historically default to true.
 			"enable_token_authentication": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(true),
-				MarkdownDescription: "Enable token (Bearer) based authentication.",
+				MarkdownDescription: "Enable token (Bearer) based authentication. Defaults to `true` for OCI remotes.",
 			},
 			"external_dependencies_patterns": schema.ListAttribute{
 				ElementType: types.StringType,

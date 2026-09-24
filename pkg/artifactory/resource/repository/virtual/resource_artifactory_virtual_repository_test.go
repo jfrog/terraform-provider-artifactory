@@ -514,6 +514,56 @@ func TestAccVirtualRepository_update(t *testing.T) {
 	})
 }
 
+func TestAccVirtualRepository_hideUnauthorizedResources(t *testing.T) {
+	id := testutil.RandomInt()
+	name := fmt.Sprintf("foo%d", id)
+	fqrn := fmt.Sprintf("artifactory_virtual_maven_repository.%s", name)
+	const virtualRepositoryHideUnauthorizedEnabled = `
+		resource "artifactory_virtual_maven_repository" "%s" {
+			key          = "%s"
+			repositories = []
+			hide_unauthorized_resources = true
+		}
+	`
+	const virtualRepositoryHideUnauthorizedDisabled = `
+		resource "artifactory_virtual_maven_repository" "%s" {
+			key          = "%s"
+			repositories = []
+			hide_unauthorized_resources = false
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(virtualRepositoryHideUnauthorizedEnabled, name, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "hide_unauthorized_resources", "true"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(virtualRepositoryHideUnauthorizedDisabled, name, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "maven"),
+					resource.TestCheckResourceAttr(fqrn, "hide_unauthorized_resources", "false"),
+				),
+			},
+			{
+				ResourceName:      fqrn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  validator.CheckImportState(name, "key"),
+			},
+		},
+	})
+}
+
 func TestAccVirtualNugetRepository_PackageCreationFull(t *testing.T) {
 	id := testutil.RandomInt()
 	name := fmt.Sprintf("foo%d", id)

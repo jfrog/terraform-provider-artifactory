@@ -70,7 +70,6 @@ type RemoteAIEditorExtensionsResourceModel struct {
 	CurationResourceModel
 	ExternalDependenciesEnabled  types.Bool              `tfsdk:"external_dependencies_enabled"`
 	ExternalDependenciesPatterns types.List              `tfsdk:"external_dependencies_patterns"`
-	EnableTokenAuthentication    types.Bool              `tfsdk:"enable_token_authentication"`
 	PropagateQueryParams         types.Bool              `tfsdk:"propagate_query_params"`
 	RetrieveSha256FromServer     types.Bool              `tfsdk:"retrieve_sha256_from_server"`
 	CustomHttpHeaders            []CustomHttpHeaderModel `tfsdk:"custom_http_headers"`
@@ -131,7 +130,6 @@ func (r RemoteAIEditorExtensionsResourceModel) ToAPIModel(ctx context.Context, p
 		},
 		ExternalDependenciesEnabled:  r.ExternalDependenciesEnabled.ValueBool(),
 		ExternalDependenciesPatterns: externalDependenciesPatterns,
-		EnableTokenAuthentication:    r.EnableTokenAuthentication.ValueBool(),
 		PropagateQueryParams:         r.PropagateQueryParams.ValueBool(),
 		RetrieveSha256FromServer:     r.RetrieveSha256FromServer.ValueBool(),
 	}
@@ -162,7 +160,6 @@ func (r *RemoteAIEditorExtensionsResourceModel) FromAPIModel(ctx context.Context
 	r.ExternalDependenciesEnabled = types.BoolValue(model.ExternalDependenciesEnabled)
 	r.Curated = types.BoolValue(model.CurationAPIModel.Curated)
 	r.PassThrough = types.BoolValue(model.CurationAPIModel.PassThrough)
-	r.EnableTokenAuthentication = types.BoolValue(model.EnableTokenAuthentication)
 	r.PropagateQueryParams = types.BoolValue(model.PropagateQueryParams)
 	r.RetrieveSha256FromServer = types.BoolValue(model.RetrieveSha256FromServer)
 
@@ -191,7 +188,6 @@ type RemoteAIEditorExtensionsAPIModel struct {
 	CurationAPIModel
 	ExternalDependenciesEnabled  bool                  `json:"externalDependenciesEnabled"`
 	ExternalDependenciesPatterns []string              `json:"externalDependenciesPatterns,omitempty"`
-	EnableTokenAuthentication    bool                  `json:"enableTokenAuthentication"`
 	PropagateQueryParams         bool                  `json:"propagateQueryParams"`
 	RetrieveSha256FromServer     bool                  `json:"retrieveSha256FromServer"`
 	CustomHttpHeaders            *[]httpHeaderAPIModel `json:"customHttpHeaders,omitempty"`
@@ -239,14 +235,6 @@ func (r *remoteAIEditorExtensionsResource) Schema(ctx context.Context, req resou
 				MarkdownDescription: "An allow list of Ant-style path patterns that determine which remote hosts external extension " +
 					"dependencies may be downloaded from. Only applies when `external_dependencies_enabled` is `true`. " +
 					"Default value is `[\"" + AIEditorExtensionsDefaultExternalDependenciesPattern + "\"]`, which covers the CDN serving VS Code marketplace extension payloads.",
-			},
-			"enable_token_authentication": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
-				MarkdownDescription: "Enable token (Bearer) based authentication. Defaults to `false`, matching the " +
-					"Artifactory default for this package type. Note this differs from the Docker and OCI remote " +
-					"repository resources, which default it to `true`.",
 			},
 			"propagate_query_params": schema.BoolAttribute{
 				Optional:            true,
