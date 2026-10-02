@@ -29,5 +29,7 @@ supported, along with the [common list of arguments for the local repositories](
 
 * `description`
 * `notes`
+* `primary_keypair_ref` - The primary GPG key used to sign packages.
+* `secondary_keypair_ref` - The secondary GPG key used to sign packages.
 
 

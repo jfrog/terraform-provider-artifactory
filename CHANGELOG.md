@@ -1,3 +1,9 @@
+### 12.11.15 (Oct 02, 2026).
+
+IMPROVEMENTS:
+
+* resource/artifactory_local_terraform_module_repository, resource/artifactory_local_terraform_provider_repository, resource/artifactory_federated_terraform_module_repository, resource/artifactory_federated_terraform_provider_repository, data-source/artifactory_local_terraform_module_repository, data-source/artifactory_local_terraform_provider_repository, data-source/artifactory_federated_terraform_module_repository, data-source/artifactory_federated_terraform_provider_repository: Add `primary_keypair_ref` and `secondary_keypair_ref` attributes so Terraform registry repositories can be configured with a GPG signing key. Issue: [#1391](https://github.com/jfrog/terraform-provider-artifactory/issues/1391)
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:
