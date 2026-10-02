@@ -764,6 +764,105 @@ func TestAccDataSourceLocalTerraformProviderRepository(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceLocalTerraformModuleRepository_GPGKeyPair(t *testing.T) {
+	testAccDataSourceLocalTerraformRepositoryGPGKeyPair(t, "module")
+}
+
+func TestAccDataSourceLocalTerraformProviderRepository_GPGKeyPair(t *testing.T) {
+	testAccDataSourceLocalTerraformRepositoryGPGKeyPair(t, "provider")
+}
+
+func testAccDataSourceLocalTerraformRepositoryGPGKeyPair(t *testing.T, registryType string) {
+	privateKey := os.Getenv("JFROG_TEST_PGP_PRIVATE_KEY")
+	publicKey := os.Getenv("JFROG_TEST_PGP_PUBLIC_KEY")
+	if privateKey == "" || publicKey == "" {
+		t.Skip("JFROG_TEST_PGP_PRIVATE_KEY and JFROG_TEST_PGP_PUBLIC_KEY must be set")
+	}
+
+	resourceType := fmt.Sprintf("artifactory_local_terraform_%s_repository", registryType)
+	_, fqrn, name := testutil.MkNames("terraform-local", "data."+resourceType)
+	kpId, kpFqrn, kpName := testutil.MkNames("some-keypair1", "artifactory_keypair")
+	kpId2, kpFqrn2, kpName2 := testutil.MkNames("some-keypair2", "artifactory_keypair")
+
+	config := util.ExecuteTemplate("keypair", `
+		resource "artifactory_keypair" "{{ .kp_name }}" {
+			pair_name  = "{{ .kp_name }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id }}"
+			private_key = <<EOF
+{{ .private_key }}
+EOF
+			public_key = <<EOF
+{{ .public_key }}
+EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+
+		resource "artifactory_keypair" "{{ .kp_name2 }}" {
+			pair_name  = "{{ .kp_name2 }}"
+			pair_type = "GPG"
+			alias = "foo-alias{{ .kp_id2 }}"
+			private_key = <<EOF
+{{ .private_key }}
+EOF
+			public_key = <<EOF
+{{ .public_key }}
+EOF
+			lifecycle {
+				ignore_changes = [
+					private_key,
+					passphrase,
+				]
+			}
+		}
+
+		resource "{{ .resource_type }}" "{{ .repo_name }}" {
+			key                   = "{{ .repo_name }}"
+			primary_keypair_ref   = artifactory_keypair.{{ .kp_name }}.pair_name
+			secondary_keypair_ref = artifactory_keypair.{{ .kp_name2 }}.pair_name
+		}
+
+		data "{{ .resource_type }}" "{{ .repo_name }}" {
+			key = {{ .resource_type }}.{{ .repo_name }}.key
+		}
+	`, map[string]interface{}{
+		"kp_id":         kpId,
+		"kp_name":       kpName,
+		"kp_id2":        kpId2,
+		"kp_name2":      kpName2,
+		"resource_type": resourceType,
+		"repo_name":     name,
+		"private_key":   privateKey,
+		"public_key":    publicKey,
+	}) // we use randomness so that, in the case of failure and dangle, the next test can run without collision
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy: acctest.CompositeCheckDestroy(
+			acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+			acctest.VerifyDeleted(t, kpFqrn, "", security.VerifyKeyPair),
+			acctest.VerifyDeleted(t, kpFqrn2, "", security.VerifyKeyPair),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", name),
+					resource.TestCheckResourceAttr(fqrn, "package_type", "terraform"),
+					resource.TestCheckResourceAttr(fqrn, "primary_keypair_ref", kpName),
+					resource.TestCheckResourceAttr(fqrn, "secondary_keypair_ref", kpName2),
+					resource.TestCheckResourceAttr(fqrn, "repo_layout_ref", fmt.Sprintf("terraform-%s-default", registryType)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceLocalMissingRepository(t *testing.T) {
 	_, fqrn, name := testutil.MkNames("terraform-local", "data.artifactory_local_terraform_provider_repository")
 	params := map[string]interface{}{

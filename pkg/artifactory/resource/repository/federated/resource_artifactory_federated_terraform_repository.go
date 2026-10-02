@@ -20,20 +20,30 @@ import (
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/repository/local"
 	"github.com/jfrog/terraform-provider-shared/packer"
 	"github.com/jfrog/terraform-provider-shared/predicate"
+	utilsdk "github.com/jfrog/terraform-provider-shared/util/sdk"
 	"github.com/samber/lo"
 )
 
 type TerraformFederatedRepositoryParams struct {
-	local.RepositoryBaseParams
+	local.TerraformLocalRepositoryParams
 	Members []Member `hcl:"member" json:"members"`
 	RepoParams
 }
 
-func unpackLocalTerraformRepository(data *schema.ResourceData, Rclass string, registryType string) local.RepositoryBaseParams {
+func unpackLocalTerraformRepository(data *schema.ResourceData, Rclass string, registryType string) local.TerraformLocalRepositoryParams {
+	d := &utilsdk.ResourceData{ResourceData: data}
 	repo := local.UnpackBaseRepo(Rclass, data, "terraform_"+registryType)
 	repo.TerraformType = registryType
 
-	return repo
+	return local.TerraformLocalRepositoryParams{
+		RepositoryBaseParams: repo,
+		PrimaryKeyPairRefParam: repository.PrimaryKeyPairRefParam{
+			PrimaryKeyPairRefSDKv2: d.GetString("primary_keypair_ref", false),
+		},
+		SecondaryKeyPairRefParam: repository.SecondaryKeyPairRefParam{
+			SecondaryKeyPairRefSDKv2: d.GetString("secondary_keypair_ref", false),
+		},
+	}
 }
 
 func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schema.Resource {
@@ -47,9 +57,9 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 
 	var unpackFederatedTerraformRepository = func(data *schema.ResourceData) (interface{}, string, error) {
 		repo := TerraformFederatedRepositoryParams{
-			RepositoryBaseParams: unpackLocalTerraformRepository(data, Rclass, registryType),
-			Members:              unpackMembers(data),
-			RepoParams:           unpackRepoParams(data),
+			TerraformLocalRepositoryParams: unpackLocalTerraformRepository(data, Rclass, registryType),
+			Members:                        unpackMembers(data),
+			RepoParams:                     unpackRepoParams(data),
 		}
 		return repo, repo.Id(), nil
 	}
@@ -71,9 +81,11 @@ func ResourceArtifactoryFederatedTerraformRepository(registryType string) *schem
 
 	constructor := func() (interface{}, error) {
 		return &TerraformFederatedRepositoryParams{
-			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: packageType,
-				Rclass:      Rclass,
+			TerraformLocalRepositoryParams: local.TerraformLocalRepositoryParams{
+				RepositoryBaseParams: local.RepositoryBaseParams{
+					PackageType: packageType,
+					Rclass:      Rclass,
+				},
 			},
 		}, nil
 	}

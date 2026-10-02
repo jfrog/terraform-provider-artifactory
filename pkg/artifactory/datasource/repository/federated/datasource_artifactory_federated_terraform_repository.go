@@ -53,9 +53,11 @@ func DataSourceArtifactoryFederatedTerraformRepository(registryType string) *sch
 
 	constructor := func() (interface{}, error) {
 		return &federated.TerraformFederatedRepositoryParams{
-			RepositoryBaseParams: local.RepositoryBaseParams{
-				PackageType: packageType,
-				Rclass:      federated.Rclass,
+			TerraformLocalRepositoryParams: local.TerraformLocalRepositoryParams{
+				RepositoryBaseParams: local.RepositoryBaseParams{
+					PackageType: packageType,
+					Rclass:      federated.Rclass,
+				},
 			},
 		}, nil
 	}

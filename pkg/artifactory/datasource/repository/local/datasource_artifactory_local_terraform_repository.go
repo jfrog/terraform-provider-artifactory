@@ -27,9 +27,11 @@ func DataSourceArtifactoryLocalTerraformRepository(registryType string) *schema.
 	terraformLocalSchemas := local.GetTerraformSchemas(registryType)
 
 	constructor := func() (interface{}, error) {
-		return &local.RepositoryBaseParams{
-			PackageType: "terraform_" + registryType,
-			Rclass:      local.Rclass,
+		return &local.TerraformLocalRepositoryParams{
+			RepositoryBaseParams: local.RepositoryBaseParams{
+				PackageType: "terraform_" + registryType,
+				Rclass:      local.Rclass,
+			},
 		}, nil
 	}
 
