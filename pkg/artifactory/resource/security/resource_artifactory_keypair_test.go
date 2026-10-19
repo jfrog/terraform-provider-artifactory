@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/acctest"
 	"github.com/jfrog/terraform-provider-artifactory/v12/pkg/artifactory/resource/security"
 	"github.com/jfrog/terraform-provider-shared/testutil"
@@ -224,6 +225,144 @@ EOF
 				ImportStateId:                        name,
 				ImportStateVerifyIdentifierAttribute: "pair_name",
 				ImportStateVerifyIgnore:              []string{"passphrase", "private_key"},
+			},
+		},
+	})
+}
+
+// TestAccKeyPair_RSA_private_key_wo verifies that the write-only `private_key_wo`
+// attribute accepts ephemeral values without persisting the private key to
+// Terraform state, supports in-place migration from `private_key`, and replaces
+// the resource when `private_key_wo_version` changes.
+func TestAccKeyPair_RSA_private_key_wo(t *testing.T) {
+	id, fqrn, name := testutil.MkNames("test-wo", "artifactory_keypair")
+
+	legacyTemplate := `
+	resource "artifactory_keypair" "{{ .name }}" {
+		pair_name   = "{{ .name }}"
+		pair_type   = "RSA"
+		alias       = "test-alias-{{ .id }}"
+		passphrase  = "{{ .passphrase }}"
+		private_key = <<EOF
+{{ .private_key }}
+EOF
+		public_key  = <<EOF
+{{ .public_key }}
+EOF
+	}`
+
+	ephemeralTemplate := `
+	variable "private_key_ephemeral" {
+		type      = string
+		ephemeral = true
+		default   = <<EOF
+{{ .private_key }}
+EOF
+	}
+
+	resource "artifactory_keypair" "{{ .name }}" {
+		pair_name              = "{{ .name }}"
+		pair_type              = "RSA"
+		alias                  = "test-alias-{{ .id }}"
+		passphrase             = "{{ .passphrase }}"
+		private_key_wo         = var.private_key_ephemeral
+		private_key_wo_version = "{{ .version }}"
+		public_key             = <<EOF
+{{ .public_key }}
+EOF
+	}`
+
+	keyLegacy := util.ExecuteTemplate(
+		fqrn,
+		legacyTemplate,
+		map[string]string{
+			"id":          fmt.Sprint(id),
+			"name":        name,
+			"passphrase":  "password",
+			"private_key": os.Getenv("JFROG_TEST_RSA_PRIVATE_KEY"),
+			"public_key":  os.Getenv("JFROG_TEST_RSA_PUBLIC_KEY"),
+		},
+	)
+
+	keyWriteOnlyV1 := util.ExecuteTemplate(
+		fqrn,
+		ephemeralTemplate,
+		map[string]string{
+			"id":          fmt.Sprint(id),
+			"name":        name,
+			"passphrase":  "password",
+			"version":     "1",
+			"private_key": os.Getenv("JFROG_TEST_RSA_PRIVATE_KEY"),
+			"public_key":  os.Getenv("JFROG_TEST_RSA_PUBLIC_KEY"),
+		},
+	)
+
+	keyWriteOnlyV2 := util.ExecuteTemplate(
+		fqrn,
+		ephemeralTemplate,
+		map[string]string{
+			"id":          fmt.Sprint(id),
+			"name":        name,
+			"passphrase":  "password",
+			"version":     "2",
+			"private_key": os.Getenv("JFROG_TEST_RSA_PRIVATE_KEY"),
+			"public_key":  os.Getenv("JFROG_TEST_RSA_PUBLIC_KEY"),
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckKeyPairDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: keyLegacy,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "pair_name", name),
+					resource.TestCheckResourceAttr(fqrn, "private_key", fmt.Sprintf("%s\n", os.Getenv("JFROG_TEST_RSA_PRIVATE_KEY"))),
+					resource.TestCheckNoResourceAttr(fqrn, "private_key_wo"),
+				),
+			},
+			{
+				// Switching an existing resource from `private_key` to `private_key_wo` updates state in-place without replacement.
+				Config: keyWriteOnlyV1,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "pair_name", name),
+					resource.TestCheckResourceAttr(fqrn, "public_key", fmt.Sprintf("%s\n", os.Getenv("JFROG_TEST_RSA_PUBLIC_KEY"))),
+					resource.TestCheckResourceAttr(fqrn, "private_key_wo_version", "1"),
+					resource.TestCheckNoResourceAttr(fqrn, "private_key_wo"),
+					resource.TestCheckNoResourceAttr(fqrn, "private_key"),
+					resource.TestCheckResourceAttr(fqrn, "alias", fmt.Sprintf("test-alias-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "pair_type", "RSA"),
+					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
+				),
+			},
+			{
+				// Bumping `private_key_wo_version` triggers replacement to re-send `private_key_wo` to Artifactory.
+				Config: keyWriteOnlyV2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(fqrn, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "pair_name", name),
+					resource.TestCheckResourceAttr(fqrn, "public_key", fmt.Sprintf("%s\n", os.Getenv("JFROG_TEST_RSA_PUBLIC_KEY"))),
+					resource.TestCheckResourceAttr(fqrn, "private_key_wo_version", "2"),
+					resource.TestCheckNoResourceAttr(fqrn, "private_key_wo"),
+					resource.TestCheckNoResourceAttr(fqrn, "private_key"),
+					resource.TestCheckResourceAttr(fqrn, "alias", fmt.Sprintf("test-alias-%d", id)),
+					resource.TestCheckResourceAttr(fqrn, "pair_type", "RSA"),
+					resource.TestCheckResourceAttr(fqrn, "passphrase", "password"),
+				),
 			},
 		},
 	})

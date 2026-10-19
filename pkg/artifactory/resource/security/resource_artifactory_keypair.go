@@ -53,12 +53,14 @@ type KeyPairResource struct {
 // KeyPairResourceModel describes the Terraform resource data model to match the
 // resource schema.
 type KeyPairResourceModel struct {
-	PairName   types.String           `tfsdk:"pair_name"`
-	PairType   types.String           `tfsdk:"pair_type"`
-	Alias      types.String           `tfsdk:"alias"`
-	PrivateKey TablessSigningKeyValue `tfsdk:"private_key"`
-	Passphrase types.String           `tfsdk:"passphrase"`
-	PublicKey  TablessSigningKeyValue `tfsdk:"public_key"`
+	PairName            types.String           `tfsdk:"pair_name"`
+	PairType            types.String           `tfsdk:"pair_type"`
+	Alias               types.String           `tfsdk:"alias"`
+	PrivateKey          TablessSigningKeyValue `tfsdk:"private_key"`
+	PrivateKeyWO        TablessSigningKeyValue `tfsdk:"private_key_wo"`
+	PrivateKeyWOVersion types.String           `tfsdk:"private_key_wo_version"`
+	Passphrase          types.String           `tfsdk:"passphrase"`
+	PublicKey           TablessSigningKeyValue `tfsdk:"public_key"`
 }
 
 func (r *KeyPairResourceModel) FromAPIModel(ctx context.Context, model *KeyPairAPIModel) diag.Diagnostics {
@@ -84,6 +86,7 @@ func (r *KeyPairResource) Metadata(ctx context.Context, req resource.MetadataReq
 	resp.TypeName = r.TypeName
 }
 
+// Schema defines the schema for the artifactory_keypair resource.
 func (r *KeyPairResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "RSA key pairs are used to sign and verify the Alpine Linux index files in JFrog Artifactory, " +
@@ -123,15 +126,52 @@ func (r *KeyPairResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"private_key": schema.StringAttribute{
-				MarkdownDescription: "Private key. PEM format will be validated. Must not include extranous spaces or tabs.",
-				Required:            true,
+				MarkdownDescription: "Private key. PEM format will be validated. Must not include extranous spaces or tabs. Conflicts with `private_key_wo`.",
+				Optional:            true,
 				Sensitive:           true,
 				CustomType:          TablessSigningKeyType{},
 				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.MatchRoot("private_key_wo")),
 					privateKeyMustValid(),
 				},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+			},
+			"private_key_wo": schema.StringAttribute{
+				MarkdownDescription: "Write-only equivalent of `private_key`. Private key. PEM format will be validated. Must not include extranous spaces or tabs. " +
+					"The value is **never stored in Terraform state or plan**. Requires Terraform 1.11 or later. Conflicts with `private_key`. " +
+					"Because write-only values are not tracked in state, use `private_key_wo_version` to trigger a replacement when the key has changed.",
+				Optional:   true,
+				Sensitive:  true,
+				WriteOnly:  true,
+				CustomType: TablessSigningKeyType{},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.MatchRoot("private_key")),
+					privateKeyMustValid(),
+				},
+			},
+			"private_key_wo_version": schema.StringAttribute{
+				MarkdownDescription: "A version identifier for `private_key_wo`. Change this value (for example, after rotating the key) to trigger a replacement that re-sends the current `private_key_wo` value to Artifactory. Only meaningful together with `private_key_wo`.",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("private_key_wo")),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+							// Do not replace when migrating in-place from `private_key` to `private_key_wo`.
+							var statePrivateKey TablessSigningKeyValue
+							resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("private_key"), &statePrivateKey)...)
+							if resp.Diagnostics.HasError() || !statePrivateKey.IsNull() {
+								return
+							}
+
+							resp.RequiresReplace = true
+						},
+						"If the value of this attribute changes while using `private_key_wo`, Terraform will destroy and recreate the resource.",
+						"If the value of this attribute changes while using `private_key_wo`, Terraform will destroy and recreate the resource.",
+					),
 				},
 			},
 			"passphrase": schema.StringAttribute{
@@ -165,6 +205,7 @@ func (r *KeyPairResource) Configure(ctx context.Context, req resource.ConfigureR
 	r.ProviderData = req.ProviderData.(util.ProviderMetadata)
 }
 
+// Create creates a new key pair in Artifactory and sets the initial Terraform state.
 func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -175,11 +216,23 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	// Write-only values are not present in the plan, so read `private_key_wo` from config.
+	var privateKeyWO TablessSigningKeyValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("private_key_wo"), &privateKeyWO)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	privateKey := plan.PrivateKey.ValueString()
+	if !privateKeyWO.IsNull() && !privateKeyWO.IsUnknown() {
+		privateKey = privateKeyWO.ValueString()
+	}
+
 	keyPair := KeyPairAPIModel{
 		PairName:   plan.PairName.ValueString(),
 		PairType:   plan.PairType.ValueString(),
 		Alias:      plan.Alias.ValueString(),
-		PrivateKey: plan.PrivateKey.ValueString(),
+		PrivateKey: privateKey,
 		Passphrase: plan.Passphrase.ValueString(),
 		PublicKey:  plan.PublicKey.ValueString(),
 	}
@@ -241,8 +294,18 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// Update persists in-place state updates (such as migrating from private_key to private_key_wo) into Terraform state.
 func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// noop
+	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
+
+	var plan KeyPairResourceModel
+	// Persist in-place state updates (such as migrating from `private_key` to `private_key_wo`).
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
