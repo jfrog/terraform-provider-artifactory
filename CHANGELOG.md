@@ -1,3 +1,9 @@
+### 12.11.15 (Oct 19, 2026).
+
+FEATURES:
+
+* resource/artifactory_keypair: Add write-only `private_key_wo` attribute (and companion `private_key_wo_version`) for the key pair private key. When set, the private key is sent to Artifactory on creation/replacement but is never stored in Terraform state or plan. Requires Terraform 1.11 or later and conflicts with `private_key`. Switching an existing resource from `private_key` to `private_key_wo` updates state in-place without replacing the key pair in Artifactory; change `private_key_wo_version` to replace the resource with a rotated key.
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:
