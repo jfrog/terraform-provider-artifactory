@@ -44,11 +44,11 @@ import (
 type cleanupSearchCriteriaValidator struct{}
 
 func (v cleanupSearchCriteriaValidator) Description(ctx context.Context) string {
-	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (keep_last_n_versions) is mutually exclusive with all other condition types"
+	return "Validates policy conditions: at least one condition is required; time-based, properties-based, and version-based (keep_last_n_versions) conditions can be combined"
 }
 
 func (v cleanupSearchCriteriaValidator) MarkdownDescription(ctx context.Context) string {
-	return "Validates policy conditions: time-based and/or properties-based conditions can be combined; version-based condition (`keep_last_n_versions`) is mutually exclusive with all other condition types"
+	return "Validates policy conditions: at least one condition is required; time-based, properties-based, and version-based (`keep_last_n_versions`) conditions can be combined"
 }
 
 func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
@@ -179,17 +179,7 @@ func (v cleanupSearchCriteriaValidator) ValidateObject(ctx context.Context, req 
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid Policy Configuration",
-			"A policy must specify at least one condition: time-based conditions (days-based or months-based), version-based condition (`keep_last_n_versions`), or properties-based condition (`included_properties`). Time-based and properties-based conditions can be combined (AND semantics) starting from Artifactory 7.129.",
-		)
-		return
-	}
-
-	// Version-based condition is mutually exclusive with time-based and properties-based conditions
-	if keepVersionBasedSet && (timeBasedSet || propertiesBasedSet) {
-		resp.Diagnostics.AddAttributeError(
-			req.Path,
-			"Invalid Policy Configuration",
-			"Version-based condition (`keep_last_n_versions`) cannot be combined with time-based conditions or properties-based condition (`included_properties`). Use `keep_last_n_versions` alone, or use time-based and/or properties-based conditions without `keep_last_n_versions`.",
+			"A policy must specify at least one condition: time-based conditions (days-based or months-based), version-based condition (`keep_last_n_versions`), or properties-based condition (`included_properties`). Time-based and properties-based conditions can be combined (AND semantics) starting from Artifactory 7.129, and `keep_last_n_versions` can be combined with them starting from Artifactory 7.161.5.",
 		)
 		return
 	}

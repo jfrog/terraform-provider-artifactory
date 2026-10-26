@@ -1,3 +1,9 @@
+### 12.11.15 (Unreleased)
+
+BUG FIXES:
+
+* resource/artifactory_package_cleanup_policy: Allow `keep_last_n_versions` to be combined with time-based conditions and/or `included_properties` in the same policy, as supported by Artifactory 7.161.5+. The last N versions of each package are never deleted. Issue: [#1482](https://github.com/jfrog/terraform-provider-artifactory/issues/1482)
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:

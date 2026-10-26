@@ -352,30 +352,6 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 			errorRegex:  "Cannot use both days-based conditions",
 		},
 		{
-			name: "invalid mixed condition types (time and version)",
-			config: `
-			resource "artifactory_package_cleanup_policy" "test" {
-				key = "test-invalid-mixed-types"
-				description = "Test policy"
-				cron_expression = "0 0 2 ? * MON-SAT *"
-				duration_in_minutes = 60
-				enabled = true
-				skip_trashcan = false
-
-				search_criteria = {
-					package_types = ["docker"]
-					repos = ["**"]
-					include_all_projects = true
-					included_projects = []
-					included_packages = ["**"]
-					created_before_in_months = 12
-					keep_last_n_versions = 5
-				}
-			}`,
-			expectError: true,
-			errorRegex:  "Version-based condition.*cannot be combined",
-		},
-		{
 			// time + property is now a valid AND combination (supported from Artifactory 7.129)
 			name: "valid combined time and properties (days and included_properties)",
 			config: `
@@ -426,59 +402,6 @@ func TestAccPackageCleanupPolicy_validation_comprehensive(t *testing.T) {
 				}
 			}`,
 			expectError: false,
-		},
-		{
-			name: "invalid mixed condition types (version and properties)",
-			config: `
-			resource "artifactory_package_cleanup_policy" "test" {
-				key = "test-invalid-version-props"
-				description = "Test policy"
-				cron_expression = "0 0 2 ? * MON-SAT *"
-				duration_in_minutes = 60
-				enabled = true
-				skip_trashcan = false
-
-				search_criteria = {
-					package_types = ["docker"]
-					repos = ["**"]
-					include_all_projects = true
-					included_projects = []
-					included_packages = ["**"]
-					keep_last_n_versions = 5
-					included_properties = {
-						"test_key" = ["test_value"]
-					}
-				}
-			}`,
-			expectError: true,
-			errorRegex:  "Version-based condition.*cannot be combined",
-		},
-		{
-			name: "invalid mixed condition types (version, time and properties)",
-			config: `
-			resource "artifactory_package_cleanup_policy" "test" {
-				key = "test-invalid-all-three"
-				description = "Test policy"
-				cron_expression = "0 0 2 ? * MON-SAT *"
-				duration_in_minutes = 60
-				enabled = true
-				skip_trashcan = false
-
-				search_criteria = {
-					package_types = ["docker"]
-					repos = ["**"]
-					include_all_projects = true
-					included_projects = []
-					included_packages = ["**"]
-					created_before_in_days = 30
-					keep_last_n_versions = 5
-					included_properties = {
-						"test_key" = ["test_value"]
-					}
-				}
-			}`,
-			expectError: true,
-			errorRegex:  "Version-based condition.*cannot be combined",
 		},
 		{
 			name: "invalid zero value for time-based condition (months)",
@@ -773,6 +696,71 @@ func TestAccPackageCleanupPolicy_days_based_conditions(t *testing.T) {
 					resource.TestCheckResourceAttr(fqrn, "description", "Test policy with days-based conditions"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_days", "30"),
 					resource.TestCheckResourceAttr(fqrn, "search_criteria.last_downloaded_before_in_days", "60"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPackageCleanupPolicy_version_combined_with_time_and_properties(t *testing.T) {
+	client := acctest.GetTestResty(t)
+	version, err := util.GetArtifactoryVersion(client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := util.CheckVersion(version, "7.161.5")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !valid {
+		t.Skipf("Artifactory version %s is earlier than 7.161.5", version)
+	}
+
+	_, fqrn, policyName := testutil.MkNames("test-package-cleanup-policy", "artifactory_package_cleanup_policy")
+
+	temp := `
+	resource "artifactory_package_cleanup_policy" "{{ .policyName }}" {
+		key = "{{ .policyName }}"
+		description = "Test policy combining version, time and properties conditions"
+		cron_expression = "0 0 2 ? * MON-SAT *"
+		duration_in_minutes = 60
+		enabled = false
+		skip_trashcan = false
+
+		search_criteria = {
+			package_types = ["docker"]
+			repos = ["**"]
+			include_all_projects = true
+			included_projects = []
+			included_packages = ["**"]
+			created_before_in_days = 730
+			keep_last_n_versions = 7
+			included_properties = {
+				"release.status" = ["prod"]
+			}
+		}
+	}`
+
+	config := util.ExecuteTemplate(
+		policyName,
+		temp,
+		map[string]string{
+			"policyName": policyName,
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6MuxProviderFactories,
+		CheckDestroy:             testAccCleanupPolicyDestroy(fqrn),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "key", policyName),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.created_before_in_days", "730"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.keep_last_n_versions", "7"),
+					resource.TestCheckResourceAttr(fqrn, "search_criteria.included_properties.%", "1"),
 				),
 			},
 		},
