@@ -1,3 +1,10 @@
+### 12.11.15 (Nov 5, 2026).
+
+FEATURES:
+
+* **New Resource:** `artifactory_federated_nix_repository` Issue: [#1417](https://github.com/jfrog/terraform-provider-artifactory/issues/1417)
+* **New Data Source:** `artifactory_federated_nix_repository` Issue: [#1417](https://github.com/jfrog/terraform-provider-artifactory/issues/1417)
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:
