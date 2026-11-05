@@ -850,6 +850,11 @@ resource "artifactory_federated_nix_repository" "nix-federated-1" {
   key = "nix-federated-1"
 
   member {
+    url     = "http://artifactory-1:8081/artifactory/nix-federated-1"
+    enabled = true
+  }
+
+  member {
     url     = "http://artifactory-2:8081/artifactory/federated-nix-1"
     enabled = true
   }
