@@ -47,10 +47,12 @@ type condaConfigTestProvider struct {
 	client *resty.Client
 }
 
+// Configure supplies the loopback API client to the production resources.
 func (p *condaConfigTestProvider) Configure(_ context.Context, _ provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	resp.ResourceData = util.ProviderMetadata{Client: p.client, ProductId: "test"}
 }
 
+// TestAccCondaConfig checks enablement, disablement and import on an isolated live instance.
 func TestAccCondaConfig(t *testing.T) {
 	fqrn := "artifactory_conda_config.global"
 	config := func(enabled bool) string {
@@ -81,6 +83,7 @@ func TestAccCondaConfig(t *testing.T) {
 	})
 }
 
+// TestCondaConfigTerraformLifecycle checks plans, convergence, import, drift and removal against a local API.
 func TestCondaConfigTerraformLifecycle(t *testing.T) {
 	var mu sync.Mutex
 	puts := 0
@@ -205,6 +208,7 @@ func TestCondaConfigTerraformLifecycle(t *testing.T) {
 	})
 }
 
+// TestCondaConfigCreateResponses checks idempotency and safe failure handling for API and schema errors.
 func TestCondaConfigCreateResponses(t *testing.T) {
 	valid := `{"repositoriesConfig":{"conda":{"shardsEnabled":false}}}`
 	for _, tc := range []struct {
@@ -297,6 +301,7 @@ func TestCondaConfigCreateResponses(t *testing.T) {
 	}
 }
 
+// TestCondaConfigImportRejectsOtherIDs rejects repository names as singleton import IDs.
 func TestCondaConfigImportRejectsOtherIDs(t *testing.T) {
 	var resp resource.ImportStateResponse
 	configuration.NewCondaConfigResource().(resource.ResourceWithImportState).ImportState(

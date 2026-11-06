@@ -32,21 +32,25 @@ const condaConfigEndpoint = "artifactory/ui/generalConfig"
 
 var _ resource.Resource = (*CondaConfigResource)(nil)
 
+// NewCondaConfigResource returns a resource for the global Conda package settings.
 func NewCondaConfigResource() resource.Resource {
 	return &CondaConfigResource{
 		JFrogResource: util.JFrogResource{TypeName: "artifactory_conda_config"},
 	}
 }
 
+// CondaConfigResource manages the instance-wide Conda package settings.
 type CondaConfigResource struct {
 	util.JFrogResource
 }
 
+// CondaConfigResourceModel stores the singleton ID and shard flag in Terraform state.
 type CondaConfigResourceModel struct {
 	ID            types.String `tfsdk:"id"`
 	ShardsEnabled types.Bool   `tfsdk:"shards_enabled"`
 }
 
+// Schema defines the singleton identity and required shard setting.
 func (r *CondaConfigResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages the instance-wide Conda settings under Administration > Artifactory Settings > Packages Settings. Define only one resource per Artifactory instance.",
@@ -63,6 +67,7 @@ func (r *CondaConfigResource) Schema(_ context.Context, _ resource.SchemaRequest
 	}
 }
 
+// Create adopts the global configuration and applies the planned shard setting.
 func (r *CondaConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	go util.SendUsageResourceCreate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -81,6 +86,7 @@ func (r *CondaConfigResource) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
+// Read refreshes the global shard setting in Terraform state.
 func (r *CondaConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	go util.SendUsageResourceRead(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -101,6 +107,7 @@ func (r *CondaConfigResource) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// Update applies the planned shard setting and verifies its saved value.
 func (r *CondaConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	go util.SendUsageResourceUpdate(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -119,6 +126,7 @@ func (r *CondaConfigResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
+// Delete stops managing the global setting without changing Artifactory.
 func (r *CondaConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	go util.SendUsageResourceDelete(ctx, r.ProviderData.Client.R(), r.ProviderData.ProductId, r.TypeName)
 
@@ -128,6 +136,7 @@ func (r *CondaConfigResource) Delete(ctx context.Context, req resource.DeleteReq
 	)
 }
 
+// ImportState accepts the singleton import ID "conda".
 func (r *CondaConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	if req.ID != "conda" {
 		resp.Diagnostics.AddError("Invalid Conda configuration import ID", "The global Conda configuration must be imported using the ID 'conda'.")
@@ -136,6 +145,7 @@ func (r *CondaConfigResource) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// readConfig loads a fresh configuration and validates the exposed shard flag.
 func (r *CondaConfigResource) readConfig(ctx context.Context) (map[string]interface{}, map[string]interface{}, error) {
 	response, err := r.ProviderData.Client.R().SetContext(ctx).Get(condaConfigEndpoint)
 	if err != nil {
@@ -155,18 +165,19 @@ func (r *CondaConfigResource) readConfig(ctx context.Context) (map[string]interf
 
 	repositories, ok := config["repositoriesConfig"].(map[string]interface{})
 	if !ok {
-		return nil, nil, fmt.Errorf("Artifactory general configuration does not expose repositoriesConfig")
+		return nil, nil, fmt.Errorf("general configuration does not expose repositoriesConfig")
 	}
 	conda, ok := repositories["conda"].(map[string]interface{})
 	if !ok {
-		return nil, nil, fmt.Errorf("Artifactory does not expose global Conda package settings")
+		return nil, nil, fmt.Errorf("global Conda package settings are not exposed by Artifactory")
 	}
 	if _, ok := conda["shardsEnabled"].(bool); !ok {
-		return nil, nil, fmt.Errorf("Artifactory does not expose repositoriesConfig.conda.shardsEnabled as a boolean; a compatible Artifactory version with Conda sharding support is required")
+		return nil, nil, fmt.Errorf("repositoriesConfig.conda.shardsEnabled is not exposed as a boolean; a compatible Artifactory version with Conda sharding support is required")
 	}
 	return config, conda, nil
 }
 
+// setShardsEnabled preserves unrelated settings and verifies the flag after a write.
 func (r *CondaConfigResource) setShardsEnabled(ctx context.Context, enabled bool) error {
 	config, conda, err := r.readConfig(ctx)
 	if err != nil {
@@ -194,7 +205,7 @@ func (r *CondaConfigResource) setShardsEnabled(ctx context.Context, enabled bool
 		return err
 	}
 	if saved["shardsEnabled"].(bool) != enabled {
-		return fmt.Errorf("Artifactory did not persist the requested Conda shardsEnabled setting")
+		return fmt.Errorf("server did not persist the requested Conda shardsEnabled setting")
 	}
 	return nil
 }
