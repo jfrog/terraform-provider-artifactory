@@ -1,3 +1,9 @@
+### Unreleased
+
+FEATURES:
+
+* **New Resource:** `artifactory_conda_config` manages the instance-wide Conda metadata sharding setting, including refresh and import.
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:

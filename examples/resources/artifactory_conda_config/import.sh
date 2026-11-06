@@ -1,0 +1,1 @@
+terraform import artifactory_conda_config.global conda
