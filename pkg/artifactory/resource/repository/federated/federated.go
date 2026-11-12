@@ -67,7 +67,10 @@ type RepoParams struct {
 type Member struct {
 	Url     string `json:"url"`
 	Enabled bool   `json:"enabled"`
+	Mode    string `json:"mode,omitempty"`
 }
+
+const memberModeReceiver = "receiver"
 
 var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
 	return lo.Assign(
@@ -151,6 +154,16 @@ var SchemaGeneratorV4 = func(isRequired bool) map[string]*schema.Schema {
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
 							Description:      "Admin access token for this member Artifactory instance. Used in conjunction with `cleanup_on_delete` attribute when Access Federation for access tokens is not enabled.",
 						},
+						"mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{memberModeReceiver}, false)),
+							Description: "Sync mode of the federated member. The only supported value is `receiver`, which makes this member " +
+								"receive-only (unidirectional sync): it receives changes from the other members but does not send its own. " +
+								"If omitted, the member keeps the default bidirectional sync. " +
+								"If the member was initially created as `receiver`, removing this attribute changes it to bidirectional sync. " +
+								"See [Set Up Unidirectional Sync Using the REST API](https://docs.jfrog.com/artifactory/docs/configure-receiving-only-mode#set-up-unidirectional-sync-using-the-rest-api).",
+						},
 					},
 				},
 			},
@@ -177,6 +190,9 @@ func unpackMembers(data *schema.ResourceData) []Member {
 				Url:     id["url"].(string),
 				Enabled: id["enabled"].(bool),
 			}
+			if mode, ok := id["mode"].(string); ok && mode != "" {
+				member.Mode = mode
+			}
 			members = append(members, member)
 		}
 	}
@@ -202,6 +218,13 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 			"url":          member.Url,
 			"enabled":      member.Enabled,
 			"access_token": nil,
+			"mode":         nil,
+		}
+
+		// Only `receiver` can be set from Terraform. Any other value returned by the API (e.g. `bidirectional` or the
+		// automatic `transmitter` state) is stored as unset so configurations that omit `mode` do not drift.
+		if member.Mode == memberModeReceiver {
+			federatedMember["mode"] = member.Mode
 		}
 
 		// find matching member to restore the 'access_token' value
