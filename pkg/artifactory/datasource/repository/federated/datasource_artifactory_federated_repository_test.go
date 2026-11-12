@@ -101,6 +101,71 @@ func federatedTestCase(repoType string, t *testing.T) (*testing.T, resource.Test
 	}
 }
 
+// TestAccDataSourceFederatedRepoWithMemberMode verifies that the data source exposes `mode = "receiver"` for a member
+// on the secondary instance, and an unset `mode` for the default bidirectional member.
+// Requires ARTIFACTORY_URL_2, see skipFederatedRepo.
+func TestAccDataSourceFederatedRepoWithMemberMode(t *testing.T) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skip(reason)
+	}
+
+	name := fmt.Sprintf("federated-generic-%d-mode", rand.Int())
+	resourceType := "artifactory_federated_generic_repository"
+	dataFqrn := fmt.Sprintf("data.%s.%s", resourceType, name)
+	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
+
+	config := util.ExecuteTemplate("TestAccDataSourceFederatedRepoWithMemberMode", `
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key = "{{ .name }}"
+
+			member {
+				url     = "{{ .member1Url }}"
+				enabled = true
+			}
+
+			member {
+				url     = "{{ .member2Url }}"
+				enabled = true
+				mode    = "receiver"
+			}
+		}
+		data "{{ .resourceType }}" "{{ .name }}" {
+			key = {{ .resourceType }}.{{ .name }}.id
+		}
+	`, map[string]interface{}{
+		"resourceType": resourceType,
+		"name":         name,
+		"member1Url":   federatedMember1Url,
+		"member2Url":   federatedMember2Url,
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(t, dataFqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataFqrn, "key", name),
+					resource.TestCheckResourceAttr(dataFqrn, "member.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataFqrn, "member.*", map[string]string{
+						"url":     federatedMember1Url,
+						"enabled": "true",
+						"mode":    "",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(dataFqrn, "member.*", map[string]string{
+						"url":     federatedMember2Url,
+						"enabled": "true",
+						"mode":    "receiver",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceFederatedRepoGenericTypes(t *testing.T) {
 	for _, packageType := range federated.PackageTypesLikeGeneric {
 		t.Run(packageType, func(t *testing.T) {

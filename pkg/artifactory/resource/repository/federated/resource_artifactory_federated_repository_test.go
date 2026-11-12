@@ -129,6 +129,94 @@ func TestAccFederatedRepoWithMembers(t *testing.T) {
 	})
 }
 
+// TestAccFederatedRepoWithMemberMode verifies one-way (receiver) federation members:
+// `mode = "receiver"` is set on the member that lives on the secondary instance, then removed, then imported.
+// Requires ARTIFACTORY_URL_2, see skipFederatedRepo.
+func TestAccFederatedRepoWithMemberMode(t *testing.T) {
+	if skip, reason := skipFederatedRepo(); skip {
+		t.Skip(reason)
+	}
+
+	name := fmt.Sprintf("federated-generic-%d-mode", rand.Int())
+	resourceType := "artifactory_federated_generic_repository"
+	fqrn := fmt.Sprintf("%s.%s", resourceType, name)
+	federatedMember1Url := fmt.Sprintf("%s/artifactory/%s", acctest.GetArtifactoryUrl(t), name)
+	federatedMember2Url := fmt.Sprintf("%s/artifactory/%s", os.Getenv("ARTIFACTORY_URL_2"), name)
+
+	template := `
+		resource "{{ .resourceType }}" "{{ .name }}" {
+			key = "{{ .name }}"
+
+			member {
+				url     = "{{ .member1Url }}"
+				enabled = true
+			}
+
+			member {
+				url     = "{{ .member2Url }}"
+				enabled = true
+				{{- if .mode }}
+				mode    = "{{ .mode }}"
+				{{- end }}
+			}
+		}
+	`
+	paramsWithMode := map[string]interface{}{
+		"resourceType": resourceType,
+		"name":         name,
+		"member1Url":   federatedMember1Url,
+		"member2Url":   federatedMember2Url,
+		"mode":         "receiver",
+	}
+	paramsWithoutMode := utilsdk.MergeMaps(paramsWithMode)
+	paramsWithoutMode["mode"] = ""
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      acctest.VerifyDeleted(t, fqrn, "key", acctest.CheckRepo),
+		Steps: []resource.TestStep{
+			{
+				Config: util.ExecuteTemplate("TestAccFederatedRepoWithMemberMode", template, paramsWithMode),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "member.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(fqrn, "member.*", map[string]string{
+						"url":     federatedMember1Url,
+						"enabled": "true",
+						"mode":    "",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(fqrn, "member.*", map[string]string{
+						"url":     federatedMember2Url,
+						"enabled": "true",
+						"mode":    "receiver",
+					}),
+				),
+			},
+			{
+				Config: util.ExecuteTemplate("TestAccFederatedRepoWithMemberMode", template, paramsWithoutMode),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(fqrn, "member.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(fqrn, "member.*", map[string]string{
+						"url":     federatedMember2Url,
+						"enabled": "true",
+						"mode":    "",
+					}),
+				),
+			},
+			{
+				Config: util.ExecuteTemplate("TestAccFederatedRepoWithMemberMode", template, paramsWithMode),
+			},
+			{
+				ResourceName:            fqrn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateCheck:        validator.CheckImportState(name, "key"),
+				ImportStateVerifyIgnore: []string{"cleanup_on_delete", "member.0.access_token", "member.1.access_token"},
+			},
+		},
+	})
+}
+
 func genericTestCase(repoType string, t *testing.T) (*testing.T, resource.TestCase) {
 	jfrogURL := os.Getenv("JFROG_URL")
 	if strings.HasSuffix(jfrogURL, "jfrog.io") {

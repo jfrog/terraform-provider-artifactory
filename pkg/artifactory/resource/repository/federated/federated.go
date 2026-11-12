@@ -67,6 +67,7 @@ type RepoParams struct {
 type Member struct {
 	Url     string `json:"url"`
 	Enabled bool   `json:"enabled"`
+	Mode    string `json:"mode,omitempty"`
 }
 
 var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
@@ -111,49 +112,74 @@ var SchemaGeneratorV3 = func(isRequired bool) map[string]*schema.Schema {
 
 var federatedSchemaV3 = SchemaGeneratorV3(true)
 
+const memberModeReceiver = "receiver"
+
+// memberAttributesV4 are the member attributes as they existed in schema version 4 (before `mode` was added).
+// They are kept separate so that the state upgrader can describe the previous schema without duplication.
+var memberAttributesV4 = map[string]*schema.Schema{
+	"url": {
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Full URL to ending with the repositoryName",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+	},
+	"enabled": {
+		Type:     schema.TypeBool,
+		Required: true,
+		Description: "Represents the active state of the federated member. It is supported to " +
+			"change the enabled status of my own member. The config will be updated on the other " +
+			"federated members automatically.",
+	},
+	"access_token": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
+		Description:      "Admin access token for this member Artifactory instance. Used in conjunction with `cleanup_on_delete` attribute when Access Federation for access tokens is not enabled.",
+	},
+}
+
+var memberAttributesV5 = lo.Assign(
+	memberAttributesV4,
+	map[string]*schema.Schema{
+		"mode": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{memberModeReceiver}, false)),
+			Description: "Sync mode of the federated member. The only supported value is `receiver`, which makes this member " +
+				"receive-only (unidirectional sync): it receives changes from the other members but does not send its own. " +
+				"If omitted, the member keeps the default bidirectional sync. " +
+				"See [Set Up Unidirectional Sync Using the REST API](https://docs.jfrog.com/artifactory/docs/configure-receiving-only-mode#set-up-unidirectional-sync-using-the-rest-api).",
+		},
+	},
+)
+
+func memberSchema(isRequired bool, attributes map[string]*schema.Schema) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: isRequired,
+		Optional: !isRequired,
+		Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
+			"automatically be added with the combination of the configured base URL and `key` field value. " +
+			"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
+			" to set up Federated repositories correctly.",
+		Elem: &schema.Resource{Schema: attributes},
+	}
+}
+
+var cleanupOnDeleteSchemaV4 = &schema.Schema{
+	Type:        schema.TypeBool,
+	Optional:    true,
+	Default:     false,
+	Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances. Set `access_token` attribute if Access Federation for access tokens is not enabled.",
+}
+
 var SchemaGeneratorV4 = func(isRequired bool) map[string]*schema.Schema {
 	return lo.Assign(
 		federatedSchemaV3,
 		map[string]*schema.Schema{
-			"cleanup_on_delete": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Delete all federated members on `terraform destroy` if set to `true`. Caution: it will delete all the repositories in the federation on other Artifactory instances. Set `access_token` attribute if Access Federation for access tokens is not enabled.",
-			},
-			"member": {
-				Type:     schema.TypeSet,
-				Required: isRequired,
-				Optional: !isRequired,
-				Description: "The list of Federated members. If a Federated member receives a request that does not include the repository URL, it will " +
-					"automatically be added with the combination of the configured base URL and `key` field value. " +
-					"Note that each of the federated members will need to have a base URL set. Please follow the [instruction](https://www.jfrog.com/confluence/display/JFROG/Working+with+Federated+Repositories#WorkingwithFederatedRepositories-SettingUpaFederatedRepository)" +
-					" to set up Federated repositories correctly.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"url": {
-							Type:             schema.TypeString,
-							Required:         true,
-							Description:      "Full URL to ending with the repositoryName",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-							Description: "Represents the active state of the federated member. It is supported to " +
-								"change the enabled status of my own member. The config will be updated on the other " +
-								"federated members automatically.",
-						},
-						"access_token": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Sensitive:        true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotEmpty),
-							Description:      "Admin access token for this member Artifactory instance. Used in conjunction with `cleanup_on_delete` attribute when Access Federation for access tokens is not enabled.",
-						},
-					},
-				},
-			},
+			"cleanup_on_delete": cleanupOnDeleteSchemaV4,
+			"member":            memberSchema(isRequired, memberAttributesV5),
 		},
 	)
 }
@@ -176,6 +202,9 @@ func unpackMembers(data *schema.ResourceData) []Member {
 			member := Member{
 				Url:     id["url"].(string),
 				Enabled: id["enabled"].(bool),
+			}
+			if mode, ok := id["mode"].(string); ok && mode != "" {
+				member.Mode = mode
 			}
 			members = append(members, member)
 		}
@@ -202,6 +231,13 @@ func PackMembers(members []Member, d *schema.ResourceData) error {
 			"url":          member.Url,
 			"enabled":      member.Enabled,
 			"access_token": nil,
+			"mode":         nil,
+		}
+
+		// Only `receiver` can be set from Terraform. Any other value returned by the API (e.g. `bidirectional` or the
+		// automatic `transmitter` state) is stored as unset so configurations that omit `mode` do not drift.
+		if member.Mode == memberModeReceiver {
+			federatedMember["mode"] = member.Mode
 		}
 
 		// find matching member to restore the 'access_token' value
@@ -416,7 +452,7 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 		},
 
 		Schema:        skeema,
-		SchemaVersion: 4,
+		SchemaVersion: 5,
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -430,6 +466,11 @@ func mkResourceSchema(skeema map[string]*schema.Schema, packer packer.PackFunc, 
 				Type:    resourceV3().CoreConfigSchema().ImpliedType(),
 				Upgrade: upgradeMemberAccessToken,
 				Version: 3,
+			},
+			{
+				Type:    resourceV4().CoreConfigSchema().ImpliedType(),
+				Upgrade: upgradeMemberMode,
+				Version: 4,
 			},
 		},
 		CustomizeDiff: customdiff.All(
@@ -452,11 +493,39 @@ func resourceV3() *schema.Resource {
 	}
 }
 
+func resourceV4() *schema.Resource {
+	return &schema.Resource{
+		Schema: lo.Assign(
+			federatedSchemaV3,
+			map[string]*schema.Schema{
+				"cleanup_on_delete": cleanupOnDeleteSchemaV4,
+				"member":            memberSchema(true, memberAttributesV4),
+			},
+		),
+	}
+}
+
 func upgradeMemberAccessToken(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if v, ok := rawState["member"]; ok {
 		for _, m := range v.([]interface{}) {
 			id := m.(map[string]interface{})
 			id["access_token"] = nil
+		}
+	}
+
+	return rawState, nil
+}
+
+func upgradeMemberMode(_ context.Context, rawState map[string]any, _ any) (map[string]any, error) {
+	if v, ok := rawState["member"]; ok {
+		members, ok := v.([]interface{})
+		if !ok {
+			return rawState, nil
+		}
+		for _, m := range members {
+			if id, ok := m.(map[string]interface{}); ok {
+				id["mode"] = nil
+			}
 		}
 	}
 
