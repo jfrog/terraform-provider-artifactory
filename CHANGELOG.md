@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* resource/artifactory_federated_*_repository, data source/artifactory_federated_*_repository: Add optional `mode` attribute to `member` to support one-way (receiving-only) federation. The only accepted value is `receiver`; when omitted, the member keeps the default bidirectional sync. The resource schema version is bumped to 5 with a state upgrader that is transparent to users. Issue: [#1494](https://github.com/jfrog/terraform-provider-artifactory/issues/1494)
+* resource/artifactory_federated_*_repository, data source/artifactory_federated_*_repository: Add optional `mode` attribute to `member` to support one-way (receiving-only) federation. The only accepted value is `receiver`; when omitted, the member keeps the default bidirectional sync. Issue: [#1494](https://github.com/jfrog/terraform-provider-artifactory/issues/1494)
 
 ### 12.11.14 (Aug 31, 2026).
 

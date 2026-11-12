@@ -15,7 +15,6 @@
 package federated
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -150,44 +149,4 @@ func TestMemberSchema_ModeValidation(t *testing.T) {
 			assert.Equal(t, tc.expectErr, diags.HasError(), "diagnostics: %v", diags)
 		})
 	}
-}
-
-func TestUpgradeMemberMode(t *testing.T) {
-	rawState := map[string]any{
-		"key": "test-repo",
-		"member": []interface{}{
-			map[string]interface{}{"url": testMember1Url, "enabled": true, "access_token": nil},
-			map[string]interface{}{"url": testMember2Url, "enabled": true, "access_token": "token"},
-		},
-	}
-
-	upgraded, err := upgradeMemberMode(context.Background(), rawState, nil)
-	require.NoError(t, err)
-
-	members := upgraded["member"].([]interface{})
-	require.Len(t, members, 2)
-	for _, m := range members {
-		member := m.(map[string]interface{})
-		value, present := member["mode"]
-		assert.True(t, present, "mode key must be present after upgrade")
-		assert.Nil(t, value)
-	}
-	assert.Equal(t, "token", members[1].(map[string]interface{})["access_token"])
-}
-
-func TestUpgradeMemberMode_NoMembers(t *testing.T) {
-	rawState := map[string]any{"key": "test-repo"}
-
-	upgraded, err := upgradeMemberMode(context.Background(), rawState, nil)
-	require.NoError(t, err)
-	assert.Equal(t, rawState, upgraded)
-}
-
-func TestResourceV4_HasNoMemberMode(t *testing.T) {
-	memberElem := resourceV4().Schema["member"].Elem.(*schema.Resource)
-	assert.NotContains(t, memberElem.Schema, "mode")
-	assert.Contains(t, memberElem.Schema, "access_token")
-
-	currentElem := SchemaGeneratorV4(true)["member"].Elem.(*schema.Resource)
-	assert.Contains(t, currentElem.Schema, "mode")
 }
