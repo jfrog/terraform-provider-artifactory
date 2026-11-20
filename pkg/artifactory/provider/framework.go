@@ -360,6 +360,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 			local.NewHexLocalRepositoryResource,
 			local.NewNixLocalRepositoryResource,
 			local.NewMachineLearningLocalRepositoryResource,
+			local.NewAgentPluginsLocalRepositoryResource,
 			local.NewNugetLocalRepositoryResource,
 			local.NewOCILocalRepositoryResource,
 			local.NewRPMLocalRepositoryResource,
