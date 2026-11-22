@@ -16,6 +16,8 @@ package repository_test
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -104,7 +106,11 @@ func testCheckRepoExcludesPattern(t *testing.T, repoKey, expected string) resour
 		if response.IsError() {
 			return fmt.Errorf("%s", response.String())
 		}
-		if repo.ExcludesPattern != expected {
+		actual := strings.Split(repo.ExcludesPattern, ",")
+		want := strings.Split(expected, ",")
+		slices.Sort(actual)
+		slices.Sort(want)
+		if !slices.Equal(actual, want) {
 			return fmt.Errorf("expected excludesPattern %q, got %q", expected, repo.ExcludesPattern)
 		}
 		return nil
