@@ -1,0 +1,1 @@
+terraform import artifactory_repository_excludes.blocked-images my-docker-remote
