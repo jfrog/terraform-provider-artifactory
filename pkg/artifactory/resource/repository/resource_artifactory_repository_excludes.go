@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -91,6 +92,7 @@ func (r *RepositoryExcludesResource) Schema(ctx context.Context, req resource.Sc
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtLeast(1),
 						validatorfw_string.RegexNotMatches(regexp.MustCompile(`,`), "must not contain a comma"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^\S(.*\S)?$`), "must not have leading or trailing whitespace"),
 					),
 				},
 				MarkdownDescription: "Set of Ant-style path patterns to add to the repository's `excludes_pattern`, e.g. `my-image/1.0.0/**` to block a Docker image tag. Patterns not managed by this resource are left untouched.",
@@ -149,6 +151,16 @@ func (r *RepositoryExcludesResource) updatePatterns(repo *RepositoryExcludesAPIM
 	return nil
 }
 
+// excludesLocks serializes the read-modify-write of excludesPattern per repository key.
+var excludesLocks sync.Map
+
+func lockRepo(key string) func() {
+	m, _ := excludesLocks.LoadOrStore(key, &sync.Mutex{})
+	mu := m.(*sync.Mutex)
+	mu.Lock()
+	return mu.Unlock
+}
+
 func patternsFromSet(ctx context.Context, set types.Set) ([]string, diag.Diagnostics) {
 	var patterns []string
 	if set.IsNull() || set.IsUnknown() {
@@ -173,6 +185,7 @@ func (r *RepositoryExcludesResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	defer lockRepo(plan.RepoKey.ValueString())()
 	repo, _, err := r.getRepo(plan.RepoKey.ValueString())
 	if err != nil {
 		utilfw.UnableToCreateResourceError(resp, err.Error())
@@ -214,9 +227,9 @@ func (r *RepositoryExcludesResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	// On import there are no patterns in state yet, so adopt all existing patterns.
+	// On import patterns are null in state, so adopt all existing patterns.
 	patterns := remote
-	if len(statePatterns) > 0 {
+	if !state.Patterns.IsNull() {
 		patterns = lo.Intersect(statePatterns, remote)
 	}
 
@@ -250,6 +263,7 @@ func (r *RepositoryExcludesResource) Update(ctx context.Context, req resource.Up
 
 	_, toRemove := lo.Difference(planPatterns, statePatterns)
 
+	defer lockRepo(plan.RepoKey.ValueString())()
 	repo, _, err := r.getRepo(plan.RepoKey.ValueString())
 	if err != nil {
 		utilfw.UnableToUpdateResourceError(resp, err.Error())
@@ -279,6 +293,7 @@ func (r *RepositoryExcludesResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
+	defer lockRepo(state.RepoKey.ValueString())()
 	repo, statusCode, err := r.getRepo(state.RepoKey.ValueString())
 	if statusCode == http.StatusBadRequest || statusCode == http.StatusNotFound {
 		return
