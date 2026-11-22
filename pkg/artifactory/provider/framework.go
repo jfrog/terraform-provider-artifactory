@@ -318,6 +318,7 @@ func (p *ArtifactoryProvider) Resources(ctx context.Context) []func() resource.R
 		[]func() resource.Resource{
 			artifact.NewArtifactResource,
 			artifact.NewItemPropertiesResource,
+			repository.NewRepositoryExcludesResource,
 			user.NewAnonymousUserResource,
 			user.NewManagedUserResource,
 			user.NewUnmanagedUserResource,

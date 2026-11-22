@@ -1,3 +1,9 @@
+### Unreleased
+
+FEATURES:
+
+* **New Resource:** `artifactory_repository_excludes` - Manage a subset of an existing repository's `excludes_pattern` (e.g. to block specific packages or Docker `image:tag`) without managing the repository itself. Issue: [#1496](https://github.com/jfrog/terraform-provider-artifactory/issues/1496)
+
 ### 12.11.14 (Aug 31, 2026).
 
 FEATURES:
