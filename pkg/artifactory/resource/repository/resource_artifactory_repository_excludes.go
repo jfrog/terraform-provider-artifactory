@@ -92,7 +92,7 @@ func (r *RepositoryExcludesResource) Schema(ctx context.Context, req resource.Sc
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtLeast(1),
 						validatorfw_string.RegexNotMatches(regexp.MustCompile(`,`), "must not contain a comma"),
-						stringvalidator.RegexMatches(regexp.MustCompile(`^\S(.*\S)?$`), "must not have leading or trailing whitespace"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`^[^\s\p{Z}\x{85}](.*[^\s\p{Z}\x{85}])?$`), "must not have leading or trailing whitespace"),
 					),
 				},
 				MarkdownDescription: "Set of Ant-style path patterns to add to the repository's `excludes_pattern`, e.g. `my-image/1.0.0/**` to block a Docker image tag. Patterns not managed by this resource are left untouched.",
